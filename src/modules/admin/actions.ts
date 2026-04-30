@@ -2,7 +2,7 @@
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 
 import { withShield } from "@/core/security/shield";
@@ -87,14 +87,26 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
 
 export const loginAdmin = withShield("admin_login", loginAdminBase, { limit: 5 }); // Stricter for login
 
-async function validateAdminSession() {
-  const supabase = createServerSupabaseClient();
-  const { data: { session } } = await supabase.auth.getSession();
+export async function validateAdminSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth_token')?.value;
   
-  if (!session || session.user.email !== process.env.ADMIN_EMAIL) {
+  if (!token) {
     throw new Error("Unauthorized Access: Admin privileges required.");
   }
-  return supabase;
+
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || "");
+    const { payload } = await jwtVerify(token, secret);
+    
+    if (payload.email !== process.env.ADMIN_EMAIL) {
+      throw new Error("Unauthorized Access: Identity mismatch.");
+    }
+    
+    return createServerSupabaseClient();
+  } catch {
+    throw new Error("Unauthorized Access: Session expired or invalid.");
+  }
 }
 
 function getErrorMessage(error: unknown): string {
@@ -112,7 +124,10 @@ async function upsertContentBase(params: { table: string, payload: object, path:
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Supabase Upsert Error [${table}]:`, error);
+      throw new Error(`Cloud Sync Failed: ${error.message}`);
+    }
 
     await recordSecurityEvent('CONTENT_UPSERT', process.env.ADMIN_EMAIL!, 'INFO', { table, id: data.id });
 
@@ -144,7 +159,10 @@ async function uploadArtifactBase(params: { file: File, path: string }) {
         upsert: true
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Storage Error:", error);
+      throw new Error(`Artifact Transmission Failed: ${error.message}`);
+    }
 
     // Get Public URL
     const { data: { publicUrl } } = supabase.storage

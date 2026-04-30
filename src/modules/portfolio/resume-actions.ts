@@ -5,14 +5,16 @@ import { unstable_cache } from 'next/cache';
 import { getAssetUrl } from "@/utils/storage";
 import { type Certificate, fallbackCertificates } from "./resume-types";
 import { revalidatePath } from "next/cache";
+import { validateAdminSession } from "@/modules/admin/actions";
+import { withShield } from "@/core/security/shield";
 
 /**
  * Secure Resume Asset Management
  */
-export async function uploadResume(file: File) {
-  const supabase = createServerSupabaseClient();
-  
+async function uploadResumeBase(file: File) {
   try {
+    const supabase = await validateAdminSession();
+    
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `CV_Aime_Serge_${Date.now()}.pdf`;
@@ -24,7 +26,10 @@ export async function uploadResume(file: File) {
         upsert: true
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Storage Error (Resumes):", error);
+      throw new Error(`Resume Sync Failed: ${error.message}`);
+    }
 
     // Log the event
     const { data: { publicUrl } } = supabase.storage.from('resumes').getPublicUrl(data.path);
@@ -38,11 +43,14 @@ export async function uploadResume(file: File) {
 
     revalidatePath('/resume');
     return { success: true, url: publicUrl };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Resume Upload Error:", err);
-    return { success: false, error: "Handshake failed during asset transmission." };
+    return { success: false, error: err.message || "Handshake failed during asset transmission." };
   }
 }
+
+export const uploadResume = withShield("resume_upload", uploadResumeBase);
+
 
 export async function getLatestResume() {
   const supabase = createServerSupabaseClient();
