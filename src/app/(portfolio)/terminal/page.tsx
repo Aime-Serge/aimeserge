@@ -1,7 +1,7 @@
 import TerminalUI from "@/components/features/TerminalUI";
 
 export const metadata = {
-  title: "Terminal | Aime Serge",
+  title: "Terminal | Aime Serge UKOBIZABA",
   description: "Command-line interface to explore my engineering portfolio.",
 };
 
