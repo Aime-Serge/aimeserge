@@ -14,7 +14,7 @@ import { withShield } from "@/core/security/shield";
 async function uploadResumeBase(file: File) {
   try {
     const supabase = await validateAdminSession();
-    
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileName = `CV_Aime_Serge_${Date.now()}.pdf`;

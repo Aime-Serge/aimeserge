@@ -90,7 +90,7 @@ export const loginAdmin = withShield("admin_login", loginAdminBase, { limit: 5 }
 export async function validateAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
-  
+
   if (!token) {
     throw new Error("Unauthorized Access: Admin privileges required.");
   }
@@ -98,11 +98,11 @@ export async function validateAdminSession() {
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET || "");
     const { payload } = await jwtVerify(token, secret);
-    
+
     if (payload.email !== process.env.ADMIN_EMAIL) {
       throw new Error("Unauthorized Access: Identity mismatch.");
     }
-    
+
     return createServerSupabaseClient();
   } catch {
     throw new Error("Unauthorized Access: Session expired or invalid.");
