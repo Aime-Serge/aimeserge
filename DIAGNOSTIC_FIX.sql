@@ -3,6 +3,7 @@
 
 -- 1. Ensure extensions are enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- 2. Repair Contacts Table (Ensure all columns exist for the current form)
@@ -74,7 +75,7 @@ DROP POLICY IF EXISTS "Enable select for admin" ON security_logs;
 
 -- Recreate policies
 CREATE POLICY "Enable insert for all users" ON security_logs FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable select for admin" ON security_logs FOR SELECT USING (true);
+CREATE POLICY "Enable select for admin" ON security_logs FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Also ensure contacts table has public insert policy
 DROP POLICY IF EXISTS "Public Submit Inquiry" ON contacts;
@@ -108,11 +109,13 @@ DROP POLICY IF EXISTS "Admin Full Access" ON storage.objects;
 CREATE POLICY "Public Read Access" ON storage.objects
 FOR SELECT USING (bucket_id IN ('artifacts', 'resumes'));
 
--- 2. Allow all operations (Insert/Update/Delete) for authenticated users (Admin)
--- Note: This assumes you are logged in as admin. For production, you might restrict by role.
+-- 2. Allow all operations (Insert/Update/Delete) for authenticated users
 CREATE POLICY "Admin Full Access" ON storage.objects
-FOR ALL USING (bucket_id IN ('artifacts', 'resumes'))
+FOR ALL TO authenticated
+USING (bucket_id IN ('artifacts', 'resumes'))
 WITH CHECK (bucket_id IN ('artifacts', 'resumes'));
 
-PRINT 'Database diagnostic repair completed. Storage buckets and policies are now synchronized.';
-
+DO $$
+BEGIN
+  RAISE NOTICE 'Database diagnostic repair completed. Storage buckets and policies are now synchronized.';
+END $$;
