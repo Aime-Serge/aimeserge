@@ -33,7 +33,7 @@ async function submitContactFormBase(formData: ContactSubmission) {
 
     if (error) {
       console.error("Supabase submission error:", error);
-      return { success: false, message: "System failure during transmission. Please retry." };
+      return { success: false, message: `System failure: ${error.message} [Ref: TRANSMISSION_ERR]` };
     }
 
     // Trigger Admin Notification
