@@ -1,4 +1,4 @@
-import { aiOrchestrator } from "@/core/ai/orchestrator";
+import { assembleAIContext, getSystemPrompt } from "@/domain/ai/queries";
 import { openai } from "@ai-sdk/openai";
 import {
   convertToModelMessages,
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // 2. Assemble RAG Context
     let context = "";
     if (userQuery) {
-      context = await aiOrchestrator.assembleContext(userQuery);
+      context = await assembleAIContext(userQuery);
     } else {
       context = "Initiating secure handshake. Welcome the user.";
     }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     // 3. Stream Response
     const result = streamText({
       model: openai("gpt-4o"),
-      system: aiOrchestrator.getSystemPrompt(context),
+      system: getSystemPrompt(context),
       messages: await convertToModelMessages(messages),
     });
 
