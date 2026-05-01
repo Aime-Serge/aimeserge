@@ -1,7 +1,7 @@
-import { getProjects } from "@/modules/portfolio/actions";
+import { getProjects } from "@/domain/portfolio/queries";
 import Link from "next/link";
 import { ExternalLink, FileText, ChevronRight, Eye, Heart, Share2, Rocket } from "lucide-react";
-import SecurityAudit from "@/components/features/SecurityAudit";
+import SecurityAudit from "@/presentation/components/features/SecurityAudit";
 
 export const metadata = {
   title: "Engineering Feed | Aime Serge",

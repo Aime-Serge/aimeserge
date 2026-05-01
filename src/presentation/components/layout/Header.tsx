@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Terminal, Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/security/headers";
-import GlobalSearch from "@/components/features/GlobalSearch";
+import { cn } from "@/infrastructure/security/headers";
+import GlobalSearch from "@/presentation/components/features/GlobalSearch";
 
 const navItems = [
   { name: "Projects", href: "/projects" },

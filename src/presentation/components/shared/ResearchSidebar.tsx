@@ -1,8 +1,8 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import SecurityAudit from "@/components/features/SecurityAudit";
-import { type ResearchPaper } from "@/modules/research/types";
+import SecurityAudit from "@/presentation/components/features/SecurityAudit";
+import { type ResearchPaper } from "@/domain/research/types";
 
 interface ResearchSidebarProps {
   papers: ResearchPaper[];

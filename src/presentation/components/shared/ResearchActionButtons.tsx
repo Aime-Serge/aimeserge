@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, Download, Zap } from "lucide-react";
-import { incrementDownloadCount } from "@/modules/research/actions";
+import { incrementDownloadCount } from "@/domain/research/actions";
 import Link from "next/link";
 
 interface ResearchActionButtonsProps {

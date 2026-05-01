@@ -1,6 +1,6 @@
-import { getResearch } from "@/modules/research/actions";
-import ResearchFeed from "@/components/features/ResearchFeed";
-import ResearchSidebar from "@/components/shared/ResearchSidebar";
+import { getResearch } from "@/domain/research/queries";
+import ResearchFeed from "@/presentation/components/features/ResearchFeed";
+import ResearchSidebar from "@/presentation/components/shared/ResearchSidebar";
 
 export const metadata = {
   title: "Technical Research | Aime Serge",

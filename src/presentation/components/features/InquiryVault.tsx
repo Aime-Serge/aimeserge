@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Trash2, Mail, Phone, Globe, User, Briefcase, Zap, Activity } from "lucide-react";
-import { deleteContent } from "@/modules/admin/actions";
-import { supabase } from "@/lib/supabase/client";
+import { deleteContent } from "@/domain/admin/actions";
+import { supabase } from "@/infrastructure/database/client";
 import { toast } from "react-hot-toast";
-import { cn } from "@/lib/security/headers";
+import { cn } from "@/infrastructure/security/headers";
 
 interface Inquiry {
   id: string;

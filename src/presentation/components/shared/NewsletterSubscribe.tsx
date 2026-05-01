@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Radio, Cpu, CheckCircle2 } from "lucide-react";
-import { subscribeNewsletter } from "@/modules/communication/contact-actions";
+import { subscribeNewsletter } from "@/domain/interactions/actions";
 import { toast } from "react-hot-toast";
 
 export default function NewsletterSubscribe() {

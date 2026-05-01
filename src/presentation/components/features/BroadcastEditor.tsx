@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Radio, X, FileEdit, Cpu, Send } from "lucide-react";
-import { upsertContent } from "@/modules/admin/actions";
-import { syncBroadcastToKnowledge } from "@/modules/communication/blog-actions";
-import { type Broadcast } from "@/modules/communication/blog-types";
+import { upsertContent } from "@/domain/admin/actions";
+import { syncBroadcastToKnowledge } from "@/domain/portfolio/actions";
+import { type Broadcast } from "@/domain/portfolio/actions";
 import { toast } from "react-hot-toast";
 
 type BroadcastCategory = "Security" | "Cloud" | "AI" | "Engineering";
@@ -62,7 +62,7 @@ export default function BroadcastEditor({ initialData, onClose }: BroadcastEdito
 
       onClose();
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error("Transmission failed: " + errorMsg);
     }
     setIsPending(false);

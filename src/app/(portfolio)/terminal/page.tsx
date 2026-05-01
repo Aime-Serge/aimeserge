@@ -1,4 +1,4 @@
-import TerminalUI from "@/components/features/TerminalUI";
+import TerminalUI from "@/presentation/components/features/TerminalUI";
 
 export const metadata = {
   title: "Terminal | Aime Serge UKOBIZABA",

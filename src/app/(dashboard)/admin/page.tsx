@@ -8,17 +8,17 @@ import {
   TrendingUp, Users, Download, Bot, Send, 
   Mic, Activity, Zap, Cpu, Award
 } from "lucide-react";
-import { getAdminAnalytics, getSecurityLogs } from "@/modules/admin/actions";
-import { cn } from "@/lib/security/headers";
+import { getAdminAnalytics, getSecurityLogs } from "@/domain/admin/actions";
+import { cn } from "@/infrastructure/security/headers";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, isTextUIPart, type UIMessage } from "ai";
 import { toast } from "react-hot-toast";
-import ProjectEditor from "@/components/features/ProjectEditor";
-import CredentialEditor from "@/components/features/CredentialEditor";
-import ResearchEditor from "@/components/features/ResearchEditor";
-import BroadcastEditor from "@/components/features/BroadcastEditor";
-import InquiryVault from "@/components/features/InquiryVault";
-import ResumeManager from "@/components/features/ResumeManager";
+import ProjectEditor from "@/presentation/components/features/ProjectEditor";
+import CredentialEditor from "@/presentation/components/features/CredentialEditor";
+import ResearchEditor from "@/presentation/components/features/ResearchEditor";
+import BroadcastEditor from "@/presentation/components/features/BroadcastEditor";
+import InquiryVault from "@/presentation/components/features/InquiryVault";
+import ResumeManager from "@/presentation/components/features/ResumeManager";
 
 type AdminChatMessage = UIMessage & {
   content?: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Award, Save, X, Upload, Calendar, ShieldCheck, Link as LinkIcon } from "lucide-react";
-import { upsertContent, uploadArtifact } from "@/modules/admin/actions";
+import { upsertContent, uploadArtifact } from "@/domain/admin/actions";
 import { toast } from "react-hot-toast";
 
 interface CredentialFormData {
@@ -45,7 +45,7 @@ export default function CredentialEditor({ initialData, onClose }: CredentialEdi
       setFormData({ ...formData, pdf_url: result.url as string });
       toast.success("Document uploaded to secure storage.");
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error("Upload failed: " + errorMsg);
     }
     setIsUploading(false);
@@ -59,7 +59,7 @@ export default function CredentialEditor({ initialData, onClose }: CredentialEdi
       toast.success("Credential synchronized.");
       onClose();
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error("Sync error: " + errorMsg);
     }
     setIsPending(false);

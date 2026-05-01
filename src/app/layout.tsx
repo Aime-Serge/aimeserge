@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import "../styles/globals.css";
-import { cn } from "@/lib/security/headers";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import ClientWrapper from "@/components/layout/ClientWrapper";
+import "@/presentation/styles/globals.css";
+import { cn } from "@/infrastructure/security/headers";
+import Header from "@/presentation/components/layout/Header";
+import Footer from "@/presentation/components/layout/Footer";
+import ClientWrapper from "@/presentation/components/layout/ClientWrapper";
 
 export const metadata: Metadata = {
   title: "Aime Serge Ukobizaba | Software Engineer, Cybersecurity Analyst, Aspiring AI Engineer & Cloud Architect Certisfied  ALX Ventures Rwanda Ambassador",

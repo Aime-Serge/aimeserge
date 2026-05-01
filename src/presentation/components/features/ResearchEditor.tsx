@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Microscope, Save, X, Upload, Database } from "lucide-react";
-import { upsertContent, uploadArtifact } from "@/modules/admin/actions";
-import { syncResearchToKnowledge } from "@/modules/research/actions";
-import { type ResearchPaper } from "@/modules/research/types";
+import { upsertContent, uploadArtifact } from "@/domain/admin/actions";
+import { syncResearchToKnowledge } from "@/domain/research/actions";
+import { type ResearchPaper } from "@/domain/research/types";
 import { toast } from "react-hot-toast";
 
 interface ResearchFormData {
@@ -42,7 +42,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
       setFormData({ ...formData, pdf_url: result.url as string });
       toast.success("Research paper uploaded.");
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error("Upload failed: " + errorMsg);
     }
     setIsUploading(false);
@@ -76,7 +76,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
 
       onClose();
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error("Sync Failure: " + errorMsg);
     }
     setIsPending(false);

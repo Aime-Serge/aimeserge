@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Save, X, Database, Cpu } from "lucide-react";
-import { upsertContent } from "@/modules/admin/actions";
+import { upsertContent } from "@/domain/admin/actions";
 import { toast } from "react-hot-toast";
 
 type ProjectCategory = "AI" | "Security" | "Cloud" | "Software Engineering" | "Full-Stack";
@@ -56,7 +56,7 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
       toast.success("Project artifact synchronized successfully.");
       onClose();
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error(`Sync Failure: ${errorMsg}`);
     }
     setIsPending(false);

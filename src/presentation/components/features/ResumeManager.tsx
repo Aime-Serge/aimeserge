@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, Upload, CheckCircle2, Loader2, Globe, ExternalLink } from "lucide-react";
-import { uploadResume } from "@/modules/portfolio/resume-actions";
+import { uploadResume } from "@/domain/portfolio/actions";
 import { toast } from "react-hot-toast";
 
 export default function ResumeManager() {
@@ -25,7 +25,7 @@ export default function ResumeManager() {
       toast.success("Resume Blueprint Synchronized.");
       setLastUrl(result.url);
     } else {
-      const errorMsg = "error" in result ? result.error : (result as any).message;
+      const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
       toast.error(errorMsg || "System failure during transmission.");
     }
     setIsPending(false);

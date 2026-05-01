@@ -1,11 +1,11 @@
-import { getBroadcastById } from "@/modules/communication/blog-actions";
+import { getBroadcastById } from "@/domain/portfolio/queries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Eye, Share2 } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/security/headers";
-import BroadcastAudioPlayer from "@/components/shared/BroadcastAudioPlayer";
-import NewsletterSubscribe from "@/components/shared/NewsletterSubscribe";
+import { cn } from "@/infrastructure/security/headers";
+import BroadcastAudioPlayer from "@/presentation/components/shared/BroadcastAudioPlayer";
+import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
 
 interface BlogPageProps {
   params: Promise<{ id: string }>;

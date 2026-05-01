@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, getToolName, isTextUIPart, isToolUIPart, type UIMessage } from 'ai';
 import { Bot, X, Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { type FormEvent, useState, useRef, useEffect, useCallback } from 'react';
-import { cn } from '@/lib/security/headers';
+import { cn } from '@/infrastructure/security/headers';
 import { useRouter } from 'next/navigation';
 
 const SUGGESTIONS = [

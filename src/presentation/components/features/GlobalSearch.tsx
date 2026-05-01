@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/security/headers";
+import { cn } from "@/infrastructure/security/headers";
 import type { SearchResult } from "@/types/search";
 import { Loader2, Search, Sparkles } from "lucide-react";
 import Link from "next/link";

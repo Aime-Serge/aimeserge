@@ -1,8 +1,8 @@
-import { getBroadcasts } from "@/modules/communication/blog-actions";
+import { getBroadcasts } from "@/domain/portfolio/queries";
 import Link from "next/link";
 import { Clock, ArrowRight, Eye, Share2, Radio, Globe } from "lucide-react";
-import { cn } from "@/lib/security/headers";
-import NewsletterSubscribe from "@/components/shared/NewsletterSubscribe";
+import { cn } from "@/infrastructure/security/headers";
+import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
 
 export const metadata = {
   title: "Broadcast Feed | Technical Updates",
