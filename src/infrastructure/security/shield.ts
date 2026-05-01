@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { rateLimit } from "./rateLimit";
 import { redactPII } from "./piiFilter";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { notifyAdmin } from "@/utils/notifications";
+import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { notifyAdmin } from "@/infrastructure/utils/notifications";
 
 interface ShieldOptions {
   limit?: number;

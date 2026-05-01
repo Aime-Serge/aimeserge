@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { securityHeaders } from './lib/security/securityHeaders';
+import { securityHeaders } from '@/infrastructure/security/securityHeaders';
 import { jwtVerify } from 'jose';
 
 /**
@@ -9,8 +9,18 @@ import { jwtVerify } from 'jose';
  */
 export async function middleware(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
-  const ip = (request as any).ip || request.headers.get('x-forwarded-for') || 'unknown';
-  const country = (request as any).geo?.country || 'unknown';
+  
+  // Define a localized type for the NextRequest with geo/ip extensions
+  interface AugmentedRequest extends NextRequest {
+    ip?: string;
+    geo?: {
+      country?: string;
+    };
+  }
+
+  const augRequest = request as AugmentedRequest;
+  const ip = augRequest.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  const country = augRequest.geo?.country || 'unknown';
 
   // 1. Advanced Security: Block Suspicious Regions (Optional/Configurable)
   const blockedCountries = ['XX']; // Placeholder for restricted regions if needed

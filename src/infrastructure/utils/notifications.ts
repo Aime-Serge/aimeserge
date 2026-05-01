@@ -7,7 +7,7 @@ type AlertPayload = {
   title: string;
   message: string;
   type: 'INQUIRY' | 'SECURITY' | 'SYSTEM';
-  data?: any;
+  data?: Record<string, unknown>;
 };
 
 export async function notifyAdmin(payload: AlertPayload) {
