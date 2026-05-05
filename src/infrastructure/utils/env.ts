@@ -6,6 +6,9 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   JWT_SECRET: z.string().min(32).optional(),
   ADMIN_EMAIL: z.string().email().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  DISCORD_WEBHOOK_URL: z.string().url().optional(),
+  SUPABASE_WEBHOOK_SECRET: z.string().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -18,6 +21,9 @@ export const validateEnv = (): Partial<Env> => {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     JWT_SECRET: process.env.JWT_SECRET,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL,
+    SUPABASE_WEBHOOK_SECRET: process.env.SUPABASE_WEBHOOK_SECRET,
     NODE_ENV: process.env.NODE_ENV,
   });
 

@@ -1,6 +1,6 @@
 export const securityHeaders = {
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://*.supabase.co; font-src 'self'; connect-src 'self' https://api.openai.com https://*.supabase.co https://vitals.vercel-insights.com; media-src 'self' blob: data: https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
+    "default-src 'self'; script-src 'self' https://*.supabase.co; style-src 'self' https://fonts.googleapis.com; img-src 'self' blob: data: https://*.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com https://*.supabase.co https://vitals.vercel-insights.com; media-src 'self' blob: data: https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests;",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "X-XSS-Protection": "1; mode=block",

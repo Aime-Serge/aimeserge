@@ -1,84 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendEmail } from '@/infrastructure/email/mailer';
+import { timingSafeEqual } from 'crypto';
+import { DatabaseWebhookSchema } from '@/core/application/dtos/webhook.dto';
+import { HandleDbWebhookUseCase } from '@/core/application/use-cases/HandleDbWebhookUseCase';
 
-/**
- * Enhanced Supabase Database Webhook Receiver
- * Dynamically handles notifications for all critical transactions.
- */
-export async function POST(req: NextRequest) {
-  const webhookSecret = req.headers.get('x-supabase-webhook-secret');
-
-  if (webhookSecret !== process.env.SUPABASE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const payload = await req.json();
-    const { table, record, type } = payload;
-    const adminEmail = process.env.ADMIN_EMAIL!;
+    const signature = request.headers.get('x-supabase-webhook-secret');
+    const secret = process.env.SUPABASE_WEBHOOK_SECRET;
 
-    let subject = `[${table.toUpperCase()}] ${type} Operation Detected`;
-    let html = `<h3>Database Transaction Alert</h3>
-                <p><strong>Table:</strong> ${table}</p>
-                <p><strong>Operation:</strong> ${type}</p>
-                <hr />`;
-
-    // 1. Dynamic Notification Templates
-    switch (table) {
-      case 'contacts':
-        if (type === 'INSERT') {
-          subject = `New Inquiry: ${record.name}`;
-          html += `
-            <p><strong>Name:</strong> ${record.name}</p>
-            <p><strong>Email:</strong> ${record.email}</p>
-            <p><strong>Interest:</strong> ${record.interest}</p>
-            <p><strong>Message:</strong> ${record.message}</p>
-          `;
-        }
-        break;
-
-      case 'security_logs':
-        if (record.severity === 'CRITICAL' || record.severity === 'WARN') {
-          subject = `🚨 ${record.severity} SECURITY ALERT: ${record.event_type}`;
-          html += `
-            <p><strong>Event:</strong> ${record.event_type}</p>
-            <p><strong>Severity:</strong> ${record.severity}</p>
-            <p><strong>IP:</strong> ${record.ip_address}</p>
-            <p><strong>Metadata:</strong> <pre>${JSON.stringify(record.metadata, null, 2)}</pre></p>
-          `;
-        } else {
-          // Don't send emails for INFO logs to prevent spam
-          return NextResponse.json({ success: true, message: 'Skipped INFO log' });
-        }
-        break;
-
-      case 'projects':
-      case 'research':
-      case 'broadcasts':
-        subject = `Content Update: ${table} (${type})`;
-        html += `
-          <p><strong>Record ID:</strong> ${record.id}</p>
-          <p><strong>Title/Slug:</strong> ${record.title || record.slug}</p>
-          <p><strong>Status:</strong> Content was ${type.toLowerCase()}ed in the secure vault.</p>
-        `;
-        break;
-
-      default:
-        html += `<p>Raw Record Data: <pre>${JSON.stringify(record, null, 2)}</pre></p>`;
+    // 1. Secure Cryptographic Validation (Timing-Safe Comparison)
+    if (!secret || !signature || signature.length !== secret.length) {
+      console.error('Unauthorized webhook attempt blocked.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    html += `<hr /><p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin">Open Management Console</a></p>`;
+    // Use timing-safe comparison to prevent timing attacks
+    const signatureBuffer = Buffer.from(signature);
+    const secretBuffer = Buffer.from(secret);
+    
+    try {
+      if (!timingSafeEqual(signatureBuffer, secretBuffer)) {
+        console.error('Unauthorized webhook attempt blocked.');
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } catch {
+      console.error('Unauthorized webhook attempt blocked.');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // 2. Dispatch Email
-    await sendEmail({
-      to: adminEmail,
-      subject,
-      html
-    });
+    const payload = await request.json();
 
-    return NextResponse.json({ success: true });
+    // 2. Strict Input Validation (Zod)
+    const validatedData = DatabaseWebhookSchema.safeParse(payload);
+
+    if (!validatedData.success) {
+      return NextResponse.json({ 
+        error: 'Invalid Payload', 
+        details: validatedData.error.format() 
+      }, { status: 400 });
+    }
+
+    // 3. Delegation to Application Layer (Use Case)
+    const useCase = new HandleDbWebhookUseCase();
+    const result = await useCase.execute(validatedData.data);
+
+    if (!result.success) {
+      return NextResponse.json({ error: 'Notification Dispatch Failed' }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: 'Notification Processed' }, { status: 200 });
   } catch (error) {
-    console.error("Webhook processing failed:", error);
+    console.error('Webhook processing error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
