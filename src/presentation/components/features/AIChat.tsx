@@ -1,7 +1,6 @@
 "use client";
 
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, getToolName, isTextUIPart, isToolUIPart, type UIMessage } from 'ai';
+import { getToolName, isTextUIPart, isToolUIPart, type UIMessage } from 'ai';
 import { Bot, X, Send, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { type FormEvent, useState, useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/infrastructure/security/headers';
@@ -202,6 +201,8 @@ export default function AIChat() {
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState<ConversationWindow[]>([]);
   const [currentWindowId, setCurrentWindowId] = useState<string>('main');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [status, setStatus] = useState<'ready' | 'submitted'>('ready');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -259,7 +260,7 @@ export default function AIChat() {
     setIsMounted(true);
   }, []);
 
-  const playTTS = async (text: string) => {
+  const playTTS = useCallback(async (text: string) => {
     if (!isSpeaking) return;
     try {
       const response = await fetch('/api/v1/ai/voice/tts', {
@@ -275,44 +276,85 @@ export default function AIChat() {
     } catch (err) {
       console.error('TTS Playback error:', err);
     }
-  };
+  }, [isSpeaking]);
 
-  const transportRef = useRef(
-    new DefaultChatTransport({
-      api: '/api/v1/ai/chat',
-      body: () => ({
-        pathname: typeof window !== 'undefined' ? window.location.pathname : '/',
-      }),
-    }),
-  );
   const router = useRouter();
-  
-  const { messages, sendMessage, status, setMessages } = useChat({
-    transport: transportRef.current,
-    onFinish: ({ message }) => {
-      const normalizedMessage = message as ChatMessage;
-      const messageText = getMessageText(normalizedMessage);
-      
-      if (isSpeaking && messageText) {
-        playTTS(messageText);
-      }
+  const handleAssistantMessage = useCallback((message: ChatMessage) => {
+    const messageText = getMessageText(message);
 
-      const navigationPath = getNavigationPath(normalizedMessage);
-      if (navigationPath) {
-        router.push(navigationPath);
-      }
-
-      const content = messageText.toLowerCase();
-      let foundFollowUps: string[] = [];
-      if (content.includes("project")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.projects;
-      else if (content.includes("security") || content.includes("protect")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.security;
-      else if (content.includes("cloud") || content.includes("aws") || content.includes("gcp")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.cloud;
-      else if (content.includes("contact") || content.includes("reach")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.contact;
-      
-      setLastFollowUps(foundFollowUps.slice(0, 3));
+    if (isSpeaking && messageText) {
+      void playTTS(messageText);
     }
-  });
-  const isLoading = status === 'submitted' || status === 'streaming';
+
+    const navigationPath = getNavigationPath(message);
+    if (navigationPath) {
+      router.push(navigationPath);
+    }
+
+    const content = messageText.toLowerCase();
+    let foundFollowUps: string[] = [];
+    if (content.includes("project")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.projects;
+    else if (content.includes("security") || content.includes("protect")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.security;
+    else if (content.includes("cloud") || content.includes("aws") || content.includes("gcp")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.cloud;
+    else if (content.includes("contact") || content.includes("reach")) foundFollowUps = FOLLOW_UP_SUGGESTIONS.contact;
+
+    setLastFollowUps(foundFollowUps.slice(0, 3));
+  }, [isSpeaking, playTTS, router]);
+
+  const sendMessage = useCallback(async ({ text }: { text: string }) => {
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: text,
+      parts: [{ type: 'text', text }],
+    };
+
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
+    setStatus('submitted');
+
+    try {
+      const response = await fetch('/api/v1/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: nextMessages.map((message) => ({
+            role: message.role,
+            content: getMessageText(message),
+          })),
+        }),
+      });
+
+      const data = await response.json() as { id?: string; role?: string; content?: string; error?: string };
+      if (!response.ok || !data.content) {
+        throw new Error(data.error || 'AI response failed');
+      }
+
+      const assistantMessage: ChatMessage = {
+        id: data.id || `assistant-${Date.now()}`,
+        role: (data.role as UIMessage['role']) || 'assistant',
+        content: data.content,
+        parts: [{ type: 'text', text: data.content }],
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      handleAssistantMessage(assistantMessage);
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : 'AI response failed';
+      const assistantMessage: ChatMessage = {
+        id: `assistant-error-${Date.now()}`,
+        role: 'assistant',
+        content: fallback,
+        parts: [{ type: 'text', text: fallback }],
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      handleAssistantMessage(assistantMessage);
+    } finally {
+      setStatus('ready');
+    }
+  }, [handleAssistantMessage, messages]);
+
+  const isLoading = status === 'submitted';
 
   // Get current conversation window
   const currentWindow = conversationHistory.find(w => w.id === currentWindowId) || 
@@ -388,7 +430,7 @@ export default function AIChat() {
           if (data.text) {
             setVoiceTranscript(data.text);
             setInput(data.text);
-            sendMessage({ text: data.text });
+            void sendMessage({ text: data.text });
             playCue('success');
             setTimeout(() => setVoiceTranscript(''), 3000);
           }
@@ -425,7 +467,7 @@ export default function AIChat() {
     console.log('🚀 Sending message:', trimmedInput);
     
     // Send message - ensure it goes through properly
-    sendMessage({ text: trimmedInput });
+    void sendMessage({ text: trimmedInput });
     setInput('');
     
     // Scroll to bottom after sending
@@ -515,7 +557,7 @@ export default function AIChat() {
           {messages.length === 0 && (
             <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
               <Bot className="mb-3 h-10 w-10 opacity-30" />
-              <p className="text-sm mb-6">Aime Serge&apos;s Digital Twin.<br/>Secure by design. AI-powered responses.</p>
+              <p className="text-sm mb-6">Aime Serge&apos;s Digital Twin.<br/>Grounded exclusively in official project data.</p>
               {currentWindowId !== 'main' && (
                 <button
                   onClick={switchToMainChat}
@@ -564,6 +606,12 @@ export default function AIChat() {
                     Executing Navigation: {navigationPath}
                   </div>
                 )}
+                {(normalizedMessage as ChatMessage & { metadata?: { synced?: boolean } }).metadata?.synced && (
+                  <div className="mt-2 flex items-center gap-1.5 border-t border-slate-700 pt-2 text-[10px] text-emerald-400 font-mono">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    SYNC_COMPLETED :: EXTERNAL_NODE_UPDATED
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -598,7 +646,7 @@ export default function AIChat() {
 
         <div className="bg-slate-900/50 px-4 py-1 border-t border-slate-800/50">
           <p className="text-[9px] text-slate-600 text-center uppercase tracking-tighter">
-            Responsible AI: Session Data is transient and never stored. PII is redacted.
+            Responsible AI: Responses are grounded in official database nodes. External hallucinations restricted.
           </p>
         </div>
 

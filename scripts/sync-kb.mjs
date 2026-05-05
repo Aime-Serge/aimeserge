@@ -30,8 +30,18 @@ const KNOWLEDGE_BASE_ITEMS = [
   {
     id: 'about-aime',
     type: 'about',
-    content: `Aime Serge UKOBIZABA is a Senior Software Engineer specializing in Cybersecurity, Cloud Engineering, and AI Architectures. ALX Software Engineering Alumni with a BSc in Computer Science from the University of Rwanda. Google Cloud Certified with 22+ badges including Vertex AI, MLOps, and Model Armor.`,
+    content: `Aime Serge UKOBIZABA is a Senior Software Engineer specializing in Cybersecurity, Cloud Engineering, and AI Architectures. ALX Software Engineering Alumni with a BSc in Computer Science from the University of Rwanda. Google Cloud Certified with 22+ badges including Vertex AI, MLOps, and Model Armor. Official Email: aimeserge51260@gmail.com. GitHub: https://github.com/AimeSerge`,
     metadata: { type: 'profile', title: 'About Aime Serge' }
+  },
+  {
+    id: 'official-platforms',
+    type: 'links',
+    content: `Official professional platforms for Aime Serge UKOBIZABA:
+- GitHub Repository: https://github.com/AimeSerge
+- Academic ORCID: https://orcid.org/0009-0004-1804-9548
+- Contact Email: aimeserge51260@gmail.com
+- Portfolio Website: Official Node hosted on Vercel.`,
+    metadata: { type: 'links', title: 'Official Platforms' }
   },
   {
     id: 'tech-skills',

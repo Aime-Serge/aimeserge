@@ -139,6 +139,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 JWT_SECRET=
 ADMIN_EMAIL=
+GEMINI_API_KEY=          # Required for Gemini chat + embeddings
+RESEND_API_KEY=          # Required for email notifications
+RESEND_FROM_EMAIL=       # (Optional) e.g., System <onboarding@resend.dev>
+DISCORD_WEBHOOK_URL=     # Required for real-time mobile push
+SUPABASE_WEBHOOK_SECRET= # Secret shared with Supabase to secure webhooks
 NODE_ENV=development
 ```
 
@@ -149,6 +154,10 @@ NODE_ENV=development
 - `SUPABASE_SERVICE_ROLE_KEY`: Required for privileged server operations
 - `JWT_SECRET`: Secret used for admin session verification
 - `ADMIN_EMAIL`: Email used for admin checks and internal logging
+- `GEMINI_API_KEY`: API key for Gemini chat and vector embeddings
+- `RESEND_API_KEY`: API key from resend.com
+- `DISCORD_WEBHOOK_URL`: Discord channel webhook URL for instant push alerts
+- `SUPABASE_WEBHOOK_SECRET`: A secure random string set in Supabase Webhook settings
 
 ## Getting Started
 
