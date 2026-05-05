@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Radio, X, FileEdit, Cpu, Send } from "lucide-react";
-import { upsertContent } from "@/domain/admin/actions";
-import { syncBroadcastToKnowledge } from "@/domain/portfolio/actions";
-import { type Broadcast } from "@/domain/portfolio/actions";
+import { upsertContent } from "@/core/domain/admin/actions";
+import { syncBroadcastToKnowledge } from "@/core/domain/portfolio/actions";
+import { type Broadcast } from "@/core/domain/portfolio/actions";
 import { toast } from "react-hot-toast";
 
 type BroadcastCategory = "Security" | "Cloud" | "AI" | "Engineering";
@@ -49,9 +49,19 @@ export default function BroadcastEditor({ initialData, onClose }: BroadcastEdito
         syncBroadcastToKnowledge({
           ...formData,
           id: result.data.id,
+          contentType: 'ARTICLE',
+          status: 'PUBLISHED',
+          slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
+          isEdited: false,
+          entities: [],
+          hashtags: formData.tags,
+          visibilityRestricted: 'ANYONE',
+          commentPermissions: 'ANYONE',
           createdAt: new Date().toISOString(),
           readTime: formData.read_time,
-          tags: formData.tags
+          tags: formData.tags,
+          excerpt: formData.excerpt,
+          estimatedReadTime: parseInt(formData.read_time) || 5,
         } as Broadcast),
         {
           loading: 'Syncing to Digital Twin...',
