@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileText, Upload, CheckCircle2, Loader2, Globe, ExternalLink } from "lucide-react";
-import { uploadResume } from "@/domain/portfolio/actions";
+import { uploadResume } from "@/core/domain/portfolio/actions";
 import { toast } from "react-hot-toast";
 
 export default function ResumeManager() {

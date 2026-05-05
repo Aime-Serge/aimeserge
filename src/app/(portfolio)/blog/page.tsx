@@ -1,4 +1,4 @@
-import { getBroadcasts } from "@/domain/portfolio/queries";
+import { getBroadcasts } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { Clock, ArrowRight, Eye, Share2, Radio, Globe } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
@@ -78,7 +78,7 @@ export default async function BlogPage() {
 
                   {/* Tags Social Style */}
                   <div className="flex flex-wrap gap-2 pt-2">
-                    {post.tags.map(tag => (
+                    {post.tags?.map(tag => (
                       <span key={tag} className="text-xs font-mono text-cyan-500/60 hover:text-cyan-400 transition-colors cursor-pointer">
                         {tag}
                       </span>

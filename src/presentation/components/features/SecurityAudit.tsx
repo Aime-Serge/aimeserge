@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Shield, CheckCircle2, AlertCircle, Lock, Globe, Terminal, Activity } from "lucide-react";
-import { getSecurityStatus } from "@/domain/admin/actions";
+import { getSecurityStatus } from "@/core/domain/admin/actions";
 
 interface SecurityStatus {
   header: string;

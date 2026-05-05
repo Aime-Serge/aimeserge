@@ -25,6 +25,15 @@ export async function getResearch(): Promise<ResearchPaper[]> {
           views: r.views || 0,
           downloads: r.downloads || 0,
           createdAt: new Date(r.created_at).toISOString().split('T')[0],
+          doi: r.doi,
+          authors: r.authors || [],
+          funding: r.funding,
+          publicationDate: r.publication_date ? new Date(r.publication_date).toISOString().split('T')[0] : new Date(r.created_at).toISOString().split('T')[0],
+          content: r.content || [],
+          assets: r.assets || [],
+          category: r.category,
+          language: r.language || 'en',
+          citations: r.citations || 0,
         }));
       } catch {
         return fallbackResearch;
@@ -56,6 +65,15 @@ export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null
       views: data.views || 0,
       downloads: data.downloads || 0,
       createdAt: new Date(data.created_at).toISOString().split('T')[0],
+      doi: data.doi,
+      authors: data.authors || [],
+      funding: data.funding,
+      publicationDate: data.publication_date ? new Date(data.publication_date).toISOString().split('T')[0] : new Date(data.created_at).toISOString().split('T')[0],
+      content: data.content || [],
+      assets: data.assets || [],
+      category: data.category,
+      language: data.language || 'en',
+      citations: data.citations || 0,
     };
   } catch {
     return null;

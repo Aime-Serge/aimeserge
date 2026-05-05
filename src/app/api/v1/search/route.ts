@@ -1,6 +1,6 @@
-import { getBroadcasts } from "@/domain/portfolio/queries";
-import { getProjects } from "@/domain/portfolio/queries";
-import { getResearch } from "@/domain/research/queries";
+import { getBroadcasts } from "@/core/domain/portfolio/queries";
+import { getProjects } from "@/core/domain/portfolio/queries";
+import { getResearch } from "@/core/domain/research/queries";
 import type { SearchResult, SearchResultType } from "@/types/search";
 import { rateLimit } from "@/infrastructure/security/rateLimit";
 import { unstable_cache } from "next/cache";
@@ -28,7 +28,7 @@ const getSearchDocuments = unstable_cache(
       id: project.id,
       type: "project",
       title: project.title,
-      snippet: project.summary || project.tagline,
+      snippet: project.summary || project.tagline || "",
       href: `/projects/${project.slug}`,
       tags: project.tools || [],
       searchableText: [
@@ -49,13 +49,13 @@ const getSearchDocuments = unstable_cache(
       id: broadcast.id,
       type: "blog",
       title: broadcast.title,
-      snippet: broadcast.excerpt,
+      snippet: broadcast.excerpt || "",
       href: `/blog/${broadcast.id}`,
       tags: broadcast.tags || [],
       searchableText: [
         broadcast.title,
-        broadcast.excerpt,
-        broadcast.content,
+        broadcast.excerpt || "",
+        broadcast.content || "",
         broadcast.category,
         ...(broadcast.tags || []),
       ]

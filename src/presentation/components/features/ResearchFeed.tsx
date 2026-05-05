@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Microscope, Eye, Download, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type ResearchPaper } from "@/domain/research/types";
+import { type ResearchPaper } from "@/core/domain/research/types";
 import ResearchActionButtons from "@/presentation/components/shared/ResearchActionButtons";
 
 interface ResearchFeedProps {

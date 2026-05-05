@@ -86,7 +86,10 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
   }
 }
 
-export const loginAdmin = withShield("admin_login", loginAdminBase, { limit: 5 });
+const internalLoginAdmin = withShield("admin_login", loginAdminBase, { limit: 5 });
+export async function loginAdmin(credentials: { email: string; passcode: string }) {
+  return internalLoginAdmin(credentials);
+}
 
 /**
  * Generic content upsert for administrative tasks.
@@ -119,7 +122,10 @@ async function upsertContentBase(params: { table: string, payload: object, path:
   }
 }
 
-export const upsertContent = withShield("content_upsert", upsertContentBase);
+const internalUpsertContent = withShield("content_upsert", upsertContentBase);
+export async function upsertContent(params: { table: string, payload: object, path: string }) {
+  return internalUpsertContent(params);
+}
 
 /**
  * Handles file uploads to the artifacts storage bucket.
@@ -156,9 +162,12 @@ async function uploadArtifactBase(params: { file: File, path: string }) {
   }
 }
 
-export const uploadArtifact = withShield("upload_artifact", uploadArtifactBase);
+const internalUploadArtifact = withShield("upload_artifact", uploadArtifactBase);
+export async function uploadArtifact(params: { file: File, path: string }) {
+  return internalUploadArtifact(params);
+}
 
-import { upsertKnowledge } from "@/domain/ai/mutations";
+import { upsertKnowledge } from "@/core/domain/ai/mutations";
 import { type AdminAnalytics, type SecurityStatus } from "./types";
 
 /**
@@ -260,7 +269,10 @@ async function deleteContentBase(params: { table: string, id: string, path: stri
   }
 }
 
-export const deleteContent = withShield("delete_content", deleteContentBase);
+const internalDeleteContent = withShield("delete_content", deleteContentBase);
+export async function deleteContent(params: { table: string, id: string, path: string }) {
+  return internalDeleteContent(params);
+}
 
 /**
  * Syncs a project artifact to the AI Knowledge Base (pgvector)
@@ -304,4 +316,28 @@ Category: ${project.category}
   }
 }
 
-export const syncProjectToKnowledge = withShield("sync_project_ai", syncProjectToKnowledgeBase);
+const internalSyncProjectToKnowledge = withShield("sync_project_ai", syncProjectToKnowledgeBase);
+export async function syncProjectToKnowledge(project: Parameters<typeof syncProjectToKnowledgeBase>[0]) {
+  return internalSyncProjectToKnowledge(project);
+}
+
+/**
+ * Highly secure data fetcher for admin-only views.
+ * Bypasses public caches and interacts directly with the primary database node.
+ */
+export async function getAllContent(table: string) {
+  try {
+    const supabase = await validateAdminSession();
+    
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err: unknown) {
+    console.error(`Admin Fetch Error [${table}]:`, err);
+    return { success: false, error: err instanceof Error ? err.message : "Handshake failed" };
+  }
+}

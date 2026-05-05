@@ -1,4 +1,4 @@
-import { getResearch } from "@/domain/research/queries";
+import { getResearch } from "@/core/domain/research/queries";
 import ResearchFeed from "@/presentation/components/features/ResearchFeed";
 import ResearchSidebar from "@/presentation/components/shared/ResearchSidebar";
 

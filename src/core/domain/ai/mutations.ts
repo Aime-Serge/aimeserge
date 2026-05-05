@@ -1,10 +1,11 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
-import { openai } from "@ai-sdk/openai";
-import { embed } from "ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { KnowledgeMetadata } from "./types";
 import { withShield } from "@/infrastructure/security/shield";
-import { type KnowledgeMetadata } from "./types";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 /**
  * Upserts content into the pgvector knowledge base.
@@ -15,10 +16,9 @@ async function upsertKnowledgeBase(params: { id: string, content: string, metada
   const supabase = createServerSupabaseClient();
   
   try {
-    const { embedding } = await embed({
-      model: openai.embedding("text-embedding-3-small"),
-      value: content,
-    });
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(content);
+    const embedding = result.embedding.values;
 
     const { error } = await supabase
       .from('knowledge')

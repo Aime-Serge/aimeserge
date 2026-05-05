@@ -1,4 +1,4 @@
-import { getBroadcastById } from "@/domain/portfolio/queries";
+import { getBroadcastById } from "@/core/domain/portfolio/queries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Eye, Share2 } from "lucide-react";
@@ -56,7 +56,7 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
           </h1>
           
           <div className="mt-8 flex flex-wrap gap-2">
-            {post.tags.map(tag => (
+            {post.tags?.map(tag => (
               <span key={tag} className="text-sm font-mono text-cyan-500/60">
                 {tag}
               </span>
@@ -83,7 +83,7 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
         {/* Voice AI Readout */}
         <BroadcastAudioPlayer 
           title={post.title}
-          text={post.content.substring(0, 1000)} // Limiting length for synthesis stability
+          text={post.content?.substring(0, 1000) || ""} // Limiting length for synthesis stability
         />
 
         {/* Visual Media Section (Video) */}

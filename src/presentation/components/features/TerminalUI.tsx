@@ -67,8 +67,16 @@ export default function TerminalUI() {
         );
         break;
       case "contact":
-        output = "Email: aime@example.com | LinkedIn: /in/aimeserge";
+        output = (
+          <div className="text-slate-300">
+            Email: <a href="mailto:aimeserge51260@gmail.com" className="text-cyan-400 underline">aimeserge51260@gmail.com</a><br /><br/>
+            LinkedIn: <a href="https://www.linkedin.com/in/aimesergeukobizaba/" target="_blank" className="text-cyan-400 underline">Aime Serge UKOBIZABA</a><br/><br/>
+            X(Twitter): <a href="https://x.com/aime__serge" target="_blank" className="text-cyan-400 underline">@aime__serge</a><br/><br/>
+            Instagram: <a href="https://www.instagram.com/_aime_serge/" target="_blank" className="text-cyan-400 underline">@_aime_serge</a><br/>
+          </div>
+        );
         break;
+      
       case "clear":
         setHistory([]);
         return;

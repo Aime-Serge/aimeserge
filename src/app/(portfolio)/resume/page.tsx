@@ -1,6 +1,6 @@
 import { Download, ExternalLink, FileText, CheckCircle, GraduationCap, Briefcase, Cloud, Calendar, Building2 } from "lucide-react";
 import BadgeShowcase from "@/presentation/components/features/BadgeShowcase";
-import { getCertificates, getLatestResume } from "@/domain/portfolio/queries";
+import { getCertificates, getLatestResume } from "@/core/domain/portfolio/queries";
 
 export const metadata = {
   title: "Resume | Aime Serge UKOBIZABA",

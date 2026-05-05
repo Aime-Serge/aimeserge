@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Award, Save, X, Upload, Calendar, ShieldCheck, Link as LinkIcon } from "lucide-react";
-import { upsertContent, uploadArtifact } from "@/domain/admin/actions";
+import { upsertContent, uploadArtifact } from "@/core/domain/admin/actions";
 import { toast } from "react-hot-toast";
 
 interface CredentialFormData {

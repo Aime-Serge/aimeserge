@@ -3,8 +3,8 @@
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { withShield } from "@/infrastructure/security/shield";
 import { type ResearchPaper } from "./types";
-import { mutations as aiMutations } from "@/domain/ai";
-import { validateAdminSession } from "@/domain/admin/queries";
+import { mutations as aiMutations } from "@/core/domain/ai";
+import { validateAdminSession } from "@/core/domain/admin/queries";
 
 /**
  * Syncs a research artifact to the AI Knowledge Base (pgvector)
@@ -14,7 +14,18 @@ async function syncResearchToKnowledgeBase(paper: ResearchPaper) {
   try {
     await validateAdminSession();
     
-    const contentToEmbed = `Research Topic: ${paper.title}\nAbstract: ${paper.abstract}\nTags: ${paper.tags.join(', ')}`;
+    const sectionsContent = paper.content?.map(s => `${s.title}:\n${s.content}`).join('\n\n') || "";
+    const contentToEmbed = `
+Research Topic: ${paper.title}
+DOI: ${paper.doi || "N/A"}
+Authors: ${paper.authors?.map(a => a.name).join(', ')}
+Category: ${paper.category}
+Abstract: ${paper.abstract}
+Tags: ${paper.tags.join(', ')}
+
+Structured Content:
+${sectionsContent}
+    `.trim();
 
     await aiMutations.upsertKnowledge({
       id: paper.id,
