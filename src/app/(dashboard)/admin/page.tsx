@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type ComponentProps, type FormEvent, useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, LayoutDashboard, Database, FileText, 
@@ -8,10 +8,9 @@ import {
   TrendingUp, Users, Download, Bot, Send, 
   Mic, Activity, Zap, Cpu, Award
 } from "lucide-react";
-import { getAdminAnalytics, getSecurityLogs } from "@/domain/admin/actions";
+import { getAdminAnalytics, getSecurityLogs } from "@/core/domain/admin/actions";
 import { cn } from "@/infrastructure/security/headers";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, isTextUIPart, type UIMessage } from "ai";
+import { isTextUIPart, type UIMessage } from "ai";
 import { toast } from "react-hot-toast";
 import ProjectEditor from "@/presentation/components/features/ProjectEditor";
 import CredentialEditor from "@/presentation/components/features/CredentialEditor";
@@ -19,6 +18,8 @@ import ResearchEditor from "@/presentation/components/features/ResearchEditor";
 import BroadcastEditor from "@/presentation/components/features/BroadcastEditor";
 import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
+import AdminContentManager from "@/presentation/components/features/AdminContentManager";
+type EditableAdminItem = Record<string, unknown>;
 
 type AdminChatMessage = UIMessage & {
   content?: string;
@@ -35,6 +36,15 @@ function getAdminMessageText(message: AdminChatMessage): string {
     .join("");
 }
 
+function createAdminChatMessage(role: UIMessage["role"], content: string, id = `${role}-${Date.now()}`): AdminChatMessage {
+  return {
+    id,
+    role,
+    content,
+    parts: [{ type: "text", text: content }],
+  };
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({ totalViews: 0, totalInquiries: 0, researchImpact: 0 });
@@ -48,9 +58,25 @@ export default function AdminDashboard() {
   const [showBroadcastEditor, setShowBroadcastEditor] = useState(false);
 
   // Edit States
-  const [editingItem, setEditingItem] = useState<Record<string, unknown> | undefined>(undefined);
+  const [editingItem, setEditingItem] = useState<EditableAdminItem | undefined>(undefined);
+  
+  const handleEdit = (item: EditableAdminItem) => {
+    setEditingItem(item);
+    if (activeTab === 'projects') setShowProjectEditor(true);
+    else if (activeTab === 'research') setShowResearchEditor(true);
+    else if (activeTab === 'broadcasts') setShowBroadcastEditor(true);
+    else setShowCredentialEditor(true);
+  };
+
   const [aiInput, setAiInput] = useState("");
-  const [chatTransport] = useState(() => new DefaultChatTransport({ api: "/api/v1/ai/chat" }));
+  const [messages, setMessages] = useState<AdminChatMessage[]>([
+    createAdminChatMessage(
+      "assistant",
+      'Admin Session Established. I am ready to help you manage your portfolio artifacts. You can ask me to "List recent inquiries" or "Prepare a new project entry".',
+      "welcome"
+    ),
+  ]);
+  const [chatStatus, setChatStatus] = useState<"ready" | "submitted">("ready");
 
   const handleExportLogs = async () => {
     toast.loading("Fetching audit trail...");
@@ -71,24 +97,44 @@ export default function AdminDashboard() {
     }
   };
 
-  const { messages, sendMessage, status } = useChat<UIMessage>({
-    transport: chatTransport,
-    messages: [
-      {
-        id: "welcome",
-        role: "assistant",
-        parts: [
-          {
-            type: "text",
-            text: 'Admin Session Established. I am ready to help you manage your portfolio artifacts. You can ask me to "List recent inquiries" or "Prepare a new project entry".',
-          },
-        ],
-      },
-    ],
-  });
-  const isAiThinking = status === "submitted" || status === "streaming";
+  const sendAdminMessage = useCallback(async (text: string) => {
+    const userMessage = createAdminChatMessage("user", text, `user-${Date.now()}`);
 
-  const handleAiSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
+    setChatStatus("submitted");
+
+    try {
+      const response = await fetch("/api/v1/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextMessages.map((message) => ({
+            role: message.role,
+            content: getAdminMessageText(message),
+          })),
+        }),
+      });
+
+      const data = (await response.json()) as { id?: string; role?: string; content?: string; error?: string };
+
+      if (!response.ok || !data.content) {
+        throw new Error(data.error || "AI response failed");
+      }
+
+      const assistantContent = data.content;
+      setMessages((prev) => [...prev, createAdminChatMessage((data.role as UIMessage["role"]) || "assistant", assistantContent, data.id || `assistant-${Date.now()}`)]);
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : "AI response failed";
+      setMessages((prev) => [...prev, createAdminChatMessage("assistant", fallback, `assistant-error-${Date.now()}`)]);
+    } finally {
+      setChatStatus("ready");
+    }
+  }, [messages]);
+
+  const isAiThinking = chatStatus === "submitted";
+
+  const handleAiSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!isAiActive || isAiThinking) {
@@ -100,9 +146,9 @@ export default function AdminDashboard() {
       return;
     }
 
-    sendMessage({ text: trimmedInput });
+    void sendAdminMessage(trimmedInput);
     setAiInput("");
-  };
+  }, [aiInput, isAiActive, isAiThinking, sendAdminMessage]);
 
   useEffect(() => {
     async function loadStats() {
@@ -211,28 +257,28 @@ export default function AdminDashboard() {
           {showProjectEditor && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
               <div className="max-w-4xl w-full my-auto">
-                <ProjectEditor initialData={editingItem} onClose={() => setShowProjectEditor(false)} />
+                <ProjectEditor initialData={editingItem as ComponentProps<typeof ProjectEditor>["initialData"]} onClose={() => setShowProjectEditor(false)} />
               </div>
             </div>
           )}
           {showCredentialEditor && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
               <div className="max-w-4xl w-full my-auto">
-                <CredentialEditor initialData={editingItem} onClose={() => setShowCredentialEditor(false)} />
+                <CredentialEditor initialData={editingItem as ComponentProps<typeof CredentialEditor>["initialData"]} onClose={() => setShowCredentialEditor(false)} />
               </div>
             </div>
           )}
           {showResearchEditor && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
               <div className="max-w-4xl w-full my-auto">
-                <ResearchEditor initialData={editingItem} onClose={() => setShowResearchEditor(false)} />
+                <ResearchEditor initialData={editingItem as ComponentProps<typeof ResearchEditor>["initialData"]} onClose={() => setShowResearchEditor(false)} />
               </div>
             </div>
           )}
           {showBroadcastEditor && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
               <div className="max-w-4xl w-full my-auto">
-                <BroadcastEditor initialData={editingItem} onClose={() => setShowBroadcastEditor(false)} />
+                <BroadcastEditor initialData={editingItem as ComponentProps<typeof BroadcastEditor>["initialData"]} onClose={() => setShowBroadcastEditor(false)} />
               </div>
             </div>
           )}
@@ -312,31 +358,9 @@ export default function AdminDashboard() {
                 <InquiryVault />
                 )}
 
-                {/* Content Management Modules (Placeholders for CRUD Lists) */}
+                {/* Content Management Modules */}
                 {["projects", "research", "broadcasts", "certificates"].includes(activeTab) && (
-                <div className="space-y-6">
-                <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-12 text-center border-dashed backdrop-blur-md min-h-[400px] flex flex-col items-center justify-center">
-                  <div className="h-20 w-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 border border-slate-700">
-                    <Database className="h-10 w-10 text-slate-600 animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-widest">{activeTab}_DATA_VAULT</h3>
-                  <p className="text-slate-500 max-w-sm mx-auto text-sm leading-relaxed mb-8">
-                    Authenticated session active. Click &apos;CREATE_ARTIFACT&apos; to add a new record to this module.
-                  </p>
-                  <button 
-                    onClick={() => {
-                      setEditingItem(undefined);
-                      if (activeTab === 'projects') setShowProjectEditor(true);
-                      else if (activeTab === 'research') setShowResearchEditor(true);
-                      else if (activeTab === 'broadcasts') setShowBroadcastEditor(true);
-                      else setShowCredentialEditor(true);
-                    }}
-                    className="bg-cyan-600/10 hover:bg-cyan-600 text-cyan-400 hover:text-white px-6 py-2 rounded-xl text-xs font-bold transition-all border border-cyan-500/20"
-                  >
-                    INITIALIZE_NEW_ENTRY
-                  </button>
-                </div>
-                </div>
+                  <AdminContentManager table={activeTab} onEdit={handleEdit} />
                 )}
                 </div>
 

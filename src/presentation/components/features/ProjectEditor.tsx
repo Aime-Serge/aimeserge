@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Save, X, Database, Cpu } from "lucide-react";
-import { upsertContent } from "@/domain/admin/actions";
+import { upsertContent } from "@/core/domain/admin/actions";
 import { toast } from "react-hot-toast";
 
 type ProjectCategory = "AI" | "Security" | "Cloud" | "Software Engineering" | "Full-Stack";
@@ -20,6 +20,11 @@ interface ProjectFormData {
   features: string[];
   url: string;
   pdf_url: string;
+  is_current: boolean;
+  start_date: { month: string; year: string };
+  end_date: { month: string; year: string };
+  contributors: string[];
+  association: string;
 }
 
 interface ProjectEditorProps {
@@ -42,9 +47,15 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
     features: Array.isArray(initialData?.features) ? initialData.features : [],
     url: initialData?.url || "",
     pdf_url: initialData?.pdf_url || "",
+    is_current: initialData?.is_current || false,
+    start_date: initialData?.start_date || { month: "January", year: "2024" },
+    end_date: initialData?.end_date || { month: "December", year: "2024" },
+    contributors: Array.isArray(initialData?.contributors) ? initialData.contributors : [],
+    association: initialData?.association || "",
   });
 
   const [newTool, setNewTool] = useState("");
+  const [newContributor, setNewContributor] = useState("");
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +80,20 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
     }
   };
 
+  const addContributor = () => {
+    if (newContributor && !formData.contributors.includes(newContributor)) {
+      setFormData({ ...formData, contributors: [...formData.contributors, newContributor] });
+      setNewContributor("");
+    }
+  };
+
+  const months = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 20 }, (_, i) => (currentYear - i).toString());
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
       <div className="flex items-center justify-between mb-8 border-b border-slate-800 pb-6">
@@ -77,7 +102,7 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
             <Database className="h-5 w-5 text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Project_Editor_v1.0</h2>
+            <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Project_Editor_v1.1</h2>
             <p className="text-[10px] text-slate-500 font-mono">ID: {formData.id || 'NEW_RECORD'}</p>
           </div>
         </div>
@@ -86,11 +111,11 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
         </button>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-8 max-h-[70vh] overflow-y-auto px-2">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Title & Slug */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Artifact_Title</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Artifact_Title (Project Name)</label>
             <input 
               required
               value={formData.title}
@@ -109,15 +134,14 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
             />
           </div>
 
-          {/* Tagline & Role */}
+          {/* Association & Role */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Marketing_Tagline</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Associated_With</label>
             <input 
-              required
-              value={formData.tagline}
-              onChange={e => setFormData({...formData, tagline: e.target.value})}
+              value={formData.association}
+              onChange={e => setFormData({...formData, association: e.target.value})}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 outline-none"
-              placeholder="The 'hook' for this project"
+              placeholder="e.g. University, Company, or Independent"
             />
           </div>
           <div className="space-y-2">
@@ -159,54 +183,144 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
           </div>
         </div>
 
-        {/* Dynamic Tool List */}
-        <div className="space-y-4">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Technology_Stack</label>
-          <div className="flex gap-2">
+        {/* LinkedIn Specific: Dates & Current Status */}
+        <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-6">
+          <div className="flex items-center gap-3">
             <input 
-              value={newTool}
-              onChange={e => setNewTool(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTool())}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-cyan-500 outline-none"
-              placeholder="Add Tool (e.g. Kubernetes)"
+              type="checkbox"
+              id="is_current"
+              checked={formData.is_current}
+              onChange={e => setFormData({...formData, is_current: e.target.checked})}
+              className="h-4 w-4 rounded border-slate-800 bg-slate-900 text-cyan-600 focus:ring-cyan-500"
             />
-            <button type="button" onClick={addTool} className="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl transition-colors">
-              <Plus className="h-4 w-4 text-cyan-400" />
-            </button>
+            <label htmlFor="is_current" className="text-xs font-medium text-slate-300">I am currently working on this project</label>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {formData.tools.map(t => (
-              <span key={t} className="flex items-center gap-2 bg-slate-800 text-[10px] font-bold text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
-                {t}
-                <button type="button" onClick={() => setFormData({...formData, tools: formData.tools.filter(x => x !== t)})}>
-                  <Trash2 className="h-3 w-3 text-red-500 hover:text-red-400" />
-                </button>
-              </span>
-            ))}
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Start_Date</label>
+              <div className="flex gap-2">
+                <select 
+                  value={formData.start_date.month}
+                  onChange={e => setFormData({...formData, start_date: {...formData.start_date, month: e.target.value}})}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                >
+                  {months.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select 
+                  value={formData.start_date.year}
+                  onChange={e => setFormData({...formData, start_date: {...formData.start_date, year: e.target.value}})}
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {!formData.is_current && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">End_Date</label>
+                <div className="flex gap-2">
+                  <select 
+                    value={formData.end_date.month}
+                    onChange={e => setFormData({...formData, end_date: {...formData.end_date, month: e.target.value}})}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                  >
+                    {months.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select 
+                    value={formData.end_date.year}
+                    onChange={e => setFormData({...formData, end_date: {...formData.end_date, year: e.target.value}})}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                  >
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Contributors & Tools */}
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="space-y-4">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Technology_Stack (Skills)</label>
+            <div className="flex gap-2">
+              <input 
+                value={newTool}
+                onChange={e => setNewTool(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTool())}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-cyan-500 outline-none"
+                placeholder="Add Skill"
+              />
+              <button type="button" onClick={addTool} className="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl transition-colors">
+                <Plus className="h-4 w-4 text-cyan-400" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.tools.map(t => (
+                <span key={t} className="flex items-center gap-2 bg-slate-800 text-[10px] font-bold text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+                  {t}
+                  <button type="button" onClick={() => setFormData({...formData, tools: formData.tools.filter(x => x !== t)})}>
+                    <Trash2 className="h-3 w-3 text-red-500 hover:text-red-400" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Contributors</label>
+            <div className="flex gap-2">
+              <input 
+                value={newContributor}
+                onChange={e => setNewContributor(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addContributor())}
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:border-cyan-500 outline-none"
+                placeholder="Add Contributor"
+              />
+              <button type="button" onClick={addContributor} className="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl transition-colors">
+                <Plus className="h-4 w-4 text-cyan-400" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.contributors.map(c => (
+                <span key={c} className="flex items-center gap-2 bg-slate-800 text-[10px] font-bold text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+                  {c}
+                  <button type="button" onClick={() => setFormData({...formData, contributors: formData.contributors.filter(x => x !== c)})}>
+                    <Trash2 className="h-3 w-3 text-red-500 hover:text-red-400" />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Summary & Description */}
         <div className="space-y-2">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Logic_Summary</label>
-          <textarea 
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Tagline</label>
+          <input 
             required
-            value={formData.summary}
-            onChange={e => setFormData({...formData, summary: e.target.value})}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 outline-none min-h-[80px]"
-            placeholder="High-level technical overview"
+            value={formData.tagline}
+            onChange={e => setFormData({...formData, tagline: e.target.value})}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 outline-none"
+            placeholder="The 'hook' for this project"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Deep_System_Description (Markdown Supported)</label>
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Description (Max 2000 chars)</label>
           <textarea 
             required
+            maxLength={2000}
             value={formData.description}
             onChange={e => setFormData({...formData, description: e.target.value})}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-400 font-mono focus:border-cyan-500 outline-none min-h-[200px]"
             placeholder="Detailed implementation logs, architecture decisions, and results..."
           />
+          <div className="text-[10px] text-slate-500 text-right font-mono">
+            {formData.description.length}/2,000
+          </div>
         </div>
 
         {/* Action Bar */}

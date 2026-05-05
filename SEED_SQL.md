@@ -4,20 +4,29 @@
 CREATE TABLE IF NOT EXISTS projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   slug TEXT UNIQUE NOT NULL,
-  title TEXT NOT NULL,
+  title TEXT NOT NULL, -- Project name
   tagline TEXT NOT NULL,
   role TEXT NOT NULL,
   summary TEXT NOT NULL,
-  description TEXT NOT NULL,
-  tools TEXT[] NOT NULL,
+  description TEXT NOT NULL, -- Max 2000 chars
+  tools TEXT[] NOT NULL, -- Skills
   features TEXT[] NOT NULL,
   category TEXT NOT NULL CHECK (category IN ('AI', 'Security', 'Cloud', 'Full-Stack', 'Software Engineering')),
-  url TEXT,
-  pdf_url TEXT,
+  url TEXT, -- Media: Site
+  pdf_url TEXT, -- Media: Document
   views INT DEFAULT 0,
   likes INT DEFAULT 0,
-  images TEXT[] DEFAULT '{}',
-  video_url TEXT,
+  images TEXT[] DEFAULT '{}', -- Media: Images
+  video_url TEXT, -- Media: Video/Presentation
+  is_visible BOOLEAN DEFAULT TRUE,
+  
+  -- LinkedIn Specific Fields
+  is_current BOOLEAN DEFAULT FALSE,
+  start_date JSONB, -- { "month": "January", "year": "2024" }
+  end_date JSONB,   -- { "month": "December", "year": "2024" }
+  contributors TEXT[] DEFAULT '{}',
+  association TEXT, -- e.g. "ALX Africa"
+  
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

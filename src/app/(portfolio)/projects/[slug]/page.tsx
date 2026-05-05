@@ -1,4 +1,4 @@
-import { getProjectBySlug } from "@/domain/portfolio/queries";
+import { getProjectBySlug } from "@/core/domain/portfolio/queries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2 } from "lucide-react";
@@ -31,15 +31,44 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
         {/* Main Content */}
         <article aria-labelledby="project-title">
           <header className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-[10px] font-mono text-cyan-500 border border-cyan-500/30 px-2 py-0.5 rounded bg-cyan-500/5 uppercase tracking-widest">
+                {project.category}
+              </span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                {project.startDate ? `${project.startDate.month} ${project.startDate.year}` : project.createdAt}
+                {" - "}
+                {project.isCurrent ? "Present" : project.endDate ? `${project.endDate.month} ${project.endDate.year}` : ""}
+              </span>
+            </div>
             <h1 id="project-title" className="text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
               {project.title}
             </h1>
+            {project.association && (
+              <p className="mt-2 text-sm text-slate-400 font-medium">
+                Associated with <span className="text-white">{project.association}</span>
+              </p>
+            )}
             <p className="mt-4 text-xl text-cyan-500/90 font-mono">
               {project.tagline}
             </p>
           </header>
 
           <div className="space-y-10 text-slate-300">
+            {/* Contributors Section */}
+            {project.contributors && project.contributors.length > 0 && (
+              <section aria-label="Project Contributors">
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Engineered By</h2>
+                <div className="flex flex-wrap gap-3">
+                  {project.contributors.map((person: string) => (
+                    <div key={person} className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-1.5 text-sm font-medium text-slate-300">
+                      <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                      {person}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
             {/* Visual Media Section (Video) */}
             {project.videoUrl && (
               <section aria-label="Project Video Demonstration">
@@ -67,7 +96,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               <section aria-label="Project Gallery">
                 <h2 className="mb-6 text-2xl font-bold text-white">Visual Documentation</h2>
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {project.images.map((img, idx) => (
+                  {project.images.map((img: string, idx: number) => (
                     <div key={idx} className="group relative aspect-video overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all hover:border-cyan-500/50">
                       <Image
                         src={img}
@@ -84,7 +113,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             <section aria-labelledby="features-title">
               <h2 id="features-title" className="mb-6 text-2xl font-bold text-white">Key Features</h2>
               <ul className="grid gap-4 sm:grid-cols-2">
-                {project.features.map((feature) => (
+                {project.features.map((feature: string) => (
                   <li key={feature} className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/30 p-4">
                     <CheckCircle2 className="mt-1 h-5 w-5 flex-shrink-0 text-emerald-500" aria-hidden="true" />
                     <span>{feature}</span>
@@ -109,7 +138,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               Tech Stack
             </h3>
             <div className="flex flex-wrap gap-2" aria-label="Tools used">
-              {project.tools.map((tool) => (
+              {project.tools.map((tool: string) => (
                 <span
                   key={tool}
                   className="rounded-md bg-slate-800 px-3 py-1 text-xs font-mono text-cyan-400 border border-slate-700"

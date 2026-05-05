@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Trash2, Mail, Phone, Globe, User, Briefcase, Zap, Activity } from "lucide-react";
-import { deleteContent } from "@/domain/admin/actions";
+import { deleteContent } from "@/core/domain/admin/actions";
 import { supabase } from "@/infrastructure/database/client";
 import { toast } from "react-hot-toast";
 import { cn } from "@/infrastructure/security/headers";
@@ -37,6 +37,36 @@ export default function InquiryVault() {
 
   useEffect(() => {
     loadInquiries();
+
+    // Enable Realtime Synchronization
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'contacts',
+        },
+        (payload) => {
+          const newInquiry = payload.new as Inquiry;
+          setInquiries((prev) => [newInquiry, ...prev]);
+          toast.success(`New inquiry received from ${newInquiry.name}`, {
+            icon: '🚀',
+            style: {
+              borderRadius: '15px',
+              background: '#0f172a',
+              color: '#fff',
+              border: '1px solid #1e293b'
+            },
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleDelete = async (id: string) => {

@@ -1,4 +1,4 @@
-import { getProjects } from "@/domain/portfolio/queries";
+import { getProjects } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { ExternalLink, FileText, ChevronRight, Eye, Heart, Share2, Rocket } from "lucide-react";
 import SecurityAudit from "@/presentation/components/features/SecurityAudit";
@@ -38,11 +38,22 @@ export default async function ProjectsPage() {
                 <div className="flex flex-col gap-6">
                   {/* Header Meta */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-widest">
-                      <span className="px-2 py-0.5 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-500/5">
-                        {project.category}
-                      </span>
-                      <span className="text-slate-500">{project.createdAt}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-widest">
+                        <span className="px-2 py-0.5 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-500/5">
+                          {project.category}
+                        </span>
+                        <span className="text-slate-500">
+                          {project.startDate ? `${project.startDate.month} ${project.startDate.year}` : project.createdAt} 
+                          {" - "}
+                          {project.isCurrent ? "Present" : project.endDate ? `${project.endDate.month} ${project.endDate.year}` : ""}
+                        </span>
+                      </div>
+                      {project.association && (
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-tight">
+                          Associated with {project.association}
+                        </span>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       {project.url && (
@@ -82,7 +93,7 @@ export default async function ProjectsPage() {
                     </p>
 
                     <div className="flex flex-wrap gap-2 pt-2">
-                      {project.tools.map(tool => (
+                      {project.tools.map((tool: string) => (
                         <span key={tool} className="text-xs font-mono text-cyan-500/60">
                           #{tool.replace(/\s+/g, '')}
                         </span>
@@ -134,12 +145,13 @@ export default async function ProjectsPage() {
                 {[
                   "Node.js", "TypeScript", "GCP", "Docker", "Vertex AI", 
                   "React", "Next.js", "Python", "Kubernetes", "Zero-Trust"
-                ].map(tech => (
+                ].map((tech: string) => (
                   <span key={tech} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[10px] font-mono text-slate-400 hover:border-cyan-500/50 hover:text-cyan-400 transition-all cursor-pointer">
                     {tech}
                   </span>
                 ))}
              </div>
+
              
              <div className="mt-8 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
                 <p className="text-[10px] font-mono text-cyan-500 leading-relaxed uppercase">
