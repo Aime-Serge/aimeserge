@@ -9,7 +9,7 @@ export async function searchKnowledge(query: string, limit: number = 3): Promise
   const supabase = createServerSupabaseClient();
   
   try {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const result = await model.embedContent(query);
     const embedding = result.embedding.values;
 

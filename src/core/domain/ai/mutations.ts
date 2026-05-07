@@ -16,7 +16,7 @@ async function upsertKnowledgeBase(params: { id: string, content: string, metada
   const supabase = createServerSupabaseClient();
   
   try {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const result = await model.embedContent(content);
     const embedding = result.embedding.values;
 

@@ -1,32 +1,38 @@
 import { assembleAIContext, getSystemPrompt } from "@/core/domain/ai/queries";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ExternalSyncService } from "@/core/application/use-cases/ExternalSyncService";
+import { google } from "@ai-sdk/google";
+import { streamText } from "ai";
 import { z } from "zod";
 import { rateLimit } from "@/infrastructure/security/rateLimit";
+import { redactPII } from "@/infrastructure/security/piiFilter";
 import { NextRequest, NextResponse } from "next/server";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const runtime = 'edge';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
-interface ChatMessage {
-  role: string;
-  content: string;
-}
 
 // Input validation schema
 const chatMessageSchema = z.object({
-  role: z.enum(['user', 'assistant', 'system']),
-  content: z.string().min(1).max(5000)
+  role: z.enum(['user', 'assistant', 'system', 'tool']),
+  content: z.string().min(1).max(10000),
+  id: z.string().optional(),
+  tool_call_id: z.string().optional(),
+  name: z.string().optional(),
 });
 
 const chatPayloadSchema = z.object({
-  messages: z.array(chatMessageSchema).min(1).max(50)
+  messages: z.array(chatMessageSchema).min(1).max(100)
 });
 
 export async function POST(req: NextRequest) {
   try {
+    // 0. Validate Content-Type
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json(
+        { error: "Invalid Content-Type. Expected application/json" },
+        { status: 400 }
+      );
+    }
+
     // 1. Rate limiting
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
     const rateLimitResult = await rateLimit.check(30, 60_000, `chat:${clientIP}`);
@@ -43,17 +49,19 @@ export async function POST(req: NextRequest) {
     const payload = chatPayloadSchema.safeParse(rawPayload);
     
     if (!payload.success) {
+      console.error("❌ Invalid Payload:", payload.error);
       return NextResponse.json(
         { error: "Invalid request format" },
         { status: 400 }
       );
     }
 
-    const messages: ChatMessage[] = payload.data.messages;
+    const messages = payload.data.messages;
 
-    // 3. Extract Query
-    const lastUserMessage = messages.findLast((m) => m.role === 'user');
-    const userQuery = lastUserMessage?.content || "";
+    // 3. Extract and Redact Query (Security Hardening)
+    const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
+    const rawUserQuery = lastUserMessage?.content || "";
+    const userQuery = redactPII(rawUserQuery);
 
     // 4. Assemble RAG Context
     let context = "";
@@ -63,66 +71,26 @@ export async function POST(req: NextRequest) {
       context = "Initiating secure handshake. Welcome the user.";
     }
 
-    // 5. Initialize Gemini 1.5 Flash with Tools
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      tools: [{
-        functionDeclarations: [
-          {
-            name: "syncExternalData",
-            description: "Synchronizes the AI's knowledge base with external sources like GitHub and Social Media (LinkedIn) to ensure the Digital Twin has the latest project and career updates.",
-          }
-        ]
-      }],
-      systemInstruction: getSystemPrompt(context)
+    // 5. Stream Response with Vercel AI SDK + Gemini
+    const convertedMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }> = messages.map(m => {
+      if (m.role === 'system') {
+        return { role: 'user' as const, content: m.content };
+      }
+      return { role: m.role as 'user' | 'assistant' | 'tool', content: m.content };
     });
 
-    // 6. Transform history for Gemini
-    const history = messages.slice(0, -1).map((m) => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }));
-
-    // 7. Generate Response
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(userQuery);
-    const response = result.response;
-    
-    // Check for function calls
-    const call = response.functionCalls()?.[0];
-    if (call && call.name === "syncExternalData") {
-      console.log("🤖 AI Triggered Synchronization...");
-      const syncService = new ExternalSyncService();
-      const syncResult = await syncService.syncAll();
-      
-      // Send the tool result back to the AI for final response
-      const toolResponse = await chat.sendMessage([
-        {
-          functionResponse: {
-            name: "syncExternalData",
-            response: syncResult
-          }
-        }
-      ]);
-      
-      return NextResponse.json({ 
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: toolResponse.response.text(),
-        metadata: { synced: true, results: syncResult }
-      });
-    }
-
-    return NextResponse.json({ 
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: response.text() 
+    const result = await streamText({
+      model: google('gemini-1.5-flash'),
+      system: getSystemPrompt(context),
+      messages: convertedMessages as any,
     });
+
+    return result.toTextStreamResponse();
 
   } catch (error) {
-    console.error('❌ AI Node Failure (Gemini):', error);
+    console.error('❌ AI Node Failure (Streaming):', error);
     return NextResponse.json(
-      { error: "Quantum decoherence detected. Secure node re-indexing required." },
+      { error: "Quantum decoherence detected in the streaming node. Secure re-indexing required." },
       { status: 500 }
     );
   }
