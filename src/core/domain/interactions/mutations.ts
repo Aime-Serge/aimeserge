@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { type ContactSubmission } from "./types";
 import { withShield } from "@/infrastructure/security/shield";
 import { contactSubmissionSchema, newsletterSubscriptionSchema } from "./schemas";
+import { notifyAdmin } from "@/infrastructure/utils/notifications";
 
 async function submitContactFormBase(formData: ContactSubmission) {
   // Validate input
@@ -43,6 +44,20 @@ async function submitContactFormBase(formData: ContactSubmission) {
       return { success: false, message: `System failure: ${error.message} [Ref: TRANSMISSION_ERR]` };
     }
 
+    // Trigger Enhanced Notification Pipeline
+    await notifyAdmin({
+      title: "New Inquiry Received",
+      message: `A new inquiry node has been synchronized from ${data.name}.`,
+      type: 'INQUIRY',
+      data: {
+        Name: data.name,
+        Email: data.email,
+        Type: data.contactType,
+        Interest: data.interest,
+        Message: data.message.substring(0, 500) // Truncate for notification safety
+      }
+    });
+
     return { success: true, message: "Inquiry successfully logged in the secure vault." };
   } catch (err) {
     console.error("Fatal contact submission error:", err);
@@ -54,10 +69,8 @@ export const submitContactForm = withShield("contact_submission", submitContactF
 
 /**
  * High-speed Newsletter Subscription
- * Handles email capture for the technical feed.
  */
 async function subscribeNewsletterBase(email: string) {
-  // Validate input
   const validatedFields = newsletterSubscriptionSchema.safeParse({ email });
   if (!validatedFields.success) {
     return { success: false, message: validatedFields.error.issues[0].message };
@@ -67,7 +80,6 @@ async function subscribeNewsletterBase(email: string) {
   const validatedEmail = validatedFields.data.email;
 
   try {
-    // Try a resilient insert first (resort to message if newsletter_opt_in is missing)
     const { error } = await supabase
       .from('contacts')
       .insert([
@@ -81,11 +93,8 @@ async function subscribeNewsletterBase(email: string) {
         }
       ]);
 
-    // Handle the specific PGRST204 error (missing column)
     if (error && error.message.includes('newsletter_opt_in')) {
-       console.warn("⚠️ DATABASE_SCHEMA_MISMATCH: Missing 'newsletter_opt_in' column. Retrying with fallback...");
-       
-       const { error: retryError } = await supabase
+       await supabase
         .from('contacts')
         .insert([
           {
@@ -96,8 +105,6 @@ async function subscribeNewsletterBase(email: string) {
             message: '[SUBSCRIPTION_SYNC] This user is a technical feed subscriber.',
           }
         ]);
-        
-       if (retryError) throw retryError;
        return { success: true, message: "Connection established (Fallback node synced)." };
     }
 
