@@ -6,7 +6,7 @@ import {
   Shield, LayoutDashboard, Database, FileText, 
   MessageSquare, Plus, 
   TrendingUp, Users, Download, Bot, Send, 
-  Mic, Activity, Zap, Cpu, Award
+  Mic, Activity, Zap, Cpu, Award, Brain
 } from "lucide-react";
 import { getAdminAnalytics, getSecurityLogs } from "@/core/domain/admin/actions";
 import { cn } from "@/infrastructure/security/headers";
@@ -19,6 +19,7 @@ import BroadcastEditor from "@/presentation/components/features/BroadcastEditor"
 import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
 import AdminContentManager from "@/presentation/components/features/AdminContentManager";
+import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
 type EditableAdminItem = Record<string, unknown>;
 
 type AdminChatMessage = UIMessage & {
@@ -165,6 +166,7 @@ export default function AdminDashboard() {
     { id: "projects", label: "Projects", icon: Database },
     { id: "research", label: "Research", icon: FileText },
     { id: "broadcasts", label: "Blog", icon: TrendingUp },
+    { id: "training", label: "AI Training", icon: Brain },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "inquiries", label: "Inquiries", icon: MessageSquare },
   ];
@@ -356,6 +358,11 @@ export default function AdminDashboard() {
                 {/* Inquiry Vault View */}
                 {activeTab === "inquiries" && (
                 <InquiryVault />
+                )}
+
+                {/* AI Training Module */}
+                {activeTab === "training" && (
+                <ManualSyncTool />
                 )}
 
                 {/* Content Management Modules */}
