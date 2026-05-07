@@ -2,8 +2,25 @@ import Link from "next/link";
 import { Terminal, Shield, Cloud, Cpu, ArrowRight, CheckCircle2, Globe } from "lucide-react";
 
 export default function Home() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Aime Serge UKOBIZABA",
+    "jobTitle": "Senior Software Engineer",
+    "url": "https://aimesergeonline.vercel.app",
+    "sameAs": [
+      "https://github.com/AimeSerge",
+      "https://linkedin.com/in/aimeserge"
+    ],
+    "knowsAbout": ["Cybersecurity", "Cloud Architecture", "Artificial Intelligence", "Full-Stack Development"]
+  };
+
   return (
     <div className="flex flex-col items-center">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero Section */}
       <section aria-label="Introduction" className="relative w-full overflow-hidden py-20 lg:py-32">
         <div className="container mx-auto px-6">
