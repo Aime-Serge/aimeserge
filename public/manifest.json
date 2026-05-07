@@ -1,0 +1,21 @@
+{
+  "name": "Aime Serge Portfolio | Senior Software Engineer",
+  "short_name": "AimeSerge",
+  "description": "Portfolio of Aime Serge UKOBIZABA, specializing in Cybersecurity, Cloud, and AI Architecture.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0891b2",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
