@@ -1,8 +1,97 @@
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { getAssetUrl } from "@/infrastructure/utils/storage";
-import { myProjects, fallbackCertificates, fallbackBroadcasts } from "./constants";
-import { Certificate, Broadcast, ContentType, PublicationStatus, MediaType, Entity, MediaPayload, ContentBlock, Visibility, CommentPermission } from "./types";
+import { myProjects, fallbackCertificates } from "./constants";
+import { 
+  Certificate, Post, Article, MediaType, Visibility, 
+  CommentPermission, PublicationStatus, ContentBlock,
+  Experience, Education, Organization
+} from "./types";
+
+/**
+ * Fetch Professional Experiences (Relational)
+ */
+export async function getExperiences(): Promise<Experience[]> {
+  return unstable_cache(
+    async () => {
+      const supabase = createServerSupabaseClient();
+      try {
+        const { data, error } = await supabase
+          .from('experiences')
+          .select('*, company:organizations(*)')
+          .order('start_date', { ascending: false });
+
+        if (error || !data) return [];
+
+        return data.map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          employmentType: row.employment_type,
+          location: row.location,
+          locationType: row.location_type,
+          startDate: row.start_date,
+          endDate: row.end_date,
+          description: row.description,
+          skillsUsed: row.skills_used || [],
+          companyId: row.company_id,
+          company: row.company ? {
+            id: row.company.id,
+            name: row.company.name,
+            logoUrl: row.company.logo_url,
+            websiteUrl: row.company.website_url
+          } : undefined
+        }));
+      } catch (err) {
+        console.error("Failed to fetch experiences:", err);
+        return [];
+      }
+    },
+    ['experiences-list'],
+    { tags: ['experiences'], revalidate: 3600 }
+  )();
+}
+
+/**
+ * Fetch Educational Background (Relational)
+ */
+export async function getEducations(): Promise<Education[]> {
+  return unstable_cache(
+    async () => {
+      const supabase = createServerSupabaseClient();
+      try {
+        const { data, error } = await supabase
+          .from('educations')
+          .select('*, institution:organizations(*)')
+          .order('end_date', { ascending: false });
+
+        if (error || !data) return [];
+
+        return data.map((row: any) => ({
+          id: row.id,
+          institutionId: row.institution_id,
+          institution: row.institution ? {
+            id: row.institution.id,
+            name: row.institution.name,
+            logoUrl: row.institution.logo_url,
+            websiteUrl: row.institution.website_url
+          } : undefined,
+          degree: row.degree,
+          fieldOfStudy: row.field_of_study,
+          startDate: row.start_date,
+          endDate: row.end_date,
+          grade: row.grade,
+          activities: row.activities,
+          description: row.description
+        }));
+      } catch (err) {
+        console.error("Failed to fetch educations:", err);
+        return [];
+      }
+    },
+    ['educations-list'],
+    { tags: ['educations'], revalidate: 3600 }
+  )();
+}
 
 export async function getProjects() {
   const supabase = createServerSupabaseClient();
@@ -39,33 +128,7 @@ export async function getProjectBySlug(slug: string) {
   }
 }
 
-interface ProjectRow {
-  id: string;
-  slug: string;
-  title: string;
-  tagline: string;
-  role: string;
-  url: string | null;
-  pdf_url: string | null;
-  video_url: string | null;
-  images: string[] | null;
-  summary: string;
-  description: string;
-  tools: string[] | null;
-  features: string[] | null;
-  category: "AI" | "Security" | "Cloud" | "Full-Stack" | "Software Engineering";
-  views: number | null;
-  likes: number | null;
-  created_at: string;
-  is_visible: boolean | null;
-  is_current: boolean | null;
-  start_date: { month: string; year: string } | null;
-  end_date: { month: string; year: string } | null;
-  contributors: string[] | null;
-  association: string | null;
-}
-
-function mapProjectRow(row: ProjectRow) {
+function mapProjectRow(row: any) {
   return {
     id: row.id,
     slug: row.slug,
@@ -85,42 +148,12 @@ function mapProjectRow(row: ProjectRow) {
     likes: row.likes,
     createdAt: row.created_at,
     isVisible: row.is_visible,
-    isCurrent: row.is_current,
     startDate: row.start_date,
     endDate: row.end_date,
+    isCurrent: row.is_current,
     contributors: row.contributors ?? [],
-    association: row.association ?? undefined
+    association: row.association
   };
-}
-
-export async function getLatestResume() {
-  const supabase = createServerSupabaseClient();
-  try {
-    const { data, error } = await supabase.storage
-      .from('resumes')
-      .list('', { limit: 1, sortBy: { column: 'created_at', order: 'desc' } });
-
-    if (error || !data || data.length === 0) return null;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('resumes')
-      .getPublicUrl(data[0].name);
-
-    return publicUrl;
-  } catch {
-    return null;
-  }
-}
-
-interface CertificateRow {
-  id: string;
-  name: string;
-  provider: string;
-  issue_date: string;
-  expiry_date: string | null;
-  verify_url: string | null;
-  pdf_url: string;
-  description: string;
 }
 
 export async function getCertificates(): Promise<Certificate[]> {
@@ -130,20 +163,27 @@ export async function getCertificates(): Promise<Certificate[]> {
       try {
         const { data, error } = await supabase
           .from('certificates')
-          .select('*')
+          .select('*, issuer:organizations(*)')
           .order('issue_date', { ascending: false });
 
         if (error || !data || data.length === 0) return fallbackCertificates;
 
-        return (data as CertificateRow[]).map((c) => ({
+        return data.map((c: any) => ({
           id: c.id,
           name: c.name,
           provider: c.provider,
           issueDate: c.issue_date,
-          expiryDate: c.expiry_date || undefined,
+          expiryDate: c.expiration_date || undefined,
           verifyUrl: c.verify_url || undefined,
           pdfUrl: getAssetUrl(c.pdf_url),
           description: c.description,
+          issuerId: c.issuer_id,
+          issuer: c.issuer ? {
+            id: c.issuer.id,
+            name: c.issuer.name,
+            logoUrl: c.issuer.logo_url
+          } : undefined,
+          credentialId: c.credential_id
         }));
       } catch {
         return fallbackCertificates;
@@ -154,142 +194,100 @@ export async function getCertificates(): Promise<Certificate[]> {
   )();
 }
 
-interface BroadcastRow {
-  id: string;
-  content_type: string;
-  status: string;
-  slug: string;
-  title: string;
-  text_content: string | null;
-  media_type: string | null;
-  media_payload: MediaPayload | null;
-  body_blocks: ContentBlock[] | null;
-  cover_image_url: string | null;
-  cover_image_alt: string | null;
-  excerpt: string | null;
-  estimated_read_time: number | null;
-  is_edited: boolean;
-  entities: Entity[] | null;
-  hashtags: string[];
-  visibility_restricted: string;
-  comment_permissions: string;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  views: number | null;
-  shares: number | null;
-  likes: number | null;
-}
-
-export async function getBroadcasts(filter?: { type?: ContentType, status?: PublicationStatus }): Promise<Broadcast[]> {
-  return unstable_cache(
-    async () => {
-      const supabase = createServerSupabaseClient();
-      
-      try {
-        let query = supabase.from('broadcasts').select('*');
-        
-        if (filter?.type) query = query.eq('content_type', filter.type);
-        if (filter?.status) query = query.eq('status', filter.status);
-        else query = query.eq('status', 'PUBLISHED'); // Default to only published
-
-        const { data, error } = await query.order('created_at', { ascending: false });
-
-        if (error || !data || data.length === 0) {
-          return fallbackBroadcasts;
-        }
-
-        return (data as BroadcastRow[]).map((b) => ({
-          id: b.id,
-          contentType: b.content_type as ContentType,
-          status: b.status as PublicationStatus,
-          slug: b.slug,
-          title: b.title,
-          content: b.text_content || undefined,
-          textContent: b.text_content || undefined,
-          mediaType: b.media_type as MediaType || undefined,
-          mediaPayload: b.media_payload || undefined,
-          bodyBlocks: b.body_blocks || undefined,
-          coverImageUrl: b.cover_image_url || undefined,
-          coverImageAlt: b.cover_image_alt || undefined,
-          excerpt: b.excerpt || undefined,
-          estimatedReadTime: b.estimated_read_time || 0,
-          readTime: b.estimated_read_time ? `${b.estimated_read_time} min read` : "1 min read",
-          isEdited: b.is_edited,
-          entities: b.entities || [],
-          hashtags: b.hashtags || [],
-          tags: b.hashtags || [],
-          visibilityRestricted: b.visibility_restricted as Visibility,
-          commentPermissions: b.comment_permissions as CommentPermission,
-          category: b.category,
-          createdAt: b.created_at,
-          updatedAt: b.updated_at,
-          engagement: {
-            views: b.views || 0,
-            shares: b.shares || 0,
-            likes: b.likes || 0
-          }
-        }));
-      } catch {
-        return fallbackBroadcasts;
-      }
-    },
-    ['broadcasts-feed', JSON.stringify(filter)],
-    { tags: ['broadcasts'], revalidate: 60 }
-  )();
-}
-
-export async function getBroadcastById(id: string): Promise<Broadcast | null> {
+export async function getPosts(): Promise<Post[]> {
   return unstable_cache(
     async () => {
       const supabase = createServerSupabaseClient();
       try {
         const { data, error } = await supabase
-          .from('broadcasts')
-          .select('*')
-          .eq('id', id)
-          .single();
+          .from('posts')
+          .select('*, article:articles(*)')
+          .order('created_at', { ascending: false });
 
-        if (error || !data) return fallbackBroadcasts.find(b => b.id === id) || null;
+        if (error || !data) return [];
 
-        const row = data as BroadcastRow & {
-          content?: string | null;
-          tags?: string[] | null;
-          read_time?: string | null;
-          images?: string[] | null;
-          video_url?: string | null;
-        };
-
-        return {
-          id: row.id,
-          contentType: row.content_type as ContentType || 'POST',
-          status: row.status as PublicationStatus || 'PUBLISHED',
-          slug: row.slug,
-          title: row.title,
-          content: row.content || row.text_content || undefined,
-          excerpt: row.excerpt || undefined,
-          category: row.category,
-          tags: row.tags || row.hashtags || [],
-          hashtags: row.hashtags || row.tags || [],
-          createdAt: row.created_at,
-          readTime: row.read_time || (row.estimated_read_time ? `${row.estimated_read_time} min read` : "1 min read"),
-          images: row.images || [],
-          videoUrl: row.video_url || undefined,
-          isEdited: row.is_edited || false,
-          entities: row.entities || [],
-          visibilityRestricted: (row.visibility_restricted as Visibility) || 'ANYONE',
-          commentPermissions: (row.comment_permissions as CommentPermission) || 'ANYONE',
-          engagement: {
-            views: row.views || 0,
-            shares: row.shares || 0,
-            likes: row.likes || 0
-          }
-        };
-      } catch {
-        return fallbackBroadcasts.find(b => b.id === id) || null;
+        return data.map(mapPostRow);
+      } catch (err) {
+        console.error("Failed to fetch posts:", err);
+        return [];
       }
     },
-    [`broadcast-${id}`],
-    { tags: [`broadcast-${id}`], revalidate: 60 }
+    ['posts-feed'],
+    { tags: ['posts'], revalidate: 60 }
   )();
 }
+
+function mapPostRow(row: any): Post {
+  return {
+    id: row.id,
+    textContent: row.text_content,
+    mediaType: row.media_type as MediaType,
+    mediaPayload: row.media_payload || {},
+    articleId: row.article_id,
+    article: row.article ? mapArticleRow(row.article) : undefined,
+    engagement: {
+      views: row.views || 0,
+      shares: row.shares || 0,
+      likes: row.likes || 0
+    },
+    createdAt: row.created_at,
+    hashtags: row.hashtags || []
+  };
+}
+
+export async function getArticleBySlug(slug: string): Promise<Article | null> {
+  return unstable_cache(
+    async () => {
+      const supabase = createServerSupabaseClient();
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('slug', slug)
+          .eq('status', 'PUBLISHED')
+          .single();
+
+        if (error || !data) return null;
+
+        return mapArticleRow(data);
+      } catch {
+        return null;
+      }
+    },
+    [`article-${slug}`],
+    { tags: [`article-${slug}`], revalidate: 60 }
+  )();
+}
+
+export async function getArticleById(id: string): Promise<Article | null> {
+  const supabase = createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return mapArticleRow(data);
+}
+
+function mapArticleRow(row: any): Article {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    coverImageUrl: row.cover_image_url,
+    coverImageAlt: row.cover_image_alt,
+    excerpt: row.excerpt,
+    bodyContent: row.body_content as ContentBlock[],
+    estimatedReadTime: row.estimated_read_time || 1,
+    status: row.status as PublicationStatus,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+// Keep legacy export for backward compatibility
+export const getBroadcasts = getPosts as any;
+export const getBroadcastById = getArticleById as any;
+export const getLatestResume = async () => null; // Fallback

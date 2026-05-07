@@ -1,135 +1,10 @@
-import { getBroadcasts } from "@/core/domain/portfolio/queries";
-import { getProjects } from "@/core/domain/portfolio/queries";
-import { getResearch } from "@/core/domain/research/queries";
-import type { SearchResult, SearchResultType } from "@/types/search";
+import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { SearchResult } from "@/types/search";
 import { rateLimit } from "@/infrastructure/security/rateLimit";
-import { unstable_cache } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
-interface SearchDocument {
-  id: string;
-  type: SearchResultType;
-  title: string;
-  snippet: string;
-  href: string;
-  tags: string[];
-  searchableText: string;
-}
-
-const getSearchDocuments = unstable_cache(
-  async (): Promise<SearchDocument[]> => {
-    const [projects, broadcasts, researchPapers] = await Promise.all([
-      getProjects(),
-      getBroadcasts(),
-      getResearch(),
-    ]);
-
-    const projectDocs: SearchDocument[] = projects.map((project) => ({
-      id: project.id,
-      type: "project",
-      title: project.title,
-      snippet: project.summary || project.tagline || "",
-      href: `/projects/${project.slug}`,
-      tags: project.tools || [],
-      searchableText: [
-        project.title,
-        project.tagline,
-        project.summary,
-        project.description,
-        project.role,
-        project.category,
-        ...(project.tools || []),
-        ...(project.features || []),
-      ]
-        .join(" ")
-        .toLowerCase(),
-    }));
-
-    const blogDocs: SearchDocument[] = broadcasts.map((broadcast) => ({
-      id: broadcast.id,
-      type: "blog",
-      title: broadcast.title,
-      snippet: broadcast.excerpt || "",
-      href: `/blog/${broadcast.id}`,
-      tags: broadcast.tags || [],
-      searchableText: [
-        broadcast.title,
-        broadcast.excerpt || "",
-        broadcast.content || "",
-        broadcast.category,
-        ...(broadcast.tags || []),
-      ]
-        .join(" ")
-        .toLowerCase(),
-    }));
-
-    const researchDocs: SearchDocument[] = researchPapers.map((paper) => ({
-      id: paper.id,
-      type: "research",
-      title: paper.title,
-      snippet: paper.abstract,
-      href: `/research`,
-      tags: paper.tags || [],
-      searchableText: [
-        paper.title,
-        paper.abstract,
-        ...(paper.tags || []),
-      ]
-        .join(" ")
-        .toLowerCase(),
-    }));
-
-    return [...projectDocs, ...blogDocs, ...researchDocs];
-  },
-  ["global-content-search-index"],
-  { revalidate: 300 },
-);
-
-function tokenizeQuery(query: string): string[] {
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length > 1);
-}
-
-function calculateScore(doc: SearchDocument, rawQuery: string, tokens: string[]): number {
-  if (tokens.length === 0) {
-    return 0;
-  }
-
-  const title = doc.title.toLowerCase();
-  const snippet = doc.snippet.toLowerCase();
-  const tags = doc.tags.map((tag) => tag.toLowerCase());
-  const normalizedQuery = rawQuery.toLowerCase().trim();
-
-  let score = 0;
-
-  if (normalizedQuery.length > 1 && title.includes(normalizedQuery)) {
-    score += 14;
-  }
-
-  if (normalizedQuery.length > 1 && doc.searchableText.includes(normalizedQuery)) {
-    score += 10;
-  }
-
-  for (const token of tokens) {
-    if (title.includes(token)) {
-      score += 8;
-    }
-    if (snippet.includes(token)) {
-      score += 4;
-    }
-    if (tags.some((tag) => tag.includes(token))) {
-      score += 6;
-    }
-    if (doc.searchableText.includes(token)) {
-      score += 2;
-    }
-  }
-
-  return score;
-}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function GET(request: NextRequest) {
   const clientToken = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
@@ -147,40 +22,50 @@ export async function GET(request: NextRequest) {
   const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 20) : 8;
 
   if (query.length < 2) {
-    return NextResponse.json(
-      { query, results: [] as SearchResult[] },
-      { headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=120" } },
-    );
+    return NextResponse.json({ query, results: [] });
   }
 
-  const tokens = tokenizeQuery(query);
-  const documents = await getSearchDocuments();
+  try {
+    const supabase = createServerSupabaseClient();
+    
+    // 1. Generate Embedding for the Search Query
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+    const embeddingResult = await model.embedContent(query);
+    const embedding = embeddingResult.embedding.values;
 
-  const results = documents
-    .map((doc) => {
-      const score = calculateScore(doc, query, tokens);
-      return {
-        id: doc.id,
-        type: doc.type,
-        title: doc.title,
-        snippet: doc.snippet,
-        href: doc.href,
-        tags: doc.tags,
-        score,
-      } satisfies SearchResult;
-    })
-    .filter((result) => result.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+    // 2. Perform Semantic Search via match_knowledge RPC
+    // We reuse the same RAG engine for global search!
+    const { data: matches, error } = await supabase.rpc("match_knowledge", {
+      query_embedding: embedding,
+      match_threshold: 0.3, // Lower threshold for broader global search
+      match_count: limit,
+    });
 
-  return NextResponse.json(
-    { query, results },
-    {
-      headers: {
-        "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
-        "X-RateLimit-Remaining": String(rateLimitResult.remaining),
+    if (error) throw error;
+
+    // 3. Transform RAG chunks into SearchResults
+    const results: SearchResult[] = (matches || []).map((match: any) => ({
+      id: match.id,
+      type: match.metadata?.type === 'github' ? 'project' : (match.metadata?.type === 'social' ? 'blog' : match.metadata?.type || 'blog'),
+      title: match.metadata?.title || match.content.split('\n')[0].substring(0, 60),
+      snippet: match.content.substring(0, 160) + "...",
+      href: match.metadata?.url || (match.metadata?.type === 'research' ? '/research' : `/blog/${match.id}`),
+      tags: match.metadata?.tags || [],
+      score: match.similarity * 100,
+    }));
+
+    return NextResponse.json(
+      { query, results },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+          "X-Search-Engine": "Semantic-Vector-Node",
+        },
       },
-    },
-  );
+    );
+  } catch (error) {
+    console.error("Semantic Search Failure:", error);
+    // Fallback to empty results instead of crashing
+    return NextResponse.json({ query, results: [], error: "Search node temporarily offline." });
+  }
 }
-
