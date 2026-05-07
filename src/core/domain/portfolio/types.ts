@@ -1,49 +1,38 @@
-export interface Project {
+export interface Organization {
   id: string;
-  slug: string;
-  title: string; // LinkedIn: Project name
-  tagline: string;
-  role: string;
-  url?: string; // LinkedIn: Media (Site)
-  pdfUrl?: string; // LinkedIn: Media (Document)
-  videoUrl?: string; // LinkedIn: Media (Video/Presentation)
-  images?: string[]; // LinkedIn: Media (Images)
-  summary: string;
-  description: string; // LinkedIn: Description (Max 2000)
-  tools: string[]; // LinkedIn: Skills
-  features: string[];
-  category: "AI" | "Security" | "Cloud" | "Full-Stack" | "Software Engineering";
-  views?: number;
-  likes?: number;
-  createdAt: string;
-  isVisible?: boolean;
-  
-  // LinkedIn Specific Fields
-  isCurrent?: boolean; // "I am currently working on this project"
-  startDate?: {
-    month: string;
-    year: string;
-  };
-  endDate?: {
-    month: string;
-    year: string;
-  };
-  contributors?: string[]; // LinkedIn: Contributors
-  association?: string; // LinkedIn: Associated with (e.g. University, Company)
+  name: string;
+  logoUrl?: string;
+  websiteUrl?: string;
 }
 
-export interface CaseStudy {
+export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'FREELANCE';
+export type LocationType = 'ON_SITE' | 'HYBRID' | 'REMOTE';
+
+export interface Experience {
   id: string;
-  slug: string;
   title: string;
-  tagline?: string;
-  role?: string;
-  url?: string;
-  summary: string;
-  tools: string[];
-  features: string[];
-  pdfUrl: string;
-  createdAt: string;
+  employmentType: EmploymentType;
+  location?: string;
+  locationType: LocationType;
+  startDate: string;
+  endDate?: string; // Null if current
+  description: string;
+  skillsUsed: string[];
+  companyId: string;
+  company?: Organization;
+}
+
+export interface Education {
+  id: string;
+  institutionId: string;
+  institution?: Organization;
+  degree: string;
+  fieldOfStudy?: string;
+  startDate?: string;
+  endDate?: string;
+  grade?: string;
+  activities?: string;
+  description?: string;
 }
 
 export interface Certificate {
@@ -55,33 +44,53 @@ export interface Certificate {
   verifyUrl?: string;
   pdfUrl?: string;
   description: string;
+  issuerId?: string;
+  issuer?: Organization;
+  credentialId?: string;
 }
 
-export type MediaType = 'NONE' | 'IMAGE' | 'IMAGE_CAROUSEL' | 'VIDEO' | 'DOCUMENT' | 'EXTERNAL_LINK';
+export interface Project {
+  id: string;
+  slug: string;
+  title: string; 
+  tagline: string;
+  role: string;
+  url?: string; 
+  pdfUrl?: string; 
+  videoUrl?: string; 
+  images?: string[]; 
+  summary: string;
+  description: string; 
+  tools: string[]; 
+  features: string[];
+  category: "AI" | "Security" | "Cloud" | "Full-Stack" | "Software Engineering";
+  views?: number;
+  likes?: number;
+  createdAt: string;
+  isVisible?: boolean;
+
+  // LinkedIn / Professional Specific Fields
+  startDate?: { month: string; year: string };
+  endDate?: { month: string; year: string };
+  isCurrent?: boolean;
+  contributors?: string[];
+  association?: string;
+}
+
+export type MediaType = 'NONE' | 'IMAGE' | 'IMAGE_CAROUSEL' | 'VIDEO' | 'DOCUMENT' | 'EXTERNAL_LINK' | 'ARTICLE_PREVIEW';
 export type Visibility = 'ANYONE' | 'CONNECTIONS_ONLY' | 'GROUP_ONLY';
 export type CommentPermission = 'ANYONE' | 'CONNECTIONS_ONLY' | 'NO_ONE';
-
-export interface Entity {
-  type: 'USER' | 'COMPANY' | 'HASHTAG';
-  id: string;
-  offset: number;
-  length: number;
-}
+export type PublicationStatus = 'DRAFT' | 'SCHEDULED' | 'PUBLISHED';
 
 export interface MediaPayload {
   url?: string;
   title?: string;
-  pageCount?: number;
-  thumbnailUrls?: string[];
   images?: string[];
   videoUrl?: string;
   ogTitle?: string;
   ogImage?: string;
   ogDescription?: string;
 }
-
-export type ContentType = 'POST' | 'ARTICLE';
-export type PublicationStatus = 'DRAFT' | 'SCHEDULED' | 'PUBLISHED';
 
 export interface ContentBlock {
   id: string;
@@ -99,42 +108,66 @@ export interface ContentBlock {
   };
 }
 
-export interface Broadcast {
+export interface Article {
   id: string;
-  contentType: ContentType;
-  status: PublicationStatus;
-  slug: string;
   title: string;
-  
-  // Blog / Frontend Specific (Simplified)
-  content?: string;
-  excerpt?: string;
-  category: string;
-  tags?: string[];
-  readTime?: string;
-  images?: string[];
-  videoUrl?: string;
-  
-  // LinkedIn / Domain Specific (Complex)
-  textContent?: string; 
-  mediaType?: MediaType;
-  mediaPayload?: MediaPayload;
-  bodyBlocks?: ContentBlock[];
+  slug: string;
   coverImageUrl?: string;
   coverImageAlt?: string;
-  estimatedReadTime?: number;
-  
-  // Shared
-  isEdited: boolean;
-  entities: Entity[];
-  hashtags: string[];
-  visibilityRestricted: Visibility;
-  commentPermissions: CommentPermission;
+  excerpt?: string;
+  bodyContent: ContentBlock[];
+  estimatedReadTime: number;
+  status: PublicationStatus;
   createdAt: string;
-  updatedAt?: string;
-  engagement?: {
+  updatedAt: string;
+}
+
+export interface Post {
+  id: string;
+  textContent: string;
+  mediaType: MediaType;
+  mediaPayload: MediaPayload;
+  articleId?: string;
+  article?: Article;
+  engagement: {
     views: number;
     shares: number;
     likes: number;
   };
+  createdAt: string;
+  hashtags: string[];
+}
+
+export interface Broadcast {
+  id: string;
+  slug: string;
+  title: string;
+  contentType?: 'POST' | 'ARTICLE';
+  content_type?: 'POST' | 'ARTICLE';
+  textContent?: string;
+  text_content?: string;
+  excerpt?: string;
+  estimatedReadTime?: number;
+  bodyBlocks?: ContentBlock[];
+  coverImageUrl?: string;
+  coverImageAlt?: string;
+  mediaType?: MediaType;
+  media_type?: MediaType;
+  mediaPayload?: MediaPayload;
+  media_payload?: MediaPayload;
+  visibility?: Visibility;
+  commentPermission?: CommentPermission;
+  engagement?: {
+    views: number;
+    shares: number;
+    likes: number;
+    comments: number;
+  };
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  status?: PublicationStatus;
+  hashtags: string[];
+  category?: string;
 }
