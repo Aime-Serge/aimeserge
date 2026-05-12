@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' https://api.openai.com https://*.supabase.co https://vitals.vercel-insights.com;
+    connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co https://vitals.vercel-insights.com;
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, ' ').trim();
 
