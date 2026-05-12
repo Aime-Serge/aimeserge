@@ -9,6 +9,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   DISCORD_WEBHOOK_URL: z.string().url().optional(),
   SUPABASE_WEBHOOK_SECRET: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -24,6 +25,7 @@ export const validateEnv = (): Partial<Env> => {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL,
     SUPABASE_WEBHOOK_SECRET: process.env.SUPABASE_WEBHOOK_SECRET,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     NODE_ENV: process.env.NODE_ENV,
   });
 

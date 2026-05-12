@@ -3,16 +3,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { type KnowledgeMatch } from "./types";
 import { SYSTEM_PROMPT } from "./constants";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
 export async function searchKnowledge(query: string, limit: number = 3): Promise<KnowledgeMatch[]> {
   const supabase = createServerSupabaseClient();
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+  const genAI = new GoogleGenerativeAI(apiKey);
   
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const result = await model.embedContent(query);
     const embedding = result.embedding.values;
-
     const { data: chunks, error } = await supabase.rpc("match_knowledge", {
       query_embedding: embedding,
       match_threshold: 0.5,

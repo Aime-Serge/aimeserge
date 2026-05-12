@@ -1,5 +1,5 @@
 import { assembleAIContext, getSystemPrompt } from "@/core/domain/ai/queries";
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 import { z } from "zod";
 import { rateLimit } from "@/infrastructure/security/rateLimit";
@@ -72,6 +72,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Stream Response with Vercel AI SDK + Gemini
+    const google = createGoogleGenerativeAI({
+      apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    });
+
     const convertedMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }> = messages.map(m => {
       if (m.role === 'system') {
         return { role: 'user' as const, content: m.content };
@@ -80,7 +84,7 @@ export async function POST(req: NextRequest) {
     });
 
     const result = await streamText({
-      model: google('gemini-1.5-flash'),
+      model: google('gemini-2.5-flash'),
       system: getSystemPrompt(context),
       messages: convertedMessages as any,
     });
