@@ -253,19 +253,24 @@ export default function AIChat() {
     setIsMounted(true);
   }, []);
 
-  const playTTS = useCallback(async (text: string) => {
-    if (!isSpeaking) return;
+  const playTTS = useCallback((text: string) => {
+    if (!isSpeaking || typeof window === 'undefined') return;
     try {
-      const response = await fetch('/api/v1/ai/voice/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (!response.ok) throw new Error('TTS failed');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Try to find a nice English voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || 
+                        voices.find(v => v.lang.startsWith('en')) ||
+                        voices[0];
+      
+      if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      
+      window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.error('TTS Playback error:', err);
     }
