@@ -4,7 +4,7 @@
 [![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-RAG-orange?style=for-the-badge&logo=openai)](https://openai.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI-blue?style=for-the-badge&logo=googlegemini)](https://deepmind.google/technologies/gemini/)
 
 > **A mission-critical professional ecosystem for software engineering, cybersecurity research, and AI-driven brand orchestration.**
 
@@ -27,9 +27,9 @@ The system is built on **Hexagonal Architecture** (Ports & Adapters) principles,
 
 ### 🧠 AI Intelligence & RAG Pipeline
 - **Retrieval-Augmented Generation (RAG):** Context-aware AI assistant utilizing `pgvector` for semantic search.
-- **High-Dimension Embeddings:** Upgraded to **3072D vector space** (Gemini/OpenAI) for superior retrieval accuracy.
+- **High-Dimension Embeddings:** Optimized **3072D vector space** (Gemini gemini-embedding-001) for superior retrieval accuracy.
 - **Automated Grounding:** Real-time synchronization of project updates and research papers into the AI knowledge base via database webhooks.
-- **External Data Ingestion:** Automated syncing of GitHub repositories and LinkedIn activity into the grounding layer.
+- **Multimodal Speech:** Multimodal STT via Gemini 2.5 Flash and high-fidelity TTS via native Web Speech API.
 
 ### 📝 LinkedIn-Style Content Engine
 - **Broadcast System:** Support for short-form posts and long-form articles with estimated read times.
@@ -56,7 +56,7 @@ The system is built on **Hexagonal Architecture** (Ports & Adapters) principles,
 | :--- | :--- |
 | **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS 4, Framer Motion |
 | **Backend** | Supabase (PostgreSQL), Next.js Route Handlers, Server Actions |
-| **AI/ML** | Google Gemini (Embeddings & Chat), OpenAI, Vercel AI SDK |
+| **AI/ML** | Google Gemini (Embeddings, Chat & STT), Web Speech API (TTS), Vercel AI SDK |
 | **Security** | Jose (JWT), Zod (Validation), Custom PII Redaction Logic |
 | **Operations** | Resend (Email), Discord Webhooks (Alerts), Supabase Storage |
 | **State** | Redux Toolkit (Data Sync), Zustand (UI State) |
@@ -82,7 +82,7 @@ The database follows a normalized professional schema, allowing for complex quer
 ### Prerequisites
 - Node.js 20+
 - Supabase Project with `pgvector` enabled
-- Gemini or OpenAI API Key
+- Google Gemini API Key
 
 ### Installation
 ```bash
