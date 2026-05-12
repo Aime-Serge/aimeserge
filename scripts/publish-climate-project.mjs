@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { openai } from "@ai-sdk/openai";
-import { embed } from "ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 import path from 'path';
 
@@ -16,11 +15,8 @@ const env = Object.fromEntries(
     })
 );
 
-// Inject API key for AI SDK - handle malformed env keys
-const openAiKeyName = Object.keys(env).find(k => k.endsWith('OPENAI_API_KEY'));
-process.env.OPENAI_API_KEY = openAiKeyName ? env[openAiKeyName] : undefined;
-
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY || env.GOOGLE_GENERATIVE_AI_API_KEY || "");
 
 const climateData = {
   slug: 'climate-modeling-east-africa',
@@ -107,10 +103,9 @@ Tags: ${climateData.tags.join(', ')}
 Tools: ${climateData.tools.join(', ')}
     `.trim();
 
-    const { embedding } = await embed({
-      model: openai.embedding("text-embedding-3-small"),
-      value: contentToEmbed,
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+    const result = await model.embedContent(contentToEmbed);
+    const embedding = result.embedding.values;
 
     await supabase.from('knowledge').upsert({
       id: id,

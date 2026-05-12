@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { openai } from "@ai-sdk/openai";
-import { embed } from "ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 import path from 'path';
 
@@ -17,6 +16,7 @@ const env = Object.fromEntries(
 );
 
 const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY || env.GOOGLE_GENERATIVE_AI_API_KEY || "");
 
 const climateResearch = {
   slug: 'climate-modeling-east-africa',
@@ -137,10 +137,9 @@ ${sectionsContent}
   `.trim();
     
   console.log('🧠 Vectorizing knowledge base...');
-  const { embedding } = await embed({
-    model: openai.embedding("text-embedding-3-small"),
-    value: contentToEmbed,
-  });
+  const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+  const result = await model.embedContent(contentToEmbed);
+  const embedding = result.embedding.values;
 
   await supabase.from('knowledge').upsert({
     id: data.id,
