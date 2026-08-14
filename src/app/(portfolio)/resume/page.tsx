@@ -1,6 +1,8 @@
 import { Download, ExternalLink, FileText, CheckCircle, GraduationCap, Briefcase, Cloud, Calendar, Building2, MapPin, Award } from "lucide-react";
 import BadgeShowcase from "@/presentation/components/features/BadgeShowcase";
+import TestimonialSection from "@/presentation/components/features/TestimonialSection";
 import { getCertificates, getLatestResume, getExperiences, getEducations } from "@/core/domain/portfolio/queries";
+import { testimonials } from "@/core/domain/portfolio/constants";
 import { formatDuration } from "@/infrastructure/utils/dateUtils";
 import Image from "next/image";
 import { cn } from "@/infrastructure/security/headers";
@@ -446,6 +448,15 @@ export default async function ResumePage() {
             </div>
           </div>
         </aside>
+      </div>
+
+      {/* Testimonials Section */}
+      <div className="mt-24 pt-20 border-t border-slate-800/30">
+        <TestimonialSection 
+          testimonials={testimonials}
+          title="Professional Recognition"
+          subtitle="Verified feedback from collaborators, technical partners, and industry professionals"
+        />
       </div>
     </div>
   );

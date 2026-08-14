@@ -2,6 +2,7 @@ import { getProjects } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { ExternalLink, FileText, ChevronRight, Eye, Heart, Share2, Rocket } from "lucide-react";
 import SecurityAudit from "@/presentation/components/features/SecurityAudit";
+import CaseStudyMetrics from "@/presentation/components/features/CaseStudyMetrics";
 
 export const metadata = {
   title: "Engineering Feed | Aime Serge",
@@ -154,6 +155,13 @@ export default async function ProjectsPage() {
                         </span>
                       ))}
                     </div>
+
+                    {/* Case Study Metrics */}
+                    {project.metrics && project.metrics.length > 0 && (
+                      <div className="pt-4">
+                        <CaseStudyMetrics metrics={project.metrics} />
+                      </div>
+                    )}
                   </div>
 
                   {/* Interaction Bar */}

@@ -152,7 +152,8 @@ function mapProjectRow(row: any) {
     endDate: row.end_date,
     isCurrent: row.is_current,
     contributors: row.contributors ?? [],
-    association: row.association
+    association: row.association,
+    metrics: row.metrics ?? []
   };
 }
 

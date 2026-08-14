@@ -75,6 +75,13 @@ export interface Project {
   isCurrent?: boolean;
   contributors?: string[];
   association?: string;
+
+  // Case Study & Impact Fields
+  metrics?: Array<{
+    label: string;
+    value: string;
+    context?: string;
+  }>;
 }
 
 export type MediaType = 'NONE' | 'IMAGE' | 'IMAGE_CAROUSEL' | 'VIDEO' | 'DOCUMENT' | 'EXTERNAL_LINK' | 'ARTICLE_PREVIEW';
@@ -170,4 +177,16 @@ export interface Broadcast {
   status?: PublicationStatus;
   hashtags: string[];
   category?: string;
+}
+
+export interface Testimonial {
+  id: string;
+  authorName: string;
+  authorRole: string;
+  authorCompany: string;
+  authorImage?: string;
+  quote: string;
+  context: string; // e.g., "Climate Modeling Project", "Technical Review"
+  date: string;
+  verified: boolean;
 }
