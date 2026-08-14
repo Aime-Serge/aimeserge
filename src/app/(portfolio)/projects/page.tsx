@@ -51,6 +51,26 @@ export default async function ProjectsPage() {
           A real-time feed of architectural blueprints, production systems, and security-hardened applications.
         </p>
         
+        {/* Proof Metrics Bar */}
+        <div className="mt-8 grid gap-4 md:grid-cols-4 text-center">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="text-2xl font-bold text-emerald-400">18%</div>
+            <div className="text-xs text-slate-400 mt-1">Avg Performance Lift</div>
+          </div>
+          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+            <div className="text-2xl font-bold text-cyan-400">4</div>
+            <div className="text-xs text-slate-400 mt-1">Verified Testimonials</div>
+          </div>
+          <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4">
+            <div className="text-2xl font-bold text-purple-400">3</div>
+            <div className="text-xs text-slate-400 mt-1">Production Systems</div>
+          </div>
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="text-2xl font-bold text-amber-400">A+</div>
+            <div className="text-xs text-slate-400 mt-1">Security Audit</div>
+          </div>
+        </div>
+        
         {/* Engineering Philosophy */}
         <div className="mt-8 p-6 rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
           <p className="text-slate-300 leading-relaxed max-w-3xl">

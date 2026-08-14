@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Shield, Send, User, Building2, Briefcase, Globe, Info, Clock, DollarSign, Linkedin, Zap, Phone, Heart, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, Shield, Send, User, Building2, Briefcase, Globe, Info, Clock, DollarSign, Linkedin, Zap, Phone, Heart, CheckCircle2, ArrowRight, ArrowLeft, Award, Users, TrendingUp, Cloud } from "lucide-react";
 import { submitContactForm } from "@/core/domain/interactions/actions";
 import { toast } from "react-hot-toast";
 import { type ContactSubmission } from "@/core/domain/interactions/actions";
 import { cn } from "@/infrastructure/security/headers";
+import ProofBackedCTA from "@/presentation/components/features/ProofBackedCTA";
 
 /**
  * Newsletter Subscription Modal
@@ -147,6 +148,53 @@ export default function ContactPage() {
   return (
     <div className="container mx-auto px-6 py-12 lg:py-20">
       <NewsletterModal isOpen={showNewsletterModal} onChoice={handleFinalSubmission} />
+
+      {/* Proof Section Before Contact Form */}
+      <div className="mb-20 pb-20 border-b border-slate-800/50">
+        <ProofBackedCTA
+          title="Proven Track Record"
+          description="Before you reach out, here's why teams choose to work with me."
+          primaryCTA={{
+            text: "View Portfolio",
+            href: "/projects"
+          }}
+          proofSignals={[
+            {
+              icon: <Award className="h-5 w-5" />,
+              label: "Verified testimonials from industry leaders",
+              value: "4/4",
+              highlight: true
+            },
+            {
+              icon: <TrendingUp className="h-5 w-5" />,
+              label: "Average performance improvement in systems",
+              value: "18%+",
+            },
+            {
+              icon: <Cloud className="h-5 w-5" />,
+              label: "Production systems shipped",
+              value: "3",
+              highlight: true
+            },
+            {
+              icon: <Users className="h-5 w-5" />,
+              label: "Years of experience in production engineering",
+              value: "5+",
+            },
+            {
+              icon: <CheckCircle2 className="h-5 w-5" />,
+              label: "Security audit score",
+              value: "A+",
+            },
+            {
+              icon: <Globe className="h-5 w-5" />,
+              label: "Monthly platform visitors",
+              value: "1,248+",
+            }
+          ]}
+          variant="inline"
+        />
+      </div>
 
       <div className="grid gap-16 lg:grid-cols-[1fr_1.2fr]">
         <div className="space-y-12">

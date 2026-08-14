@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Terminal, Shield, Cloud, Cpu, ArrowRight, CheckCircle2, Globe } from "lucide-react";
+import { Terminal, Shield, Cloud, Cpu, ArrowRight, CheckCircle2, Globe, TrendingUp, Users, Award } from "lucide-react";
+import ProofBackedCTA from "@/presentation/components/features/ProofBackedCTA";
 
 export default function Home() {
   const jsonLd = {
@@ -178,21 +179,55 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section - Replace Services Grid */}
+      {/* CTA Section - Proof-Backed Conversion */}
       <section className="container mx-auto px-6 py-24 border-t border-slate-800/50">
-        <div className="rounded-2xl bg-gradient-to-r from-cyan-600/10 via-slate-900 to-emerald-600/10 border border-slate-800 p-12 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Ready to Work Together?</h2>
-          <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">
-            Whether you need a scalable backend system, security architecture review, or AI-powered solution, let's discuss your project.
-          </p>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-8 py-4 font-bold text-white transition hover:bg-emerald-700 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-          >
-            Start a Conversation
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        <ProofBackedCTA
+          title="Why Teams Choose Me"
+          description="Backed by verified results and proven expertise in delivering secure, scalable systems that generate real business impact."
+          primaryCTA={{
+            text: "View Case Studies",
+            href: "/projects"
+          }}
+          secondaryCTA={{
+            text: "Let's Discuss Your Project",
+            href: "/contact"
+          }}
+          proofSignals={[
+            {
+              icon: <TrendingUp className="h-5 w-5" />,
+              label: "Average wait time reduction in deployed systems",
+              value: "18%",
+              highlight: true
+            },
+            {
+              icon: <Award className="h-5 w-5" />,
+              label: "Verified testimonials from technical partners",
+              value: "4/4",
+            },
+            {
+              icon: <Users className="h-5 w-5" />,
+              label: "Monthly visitors to this platform",
+              value: "1,248+",
+            },
+            {
+              icon: <Globe className="h-5 w-5" />,
+              label: "Security audit score (A+ grade)",
+              value: "A+",
+              highlight: true
+            },
+            {
+              icon: <CheckCircle2 className="h-5 w-5" />,
+              label: "Production systems deployed",
+              value: "3",
+            },
+            {
+              icon: <Cloud className="h-5 w-5" />,
+              label: "Multi-region cloud architecture experience",
+              value: "GCP+AWS",
+            }
+          ]}
+          variant="featured"
+        />
       </section>
     </div>
   );
