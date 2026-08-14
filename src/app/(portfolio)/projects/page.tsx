@@ -11,8 +11,33 @@ export const metadata = {
 export default async function ProjectsPage() {
   const projects = await getProjects();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Engineering Solutions - Aime Serge",
+    "description": "Security-first, cloud-native projects demonstrating real-world impact",
+    "url": "https://aimesergeonline.vercel.app/projects",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Aime Serge UKOBIZABA",
+      "jobTitle": "Senior Software Engineer"
+    },
+    "hasPart": projects.map(project => ({
+      "@type": "SoftwareApplication",
+      "name": project.title,
+      "description": project.description,
+      "url": project.url,
+      "applicationCategory": "DeveloperApplication"
+    }))
+  };
+
   return (
-    <div className="container mx-auto px-6 py-12 lg:py-20">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
         <div className="flex items-center gap-2 text-cyan-500 font-mono text-xs uppercase tracking-[0.3em] mb-4">
           <Rocket className="h-3.5 w-3.5 animate-bounce" />
@@ -191,6 +216,7 @@ export default async function ProjectsPage() {
           </div>
         </aside>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

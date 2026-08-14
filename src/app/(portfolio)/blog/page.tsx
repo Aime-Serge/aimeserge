@@ -14,8 +14,38 @@ export const metadata = {
 export default async function BlogPage() {
   const posts = await getPosts();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Engineering Insights - Aime Serge",
+    "description": "Professional feed of technical posts and architectural insights",
+    "url": "https://aimesergeonline.vercel.app/blog",
+    "creator": {
+      "@type": "Person",
+      "name": "Aime Serge UKOBIZABA",
+      "jobTitle": "Senior Software Engineer"
+    },
+    "blogPost": posts
+      .filter(post => post.article)
+      .map(post => ({
+        "@type": "BlogPosting",
+        "headline": post.article?.title || post.textContent?.substring(0, 100),
+        "description": post.article?.excerpt || post.textContent?.substring(0, 200),
+        "datePublished": post.article?.createdAt || post.createdAt,
+        "author": {
+          "@type": "Person",
+          "name": "Aime Serge UKOBIZABA"
+        }
+      }))
+  };
+
   return (
-    <div className="container mx-auto px-6 py-12 lg:py-20">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
         <div className="flex items-center gap-2 text-cyan-500 font-mono text-xs uppercase tracking-[0.3em] mb-4">
           <Radio className="h-3.5 w-3.5 animate-pulse" />
@@ -222,6 +252,7 @@ export default async function BlogPage() {
       <div className="mt-20 border-t border-slate-800 pt-12 text-center">
         <NewsletterSubscribe />
       </div>
-    </div>
+      </div>
+    </>
   );
 }

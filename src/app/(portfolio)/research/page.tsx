@@ -10,8 +10,35 @@ export const metadata = {
 export default async function ResearchPage() {
   const researchPapers = await getResearch();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Technical Research - Aime Serge",
+    "description": "Independent research on cloud infrastructure, proactive security, and autonomous systems",
+    "url": "https://aimesergeonline.vercel.app/research",
+    "mainEntity": {
+      "@type": "Person",
+      "name": "Aime Serge UKOBIZABA",
+      "jobTitle": "Senior Software Engineer",
+      "url": "https://aimesergeonline.vercel.app"
+    },
+    "hasPart": researchPapers.map(paper => ({
+      "@type": "ScholarlyArticle",
+      "headline": paper.title,
+      "description": paper.abstract || paper.title,
+      "datePublished": paper.publicationDate,
+      "author": { "@type": "Person", "name": "Aime Serge UKOBIZABA" },
+      "citation": paper.citations || 0
+    }))
+  };
+
   return (
-    <div className="container mx-auto px-6 py-12 lg:py-20">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
           Technical <span className="text-emerald-500">Research</span>
@@ -44,6 +71,7 @@ export default async function ResearchPage() {
         {/* Right Column: Sidebar */}
         <ResearchSidebar papers={researchPapers} />
       </div>
-    </div>
+      </div>
+    </>
   );
 }
