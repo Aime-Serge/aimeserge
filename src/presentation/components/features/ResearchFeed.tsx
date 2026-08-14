@@ -105,9 +105,30 @@ export default function ResearchFeed({ initialPapers }: ResearchFeedProps) {
               <div className="flex flex-col gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-400">
-                      <Microscope className="h-3 w-3" />
-                      PUBLISHED: {paper.createdAt}
+                    <div className="flex items-center gap-3">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-400">
+                        <Microscope className="h-3 w-3" />
+                        Published {paper.publicationDate || paper.createdAt}
+                      </div>
+                      {paper.category && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-mono text-blue-400 uppercase tracking-tight">
+                          {paper.category === 'published' && '📄 Published Paper'}
+                          {paper.category === 'whitepaper' && '📋 Whitepaper'}
+                          {paper.category === 'research' && '🔬 Research'}
+                          {paper.category === 'analysis' && '📊 Analysis'}
+                          {!['published', 'whitepaper', 'research', 'analysis'].includes(paper.category) && paper.category}
+                        </span>
+                      )}
+                      {paper.doi && (
+                        <a 
+                          href={`https://doi.org/${paper.doi}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-mono text-slate-500 hover:text-emerald-400 transition-colors"
+                        >
+                          DOI: {paper.doi}
+                        </a>
+                      )}
                     </div>
                     <div className="flex items-center gap-4 text-[10px] font-mono text-slate-500 uppercase">
                       <span className="flex items-center gap-1">
@@ -116,6 +137,11 @@ export default function ResearchFeed({ initialPapers }: ResearchFeedProps) {
                       <span className="flex items-center gap-1">
                         <Download className="h-3 w-3" /> {paper.downloads} downloads
                       </span>
+                      {paper.citations > 0 && (
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          {paper.citations} citations
+                        </span>
+                      )}
                     </div>
                   </div>
                   
