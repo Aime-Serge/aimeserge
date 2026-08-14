@@ -1,0 +1,56 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="urbanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="400" height="225" fill="url(#urbanGrad)"/>
+  
+  <!-- City skyline silhouette -->
+  <g fill="#ffffff" opacity="0.15">
+    <rect x="20" y="120" width="30" height="85" />
+    <rect x="60" y="100" width="35" height="105" />
+    <rect x="110" y="110" width="40" height="95" />
+    <rect x="165" y="95" width="70" height="110" />
+    <rect x="250" y="105" width="40" height="100" />
+    <rect x="305" y="115" width="35" height="90" />
+    <rect x="355" y="130" width="25" height="75" />
+  </g>
+  
+  <!-- Transit network nodes -->
+  <g fill="#fbbf24" opacity="0.9">
+    <circle cx="80" cy="80" r="6" />
+    <circle cx="150" cy="70" r="6" />
+    <circle cx="220" cy="85" r="6" />
+    <circle cx="280" cy="75" r="6" />
+    <circle cx="330" cy="90" r="6" />
+  </g>
+  
+  <!-- Transit network connections -->
+  <g stroke="#fbbf24" stroke-width="2" opacity="0.7" fill="none">
+    <path d="M 80 80 Q 115 75 150 70" />
+    <path d="M 150 70 Q 185 77 220 85" />
+    <path d="M 220 85 Q 250 80 280 75" />
+    <path d="M 280 75 Q 305 82 330 90" />
+  </g>
+  
+  <!-- Vehicles (buses/vehicles on route) -->
+  <g fill="#10b981">
+    <rect x="110" y="70" width="8" height="5" rx="1" />
+    <rect x="200" y="82" width="8" height="5" rx="1" />
+    <rect x="290" y="73" width="8" height="5" rx="1" />
+  </g>
+  
+  <!-- Pulse effect (data transmission) -->
+  <g stroke="#fbbf24" stroke-width="1" fill="none" opacity="0.5">
+    <circle cx="150" cy="70" r="12" />
+    <circle cx="220" cy="85" r="12" />
+  </g>
+  
+  <!-- Label -->
+  <text x="200" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Urban Mobility IoT Platform</text>
+</svg>

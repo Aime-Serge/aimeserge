@@ -1,0 +1,55 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="portfolioGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="400" height="225" fill="url(#portfolioGrad)"/>
+  
+  <!-- Browser window frame -->
+  <rect x="30" y="30" width="340" height="160" fill="none" stroke="#ffffff" stroke-width="2" rx="4" opacity="0.9"/>
+  
+  <!-- Browser header bar -->
+  <rect x="30" y="30" width="340" height="25" fill="#ffffff" opacity="0.1" rx="4"/>
+  
+  <!-- URL bar -->
+  <rect x="40" y="38" width="180" height="10" fill="#ffffff" opacity="0.2" rx="2"/>
+  
+  <!-- Browser dots -->
+  <circle cx="320" cy="42" r="2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="330" cy="42" r="2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="340" cy="42" r="2" fill="#ffffff" opacity="0.5"/>
+  
+  <!-- Content section - Hero text area -->
+  <rect x="45" y="65" width="150" height="20" fill="#ffffff" opacity="0.15" rx="3"/>
+  <rect x="45" y="92" width="280" height="8" fill="#ffffff" opacity="0.1" rx="2"/>
+  <rect x="45" y="105" width="280" height="8" fill="#ffffff" opacity="0.1" rx="2"/>
+  
+  <!-- Project cards -->
+  <g>
+    <!-- Card 1 -->
+    <rect x="45" y="125" width="80" height="50" fill="#fbbf24" opacity="0.2" rx="3" stroke="#fbbf24" stroke-width="1" opacity="0.4"/>
+    <rect x="48" y="128" width="74" height="3" fill="#fbbf24" opacity="0.6" rx="1"/>
+    
+    <!-- Card 2 -->
+    <rect x="135" y="125" width="80" height="50" fill="#10b981" opacity="0.2" rx="3" stroke="#10b981" stroke-width="1" opacity="0.4"/>
+    <rect x="138" y="128" width="74" height="3" fill="#10b981" opacity="0.6" rx="1"/>
+    
+    <!-- Card 3 -->
+    <rect x="225" y="125" width="80" height="50" fill="#06b6d4" opacity="0.2" rx="3" stroke="#06b6d4" stroke-width="1" opacity="0.4"/>
+    <rect x="228" y="128" width="74" height="3" fill="#06b6d4" opacity="0.6" rx="1"/>
+  </g>
+  
+  <!-- Accent lines -->
+  <g stroke="#ffffff" stroke-width="1" opacity="0.3">
+    <line x1="50" y1="155" x2="340" y2="155" />
+    <line x1="50" y1="165" x2="280" y2="165" />
+  </g>
+  
+  <!-- Label -->
+  <text x="200" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Portfolio Platform</text>
+</svg>

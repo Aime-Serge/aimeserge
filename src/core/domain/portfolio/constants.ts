@@ -8,6 +8,7 @@ export const myProjects: Project[] = [
     tagline: "Data-driven climate trends analysis supporting agricultural resilience across Sub-Saharan Africa.",
     role: "Lead Researcher & Developer",
     summary: "A self-designed research project applying time-series modeling and machine learning to analyze 24 years of East African climate data, identifying warming trends and rainfall variability.",
+    images: ["/uploads/climate-research-thumbnail.svg"],
     description: `
 **Situation:** East Africa faces increasing vulnerability to climate change, yet global climate models often obscure local variation critical for regional planning and agricultural adaptation strategies.
 
@@ -50,6 +51,7 @@ export const myProjects: Project[] = [
     tagline: "IoT-powered fleet optimization reducing commute times and operational waste in Kigali transit.",
     role: "Technical Researcher & Systems Designer",
     summary: "A case study of the Flex Transport model integrating IoT telemetry from bus fleets into real-time cloud data processing pipelines for commuter optimization in Kigali, Rwanda.",
+    images: ["/uploads/urban-mobility-thumbnail.svg"],
     description: `
 **Situation:** Urban transportation in rapidly growing African cities like Kigali faces significant inefficiency: buses run with inconsistent schedules, real-time passenger information is unavailable, and fleet redistribution is reactive rather than predictive. This leads to passenger wait times, operational waste, and poor user experience.
 
@@ -91,6 +93,7 @@ export const myProjects: Project[] = [
     tagline: "Production-ready full-stack system combining portfolio, research, and AI-powered discovery.",
     role: "Full-Stack Engineer & Architect",
     summary: "A modern, security-hardened portfolio platform demonstrating full-stack architecture, AI integration, and production engineering practices.",
+    images: ["/uploads/portfolio-platform-thumbnail.svg"],
     description: `
 **Situation:** Traditional portfolio sites are static and don't demonstrate engineering depth. A portfolio should itself be evidence of engineering capability—showing system design, security practices, scalability, and thoughtful UX.
 

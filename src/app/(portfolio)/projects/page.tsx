@@ -81,6 +81,19 @@ export default async function ProjectsPage() {
                     </div>
                   </div>
 
+                  {/* Project Thumbnail */}
+                  {project.images && project.images.length > 0 && (
+                    <Link href={`/projects/${project.slug}`}>
+                      <div className="relative w-full aspect-video bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-cyan-500/30 transition-colors">
+                        <img
+                          src={project.images[0]}
+                          alt={project.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    </Link>
+                  )}
+
                   {/* Content */}
                   <div className="space-y-4">
                     <Link href={`/projects/${project.slug}`}>
