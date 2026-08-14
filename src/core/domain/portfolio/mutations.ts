@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { validateAdminSession } from "@/core/domain/admin/queries";
 import { withShield } from "@/infrastructure/security/shield";
+import { syndicateContentAction } from "./syndication-actions";
 import { Broadcast } from "./types";
 
 /**
@@ -125,6 +126,13 @@ export async function publishArticleWithSocialSync(article: Broadcast) {
 
     // 3. Sync to Knowledge
     await syncBroadcastToKnowledge(article);
+
+    // 4. Trigger Syndication (async, non-blocking)
+    // Errors in syndication don't fail the publish
+    syndicateContentAction(article).catch((error) => {
+      console.warn("Syndication failed after publishing:", error);
+      // Log but don't throw - article is already published
+    });
 
     return { success: true };
   } catch (error) {

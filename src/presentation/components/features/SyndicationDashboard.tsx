@@ -15,27 +15,27 @@ import {
   Settings,
 } from "lucide-react";
 
-interface SyndicationRecord {
+interface SyndicationStatus {
   id: string;
   platform: string;
   status: "DRAFT" | "SCHEDULED" | "PUBLISHED" | "FAILED";
   externalUrl?: string;
   publishedAt?: string;
   error?: string;
-  metrics?: {
-    views: number;
-    likes: number;
-    shares: number;
-    comments: number;
-  };
+  views?: number;
+  likes?: number;
+  shares?: number;
+  comments?: number;
 }
 
 interface ContentItem {
   id: string;
   title: string;
-  type: "POST" | "ARTICLE" | "PROJECT" | "RESEARCH";
+  slug: string;
+  type: "ARTICLE" | "POST" | "PROJECT" | "RESEARCH";
   createdAt: string;
-  syndicationStatus: SyndicationRecord[];
+  updatedAt: string;
+  syndicationStatus: SyndicationStatus[];
 }
 
 const PLATFORMS = [
@@ -71,51 +71,83 @@ const PLATFORMS = [
 
 export default function SyndicationDashboard() {
   const [contents, setContents] = useState<ContentItem[]>([]);
-  const [selectedContent, setSelectedContent] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyndicating, setIsSyndicating] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "settings">(
     "overview"
   );
+  const [globalMetrics, setGlobalMetrics] = useState({
+    views: 0,
+    likes: 0,
+    shares: 0,
+    comments: 0,
+  });
 
   useEffect(() => {
-    // In a real app, fetch syndication status
-    // setContents(await getSyndicationStatus());
+    loadContent();
   }, []);
 
-  const handleSyndicate = async (contentId: string, platforms: string[]) => {
+  const loadContent = async () => {
     setIsLoading(true);
     try {
-      // Call syndication API
+      const response = await fetch("/api/v1/admin/syndication/content", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setContents(data.content || []);
+
+        // Calculate global metrics
+        let totalViews = 0,
+          totalLikes = 0,
+          totalShares = 0,
+          totalComments = 0;
+        data.content?.forEach((item: ContentItem) => {
+          item.syndicationStatus?.forEach((status) => {
+            totalViews += status.views || 0;
+            totalLikes += status.likes || 0;
+            totalShares += status.shares || 0;
+            totalComments += status.comments || 0;
+          });
+        });
+
+        setGlobalMetrics({
+          views: totalViews,
+          likes: totalLikes,
+          shares: totalShares,
+          comments: totalComments,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load content:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSyndicate = async (contentId: string, platforms: string[]) => {
+    setIsSyndicating(true);
+    try {
       const response = await fetch("/api/v1/admin/syndicate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contentId,
+          contentType: "ARTICLE",
           platforms,
         }),
       });
 
       if (response.ok) {
-        // Refresh status
-        setContents((prev) =>
-          prev.map((item) =>
-            item.id === contentId
-              ? {
-                  ...item,
-                  syndicationStatus: item.syndicationStatus.map((s) =>
-                    platforms.includes(s.platform)
-                      ? { ...s, status: "SCHEDULED" as const }
-                      : s
-                  ),
-                }
-              : item
-          )
-        );
+        // Refresh content status
+        await loadContent();
       }
     } catch (error) {
       console.error("Syndication error:", error);
     } finally {
-      setIsLoading(false);
+      setIsSyndicating(false);
     }
   };
 
@@ -178,21 +210,28 @@ export default function SyndicationDashboard() {
         <div className="space-y-6">
           {/* Active Platforms Summary */}
           <div className="grid gap-4 md:grid-cols-4">
-            {PLATFORMS.map((platform) => (
-              <div
-                key={platform.key}
-                className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
-              >
+            {PLATFORMS.map((platform) => {
+              const publishedCount = contents.filter((c) =>
+                c.syndicationStatus.some(
+                  (s) => s.platform === platform.key && s.status === "PUBLISHED"
+                )
+              ).length;
+              return (
                 <div
-                  className={`${platform.color} inline-flex h-12 w-12 items-center justify-center rounded-lg text-white font-bold mb-4`}
+                  key={platform.key}
+                  className="rounded-xl border border-slate-800 bg-slate-900/40 p-6"
                 >
-                  {platform.icon}
+                  <div
+                    className={`${platform.color} inline-flex h-12 w-12 items-center justify-center rounded-lg text-white font-bold mb-4`}
+                  >
+                    {platform.icon}
+                  </div>
+                  <h3 className="font-semibold text-white mb-2">{platform.name}</h3>
+                  <p className="text-2xl font-bold text-cyan-400">{publishedCount}</p>
+                  <p className="text-xs text-slate-500 mt-1">Published Posts</p>
                 </div>
-                <h3 className="font-semibold text-white mb-2">{platform.name}</h3>
-                <p className="text-2xl font-bold text-cyan-400">0</p>
-                <p className="text-xs text-slate-500 mt-1">Published Posts</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Global Syndication Metrics */}
@@ -202,28 +241,28 @@ export default function SyndicationDashboard() {
                 <Eye className="h-4 w-4" />
                 <span className="text-sm">Total Views</span>
               </div>
-              <p className="text-3xl font-bold text-white">0</p>
+              <p className="text-3xl font-bold text-white">{globalMetrics.views.toLocaleString()}</p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-slate-400">
                 <Heart className="h-4 w-4" />
                 <span className="text-sm">Total Likes</span>
               </div>
-              <p className="text-3xl font-bold text-emerald-400">0</p>
+              <p className="text-3xl font-bold text-emerald-400">{globalMetrics.likes.toLocaleString()}</p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-slate-400">
                 <Share2 className="h-4 w-4" />
                 <span className="text-sm">Total Shares</span>
               </div>
-              <p className="text-3xl font-bold text-cyan-400">0</p>
+              <p className="text-3xl font-bold text-cyan-400">{globalMetrics.shares.toLocaleString()}</p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-slate-400">
                 <MessageCircle className="h-4 w-4" />
                 <span className="text-sm">Total Comments</span>
               </div>
-              <p className="text-3xl font-bold text-purple-400">0</p>
+              <p className="text-3xl font-bold text-purple-400">{globalMetrics.comments.toLocaleString()}</p>
             </div>
           </div>
 
@@ -257,11 +296,20 @@ export default function SyndicationDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {contents.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center">
+                        <p className="text-slate-500 flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading content...
+                        </p>
+                      </td>
+                    </tr>
+                  ) : contents.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-12 text-center">
                         <p className="text-slate-500">
-                          No content available for syndication
+                          No published articles found. Write and publish your first article to start syndicating!
                         </p>
                       </td>
                     </tr>
@@ -293,7 +341,7 @@ export default function SyndicationDashboard() {
                                 <button
                                   key={platform.key}
                                   onClick={() =>
-                                    window.open(status?.externalUrl, "_blank")
+                                    status?.externalUrl && window.open(status.externalUrl, "_blank")
                                   }
                                   disabled={!status || status.status !== "PUBLISHED"}
                                   title={`${platform.name}: ${status?.status || "Not syndicated"}`}
@@ -323,10 +371,10 @@ export default function SyndicationDashboard() {
                                 PLATFORMS.map((p) => p.key)
                               )
                             }
-                            disabled={isLoading}
+                            disabled={isSyndicating}
                             className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 px-3 py-2 text-white font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {isLoading ? (
+                            {isSyndicating ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <Send className="h-4 w-4" />
