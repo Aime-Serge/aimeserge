@@ -9,7 +9,7 @@ import {
   Shield, LayoutDashboard, Database, FileText, 
   MessageSquare, Plus, 
   TrendingUp, Users, Download, Bot, Send, 
-  Mic, Activity, Zap, Cpu, Award, Brain
+  Mic, Activity, Zap, Cpu, Award, Brain, Globe
 } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
 import { isTextUIPart, type UIMessage } from "ai";
@@ -22,6 +22,7 @@ import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
 import AdminContentManager from "@/presentation/components/features/AdminContentManager";
 import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
+import SyndicationDashboard from "@/presentation/components/features/SyndicationDashboard";
 type EditableAdminItem = Record<string, unknown>;
 
 type AdminChatMessage = UIMessage & {
@@ -186,6 +187,7 @@ export default function AdminDashboard() {
     { id: "projects", label: "Projects", icon: Database },
     { id: "research", label: "Research", icon: FileText },
     { id: "broadcasts", label: "Blog", icon: TrendingUp },
+    { id: "syndication", label: "Syndication", icon: Globe },
     { id: "training", label: "AI Training", icon: Brain },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "inquiries", label: "Inquiries", icon: MessageSquare },
@@ -383,6 +385,11 @@ export default function AdminDashboard() {
                 {/* AI Training Module */}
                 {activeTab === "training" && (
                 <ManualSyncTool />
+                )}
+
+                {/* Content Syndication Module */}
+                {activeTab === "syndication" && (
+                <SyndicationDashboard />
                 )}
 
                 {/* Content Management Modules */}

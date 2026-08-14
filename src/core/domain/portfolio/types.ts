@@ -190,3 +190,39 @@ export interface Testimonial {
   date: string;
   verified: boolean;
 }
+
+// Content Syndication Types
+export type SyndicationPlatform = 'MEDIUM' | 'DEV_TO' | 'LINKEDIN' | 'HASHNODE' | 'SUBSTACK' | 'PERSONAL_BLOG';
+
+export interface ContentSyndication {
+  id: string;
+  sourceContentId: string; // Post or Article ID
+  sourceContentType: 'POST' | 'ARTICLE' | 'PROJECT' | 'RESEARCH';
+  platform: SyndicationPlatform;
+  externalUrl?: string; // URL on the syndication platform
+  externalId?: string; // ID on the syndication platform
+  status: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED' | 'FAILED';
+  publishedAt?: string;
+  syncedAt?: string;
+  metrics?: {
+    views: number;
+    likes: number;
+    shares: number;
+    comments: number;
+  };
+  error?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SyndicationConfig {
+  platform: SyndicationPlatform;
+  enabled: boolean;
+  apiKey?: string;
+  username?: string;
+  customizations?: {
+    appendCanonicalUrl?: boolean; // Add canonical link back to original
+    appendAuthorBio?: boolean; // Add author bio at end
+    appendCTA?: boolean; // Add call-to-action
+  };
+}
