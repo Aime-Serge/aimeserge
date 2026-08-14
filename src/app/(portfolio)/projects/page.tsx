@@ -5,7 +5,7 @@ import SecurityAudit from "@/presentation/components/features/SecurityAudit";
 
 export const metadata = {
   title: "Engineering Feed | Aime Serge",
-  description: "Explore my engineering projects in Cloud, Security, and Full-Stack Development presented as a dynamic feed.",
+  description: "Explore security-first, cloud-native projects spanning AI research, real-time systems, and full-stack platforms. Each demonstrates zero-trust architecture and real-world impact.",
 };
 
 export default async function ProjectsPage() {
@@ -24,11 +24,28 @@ export default async function ProjectsPage() {
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
           A real-time feed of architectural blueprints, production systems, and security-hardened applications.
         </p>
+        
+        {/* Engineering Philosophy */}
+        <div className="mt-8 p-6 rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
+          <p className="text-slate-300 leading-relaxed max-w-3xl">
+            Each project demonstrates a <span className="text-cyan-400 font-semibold">security-first architecture</span>, <span className="text-cyan-400 font-semibold">cloud-native scalability</span>, and <span className="text-cyan-400 font-semibold">real-world impact</span>. From environmental research to urban mobility systems to production platforms—all built with zero-trust principles, reproducible infrastructure, and measurable outcomes.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-12 lg:grid-cols-[1fr_400px]">
         {/* Left Column: Projects Feed */}
         <div className="space-y-8">
+          {/* Category Labels */}
+          <div className="flex flex-wrap gap-3 pb-4 border-b border-slate-800">
+            <div className="text-xs font-mono text-slate-500 uppercase tracking-widest self-center">Featured categories:</div>
+            {['AI', 'Cloud', 'Full-Stack'].map((cat) => (
+              <span key={cat} className="px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-400 transition-colors cursor-pointer">
+                {cat}
+              </span>
+            ))}
+          </div>
+
           {projects.map((project) => (
             <article
               key={project.id}
