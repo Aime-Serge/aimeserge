@@ -7,8 +7,8 @@ import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubs
 import Image from "next/image";
 
 export const metadata = {
-  title: "Professional Feed | Technical Insights",
-  description: "LinkedIn-style professional feed featuring technical posts and long-form articles on Cyber-Cloud Engineering and AI.",
+  title: "Engineering Insights | Aime Serge",
+  description: "Professional feed of technical posts, long-form articles, and architectural insights on cloud engineering, cybersecurity, and AI systems. Timeless engineering wisdom and production learnings.",
 };
 
 export default async function BlogPage() {
@@ -22,11 +22,18 @@ export default async function BlogPage() {
           Live_Professional_Feed
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Technical <span className="text-cyan-500">Activity</span>
+          Engineering <span className="text-cyan-500">Insights</span>
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Insights on production logs, architectural breakthroughs, and professional milestones.
+          Timeless technical wisdom: production learnings, architectural breakthroughs, and professional milestones in cloud engineering and cybersecurity.
         </p>
+        
+        {/* Feed Purpose */}
+        <div className="mt-8 p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
+          <p className="text-sm text-slate-300">
+            Articles, posts, and technical observations spanning distributed systems, security architecture, and AI-driven infrastructure. Each piece represents real-world lessons and production experience.
+          </p>
+        </div>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-8">
@@ -93,7 +100,12 @@ export default async function BlogPage() {
                   </div>
                 )}
                 <div className="p-4">
-                  <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-1">Article</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Article</p>
+                    <span className="px-2 py-0.5 text-[9px] font-mono text-cyan-500 bg-cyan-500/10 rounded border border-cyan-500/20">
+                      {post.article.estimatedReadTime} min read
+                    </span>
+                  </div>
                   <h4 className="text-sm font-bold text-white group-hover:text-cyan-400 transition mb-2">
                     {post.article.title}
                   </h4>
@@ -102,7 +114,7 @@ export default async function BlogPage() {
                   </p>
                   <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-500 uppercase font-mono">
                     <Clock className="h-3 w-3" />
-                    <span>{post.article.estimatedReadTime} min read</span>
+                    <span>Published on {new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                   </div>
                 </div>
               </Link>
