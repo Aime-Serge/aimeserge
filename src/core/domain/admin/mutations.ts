@@ -6,6 +6,7 @@ import { SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
 import { withShield } from "@/infrastructure/security/shield";
 import { validateAdminSession } from "./queries";
+import { sanitizeContentBlocks, sanitizeHtmlContent } from '@/infrastructure/security/sanitizer';
 
 /**
  * Internal helper to record security events.
@@ -98,10 +99,29 @@ async function upsertContentBase(params: { table: string, payload: object, path:
   const { table, payload, path } = params;
   try {
     const supabase = await validateAdminSession();
+
+    // Defensive sanitization: clean common rich-content fields before DB write
+    let safePayload: any = { ...(payload as any) };
+    try {
+      if (safePayload.content && Array.isArray(safePayload.content)) {
+        safePayload.content = sanitizeContentBlocks(safePayload.content);
+      }
+      // sanitize common text fields if present
+      if (typeof safePayload.description === 'string') {
+        safePayload.description = sanitizeHtmlContent(safePayload.description);
+      }
+      if (typeof safePayload.summary === 'string') {
+        safePayload.summary = sanitizeHtmlContent(safePayload.summary);
+      }
+    } catch (e) {
+      // If sanitization fails, fallback to original payload and log
+      console.error('Sanitization failed, proceeding with original payload:', e);
+      safePayload = payload;
+    }
     
     const { data, error } = await supabase
       .from(table)
-      .upsert(payload)
+      .upsert(safePayload)
       .select()
       .single();
 

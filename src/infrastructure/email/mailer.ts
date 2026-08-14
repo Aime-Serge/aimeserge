@@ -1,10 +1,17 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendEmail({ to, subject, html }: { to: string, subject: string, html: string }) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'Portfolio <onboarding@resend.dev>';
+  const apiKey = process.env.RESEND_API_KEY;
+
+  // If Resend API key is not configured, gracefully skip email sending (development mode)
+  if (!apiKey) {
+    console.warn(`⚠️ RESEND_API_KEY not configured. Email would be sent to ${to} with subject: ${subject}`);
+    return { success: true, skipped: true, message: 'Email skipped: RESEND_API_KEY not configured' };
+  }
   
+  const resend = new Resend(apiKey);
+
   try {
     console.log(`📡 Attempting to send email to ${to} via Resend...`);
     

@@ -4,7 +4,6 @@ import { cn } from "@/infrastructure/security/headers";
 import Header from "@/presentation/components/layout/Header";
 import Footer from "@/presentation/components/layout/Footer";
 import ClientWrapper from "@/presentation/components/layout/ClientWrapper";
-import AIChat from "@/presentation/components/features/AIChat";
 import ScrollToTop from "@/presentation/components/shared/ScrollToTop";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -82,8 +81,6 @@ export default function RootLayout({
           </main>
           <Footer />
           
-          {/* Persistent AI Assistant Node */}
-          <AIChat />
           <ScrollToTop />
           <Analytics />
           <SpeedInsights />

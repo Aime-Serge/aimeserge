@@ -1,130 +1,161 @@
-# Aime Serge Portfolio Platform 🚀
+# Aime Serge UKOBIZABA — Professional Portfolio Platform
 
-[![Next.js 15](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI-blue?style=for-the-badge&logo=googlegemini)](https://deepmind.google/technologies/gemini/)
+[Live portfolio](https://aimesergeonline.vercel.app/) · [Projects](https://aimesergeonline.vercel.app/projects) · [Research](https://aimesergeonline.vercel.app/research) · [LinkedIn](https://linkedin.com/in/aimeserge) · [GitHub](https://github.com/AimeSerge)
 
-> **A mission-critical professional ecosystem for software engineering, cybersecurity research, and AI-driven brand orchestration.**
+This repository contains the source for Aime Serge UKOBIZABA’s professional portfolio: a full-stack platform that presents engineering work, technical research, credentials, and professional writing in one accessible experience. It is designed to give recruiters and admissions reviewers direct evidence of technical depth, system design practice, security awareness, and scholarly communication.
 
-This platform is more than a portfolio; it is a **highly-engineered professional operating system**. It leverages **Clean Architecture** and **Domain-Driven Design (DDD)** to provide a secure, scalable, and intelligent hub for content distribution, career management, and automated knowledge discovery.
+## What this project demonstrates
 
----
+The platform is both a portfolio and a working software system. It demonstrates the ability to:
 
-## 🏛️ Architectural Philosophy
+- Design and deliver a modern full-stack application with Next.js, React, TypeScript, and PostgreSQL.
+- Model professional, academic, and project information in a relational database with Supabase and Row Level Security.
+- Build AI-assisted discovery using semantic search, Gemini embeddings, and retrieval-augmented chat.
+- Apply practical security controls, including server-side validation, PII redaction, rate limiting, security headers, protected administration routes, and audit logging.
+- Create clear public-facing experiences for projects, research papers, technical articles, a résumé, and professional enquiries.
+- Maintain an editorial workflow through a protected content-management dashboard and database-triggered synchronization.
 
-The system is built on **Hexagonal Architecture** (Ports & Adapters) principles, ensuring that business logic is completely decoupled from infrastructure concerns.
+## For recruiters and admissions reviewers
 
-- **`src/core/domain`**: Pure business logic, entities, and repository interfaces. No external dependencies.
-- **`src/core/application`**: Use cases and orchestration logic (e.g., AI grounding, webhook processing).
-- **`src/infrastructure`**: Concrete implementations of database clients, email services, security filters, and logging.
-- **`src/presentation`**: Modern UI layer using Next.js App Router, React Server Components (RSC), and Framer Motion for high-fidelity interactions.
+The public site provides focused entry points for evaluating the candidate’s work:
 
----
+| Area | Evidence available |
+| --- | --- |
+| Engineering portfolio | Project pages with technologies, responsibilities, features, media, and case-study documents. |
+| Research and communication | Technical research papers, abstracts, citations, downloadable assets, articles, and short-form posts. |
+| Professional preparation | Résumé, education, experience, certificates, and verified professional profile links. |
+| Applied AI | A contextual assistant grounded in portfolio and research content, plus semantic search support. |
+| Security mindset | Input handling and data protection utilities, authentication middleware, protected administration, and security-event records. |
 
-## 💎 Core Capabilities
+The home page frames the work around secure cloud architecture, AI deployment, and scalable full-stack systems. The project collection includes case-study PDFs in `public/uploads/` so reviewers can inspect implementation work in more depth.
 
-### 🧠 AI Intelligence & RAG Pipeline
-- **Retrieval-Augmented Generation (RAG):** Context-aware AI assistant utilizing `pgvector` for semantic search.
-- **High-Dimension Embeddings:** Optimized **3072D vector space** (Gemini gemini-embedding-001) for superior retrieval accuracy.
-- **Automated Grounding:** Real-time synchronization of project updates and research papers into the AI knowledge base via database webhooks.
-- **Multimodal Speech:** Multimodal STT via Gemini 2.5 Flash and high-fidelity TTS via native Web Speech API.
+## Key capabilities
 
-### 📝 LinkedIn-Style Content Engine
-- **Broadcast System:** Support for short-form posts and long-form articles with estimated read times.
-- **Content Blocks:** Modular article builder supporting headings, code blocks, callouts, and multi-media layouts.
-- **Engagement Metrics:** Native tracking of views, shares, and likes for performance analysis.
-- **Visibility Controls:** Granular permissions for content access and comments.
+### Public experience
 
-### 🛡️ Cybersecurity & Resilience
-- **PII Filtering:** Automated redaction of sensitive information before AI processing or logging.
-- **Security Audit Layer:** Real-time logging of critical system events with automated Discord alerts.
-- **Edge Middleware:** Zero-trust architecture with JWT-based admin verification and CSP injection.
-- **Rate Limiting:** Distributed rate limiting for public-facing API routes and form submissions.
+- Responsive portfolio, project, research, blog, résumé, contact, and terminal-style navigation pages.
+- SEO metadata, Open Graph metadata, sitemap, robots configuration, and Person structured data.
+- Research and article pages that render structured content and support associated documents.
+- A multi-step contact workflow with validation, a honeypot field, newsletter preference, and notification support.
 
-### 📁 Career & Research Management
-- **Professional Schema:** Deep relational mapping between Organizations, Experiences, Projects, and Certificates.
-- **Research Hub:** Distribution system for technical whitepapers with PDF management and abstract indexing.
-- **Terminal Interface:** Interactive, hacker-themed CLI for navigating professional artifacts.
+### Content and professional data
 
----
+- Normalized records for organizations, experience, education, certificates, projects, and research.
+- Separate article and post workflows, including publication state and calculated reading time.
+- A protected administrative workspace for managing projects, research, credentials, broadcasts, résumé content, enquiries, security logs, and manual knowledge-base synchronization.
 
-## 🛠️ Tech Stack
+### AI and search
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS 4, Framer Motion |
-| **Backend** | Supabase (PostgreSQL), Next.js Route Handlers, Server Actions |
-| **AI/ML** | Google Gemini (Embeddings, Chat & STT), Web Speech API (TTS), Vercel AI SDK |
-| **Security** | Jose (JWT), Zod (Validation), Custom PII Redaction Logic |
-| **Operations** | Resend (Email), Discord Webhooks (Alerts), Supabase Storage |
-| **State** | Redux Toolkit (Data Sync), Zustand (UI State) |
+- Gemini-powered chat endpoint with streaming responses.
+- Retrieval context assembled from a `pgvector` knowledge base using 3072-dimension embeddings.
+- Database-webhook workflow for updating searchable knowledge when portfolio content changes.
+- Speech-to-text and text-to-speech endpoints/interfaces for more accessible interaction.
 
----
+### Security and reliability
 
-## 🚀 System Design Highlights
+- Zod schemas and server-side validation at system boundaries.
+- PII filtering before AI processing and logging.
+- Request throttling for public AI and interaction flows.
+- JWT-protected administrative access and security-focused HTTP headers through middleware.
+- Supabase Row Level Security policies, security event logging, and optional Discord/email alerts.
 
-### 🔄 Webhook-Driven Knowledge Orchestration
-When a new project or research paper is published, a Supabase webhook triggers the `HandleDbWebhookUseCase`. This use case:
-1.  Extracts and sanitizes the content.
-2.  Generates high-dimensional embeddings.
-3.  Upserts the record into the `knowledge` vector table.
-4.  Notifies the admin via the Secure Notification Layer.
+## Architecture
 
-### ⚡ Professional Relational Schema
-The database follows a normalized professional schema, allowing for complex queries like "Show me all projects I worked on while at Organization X that used Tool Y".
+The codebase uses a pragmatic layered structure that keeps domain rules distinct from delivery and infrastructure concerns:
 
----
+```text
+src/
+├── app/                       # Next.js routes, layouts, API handlers, metadata
+├── core/
+│   ├── domain/                # Portfolio, research, AI, admin, and interaction rules
+│   └── application/           # Use cases and DTOs, including webhook processing
+├── infrastructure/            # Database, email, security, utilities, integrations
+└── presentation/              # Reusable UI, features, layouts, and global styles
+supabase/migrations/           # Versioned schema, RLS, trigger, and vector changes
+scripts/                       # Controlled seeding, synchronization, and setup tasks
+public/uploads/                # Résumé and project case-study assets
+```
 
-## 🚦 Getting Started
+This separation makes the application easier to extend: presentation components do not own core business rules, while domain workflows can rely on infrastructure adapters for services such as Supabase, Gemini, email, and notifications.
+
+## Technology stack
+
+| Concern | Implementation |
+| --- | --- |
+| Web application | Next.js 15, React 19, TypeScript, App Router |
+| Styling and interaction | Tailwind CSS, Framer Motion, Lucide |
+| Data | Supabase, PostgreSQL, `pgvector`, Supabase Storage |
+| AI | Google Gemini, Vercel AI SDK, semantic retrieval |
+| Application state | Redux Toolkit and Zustand |
+| Security | Jose/JWT, Zod, custom sanitization and PII filtering, rate limiting |
+| Operations | Resend, Discord webhooks, Vercel Analytics and Speed Insights |
+
+## Run locally
 
 ### Prerequisites
-- Node.js 20+
-- Supabase Project with `pgvector` enabled
-- Google Gemini API Key
 
-### Installation
+- Node.js 20 or later
+- npm
+- A Supabase project; enable `pgvector` if using semantic search
+- A Google Gemini API key for chat, embeddings, or speech features
+- Supabase CLI for applying migrations (optional for UI-only development)
+
+### Setup
+
 ```bash
-# Clone the repository
 git clone https://github.com/Aime-Serge/aimeserge.git
-
-# Install dependencies
+cd aimeserge
 npm install
-
-# Setup environment variables
 cp .env.example .env.local
+npm run dev
 ```
 
-### Environment Configuration
-Ensure your `.env.local` contains these critical keys:
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-GEMINI_API_KEY=          # Primary AI engine
-JWT_SECRET=              # Admin session signing
-DISCORD_WEBHOOK_URL=     # Critical security alerts
-```
+Open `http://localhost:3000` after the development server starts.
 
-### Database Migration
-The schema is managed through Supabase migrations. Apply the latest state using:
+To apply the versioned database schema to a linked Supabase project:
+
 ```bash
 supabase db push
 ```
 
----
+### Environment variables
 
-## 👨‍💻 Author
+`.env.example` documents every supported setting. The primary variables are:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+JWT_SECRET=
+ADMIN_EMAIL=
+GEMINI_API_KEY=
+SUPABASE_WEBHOOK_SECRET=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+DISCORD_WEBHOOK_URL=
+```
+
+Keep `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, Gemini keys, and webhook URLs out of version control. The service-role key must remain server-side only. See [DATABASE_CREDENTIALS_SETUP.md](DATABASE_CREDENTIALS_SETUP.md) for fuller setup guidance.
+
+## Quality checks
+
+```bash
+npm run lint
+npm run build
+```
+
+Production deployments should provide the same required secrets through the hosting provider’s secure environment-variable settings. The project includes `vercel.json` for Vercel-oriented deployment configuration.
+
+## Author
 
 **Aime Serge UKOBIZABA**
-*Senior Software Engineer & Cybersecurity Specialist*
+Software Engineer · Cybersecurity Analyst · Aspiring AI Engineer
 
-- 🌍 [Live Platform](https://aimesergeonline.vercel.app/)
-- 🤝 [LinkedIn](https://linkedin.com/in/aimeserge)
-- 🧪 [Research](https://aimesergeonline.vercel.app/research)
+- Portfolio: [aimesergeonline.vercel.app](https://aimesergeonline.vercel.app/)
+- Email: [aimeserge51260@gmail.com](mailto:aimeserge51260@gmail.com)
+- LinkedIn: [linkedin.com/in/aimeserge](https://linkedin.com/in/aimeserge)
+- GitHub: [github.com/AimeSerge](https://github.com/AimeSerge)
 
----
+## License
 
-## 📜 License
-
-© 2026 Aime Serge UKOBIZABA. All rights reserved. This repository is private and proprietary.
+© 2026 Aime Serge UKOBIZABA. All rights reserved. This is a private, proprietary portfolio project.

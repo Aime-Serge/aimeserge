@@ -1,5 +1,8 @@
 "use client";
 
+// Prevent prerendering of this client page
+export const dynamic = 'force-dynamic';
+
 import { type ComponentProps, type FormEvent, useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -8,7 +11,6 @@ import {
   TrendingUp, Users, Download, Bot, Send, 
   Mic, Activity, Zap, Cpu, Award, Brain
 } from "lucide-react";
-import { getAdminAnalytics, getSecurityLogs } from "@/core/domain/admin/actions";
 import { cn } from "@/infrastructure/security/headers";
 import { isTextUIPart, type UIMessage } from "ai";
 import { toast } from "react-hot-toast";
@@ -81,18 +83,26 @@ export default function AdminDashboard() {
 
   const handleExportLogs = async () => {
     toast.loading("Fetching audit trail...");
-    const result = await getSecurityLogs();
-    
-    if (result.success && result.data) {
-      const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `security_audit_${new Date().toISOString()}.json`;
-      a.click();
-      toast.dismiss();
-      toast.success("Audit Logs Exported.");
-    } else {
+    try {
+      const response = await fetch('/api/v1/admin/security-logs');
+      if (!response.ok) throw new Error('Failed to fetch logs');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `security_audit_${new Date().toISOString()}.json`;
+        a.click();
+        toast.dismiss();
+        toast.success("Audit Logs Exported.");
+      } else {
+        toast.dismiss();
+        toast.error("Export Failed.");
+      }
+    } catch (error) {
+      console.error('Failed to export logs:', error);
       toast.dismiss();
       toast.error("Export Failed.");
     }
@@ -153,9 +163,19 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadStats() {
-      const data = await getAdminAnalytics();
-      setStats(data);
-      setIsLoading(false);
+      try {
+        // Fetch analytics from server endpoint instead of direct function
+        const response = await fetch('/api/v1/admin/analytics');
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to load analytics:', error);
+        // Set default stats on error
+        setStats({ totalViews: 0, totalInquiries: 0, researchImpact: 0 });
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadStats();
   }, []);

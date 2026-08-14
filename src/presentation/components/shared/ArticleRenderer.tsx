@@ -4,6 +4,7 @@ import React from "react";
 import { ContentBlock } from "@/core/domain/portfolio/types";
 import Image from "next/image";
 import { cn } from "@/infrastructure/security/headers";
+import { sanitizeHtmlContent, isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
 import { Info, AlertTriangle, CheckCircle2, PlayCircle } from "lucide-react";
 
 interface ArticleRendererProps {
@@ -19,10 +20,10 @@ export default function ArticleRenderer({ blocks }: ArticleRendererProps) {
         switch (block.type) {
           case 'paragraph':
             return (
-              <p 
-                key={block.id} 
+              <p
+                key={block.id}
                 className="text-lg leading-relaxed text-slate-300"
-                dangerouslySetInnerHTML={{ __html: block.data.text || "" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtmlContent(block.data.text || "") }}
               />
             );
 
@@ -66,13 +67,23 @@ export default function ArticleRenderer({ blocks }: ArticleRendererProps) {
             return (
               <figure key={block.id} className="my-10 space-y-3">
                 <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-800 bg-black shadow-2xl">
-                   <iframe
-                    src={block.data.url}
-                    title={block.data.caption || "Video content"}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  {isAllowedIframeSrc(block.data.url) ? (
+                    <iframe
+                      src={block.data.url}
+                      title={block.data.caption || "Video content"}
+                      className="absolute inset-0 h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      referrerPolicy="no-referrer"
+                      sandbox="allow-scripts allow-popups"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="p-4 text-sm text-slate-400">
+                      <a href={block.data.url} target="_blank" rel="noopener noreferrer" className="underline">
+                        Open media in new tab
+                      </a>
+                    </div>
+                  )}
                 </div>
                 {block.data.caption && (
                   <figcaption className="text-center text-sm text-slate-500 italic">
@@ -119,7 +130,7 @@ export default function ArticleRenderer({ blocks }: ArticleRendererProps) {
             return (
               <ul key={block.id} className="list-disc list-inside space-y-3 text-slate-300 my-6">
                 {block.data.items?.map((item, idx) => (
-                  <li key={idx} dangerouslySetInnerHTML={{ __html: item }} />
+                  <li key={idx} dangerouslySetInnerHTML={{ __html: sanitizeHtmlContent(item) }} />
                 ))}
               </ul>
             );

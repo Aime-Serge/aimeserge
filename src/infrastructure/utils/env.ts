@@ -30,7 +30,11 @@ export const validateEnv = (): Partial<Env> => {
   });
 
   if (!result.success) {
-    console.warn("⚠️ Environment Variable Validation Warning:", result.error.format());
+    const formatted = result.error.format();
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(`Missing or invalid required environment variables: ${JSON.stringify(formatted)}`);
+    }
+    console.warn("⚠️ Environment Variable Validation Warning:", formatted);
     return {};
   }
 

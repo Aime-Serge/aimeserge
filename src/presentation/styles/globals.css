@@ -4,24 +4,120 @@
   --animate-progress-indefinite: progress-indefinite 2s linear infinite;
 
   @keyframes progress-indefinite {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
   }
 }
 
-:root {
-  --font-sans-custom: "Space Grotesk", "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
-  --font-mono-custom: "JetBrains Mono", "IBM Plex Mono", "Fira Code", monospace;
+@layer base {
+  :root {
+    color-scheme: dark;
+    --font-sans-custom:
+      "Space Grotesk", "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+    --font-mono-custom:
+      "JetBrains Mono", "IBM Plex Mono", "Fira Code", monospace;
+  }
+
+  html {
+    min-height: 100%;
+    background: #020617;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    overflow-x: clip;
+    margin: 0;
+    background: #020617;
+    font-family: var(--font-sans-custom);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 3px;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono-custom);
+  }
 }
 
-body {
-  font-family: var(--font-sans-custom);
+@keyframes portfolio-enter {
+  from {
+    opacity: var(--enter-opacity, 1);
+    transform: translate3d(
+        var(--enter-translate-x, 0),
+        var(--enter-translate-y, 0),
+        0
+      )
+      scale(var(--enter-scale, 1));
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
-code,
-pre,
-.font-mono {
-  font-family: var(--font-mono-custom);
+@layer utilities {
+  .animate-in,
+  .animate-fade-in {
+    animation: portfolio-enter 300ms ease-out both;
+  }
+
+  .fade-in {
+    --enter-opacity: 0;
+  }
+
+  .zoom-in {
+    --enter-opacity: 0;
+    --enter-scale: 0.96;
+  }
+
+  .slide-in-from-top-1 {
+    --enter-translate-y: -0.25rem;
+  }
+
+  .slide-in-from-bottom-2 {
+    --enter-translate-y: 0.5rem;
+  }
+
+  .slide-in-from-bottom-4 {
+    --enter-translate-y: 1rem;
+  }
+
+  .slide-in-from-right-4 {
+    --enter-translate-x: 1rem;
+  }
 }
 
-/* Toast entrance animation */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

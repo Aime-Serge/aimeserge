@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
+import { isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
 
 interface ProjectPageProps {
   params: Promise<{ slug: string }>;
@@ -73,13 +74,23 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             {project.videoUrl && (
               <section aria-label="Project Video Demonstration">
                 <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
-                  <iframe
-                    src={project.videoUrl}
-                    title={`Video for ${project.title}`}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  {isAllowedIframeSrc(project.videoUrl) ? (
+                    <iframe
+                      src={project.videoUrl}
+                      title={`Video for ${project.title}`}
+                      className="absolute inset-0 h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      referrerPolicy="no-referrer"
+                      sandbox="allow-scripts allow-popups"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="p-4 text-sm text-slate-400">
+                      <a href={project.videoUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                        Open media in new tab
+                      </a>
+                    </div>
+                  )}
                 </div>
               </section>
             )}

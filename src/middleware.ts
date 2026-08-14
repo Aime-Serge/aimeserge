@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
     img-src 'self' blob: data: https://*.supabase.co;
     font-src 'self' https://fonts.gstatic.com;
     object-src 'none';
+    frame-src 'self' https://www.youtube.com https://player.vimeo.com;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';

@@ -2,6 +2,7 @@ import { getPosts } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { Clock, Radio, Globe, MessageSquare, Repeat2, Heart, Send, PlayCircle, MoreHorizontal } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
+import { isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
 import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
 import Image from "next/image";
 
@@ -110,13 +111,23 @@ export default async function BlogPage() {
             {/* CASE 2: Video Post Payload */}
             {post.mediaType === 'VIDEO' && post.mediaPayload.videoUrl && (
               <div className="relative aspect-video w-full border-y border-slate-800 bg-black">
-                <iframe
-                  src={post.mediaPayload.videoUrl}
-                  title="Post video content"
-                  className="absolute inset-0 h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                {isAllowedIframeSrc(post.mediaPayload.videoUrl) ? (
+                  <iframe
+                    src={post.mediaPayload.videoUrl}
+                    title="Post video content"
+                    className="absolute inset-0 h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="no-referrer"
+                    sandbox="allow-scripts allow-popups"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="p-4 text-sm text-slate-400">
+                    <a href={post.mediaPayload.videoUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                      Open media in new tab
+                    </a>
+                  </div>
+                )}
               </div>
             )}
 
