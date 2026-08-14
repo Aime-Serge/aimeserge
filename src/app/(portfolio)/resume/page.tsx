@@ -8,7 +8,7 @@ import { Experience } from "@/core/domain/portfolio/types";
 
 export const metadata = {
   title: "Professional Blueprint | Aime Serge UKOBIZABA",
-  description: "Senior Software Engineer, Google Cloud Architect, and AI Specialist. Explore my professional timeline and verifiable credentials.",
+  description: "Senior Software Engineer, Google Cloud Architect, and AI Specialist with 5+ years deploying secure, scalable systems. AWS & GCP certified. Expertise: Cloud Architecture, Zero-Trust Security, ML Systems, Full-Stack Engineering. Verifiable credentials and peer-validated achievements.",
 };
 
 const skillMatrix = [
@@ -50,6 +50,22 @@ export default async function ResumePage() {
           <p className="mt-6 text-slate-400 text-lg md:text-xl max-w-2xl leading-relaxed">
             Architecting secure, scalable AI systems and cloud infrastructure. Verifiable expertise in high-performance computing.
           </p>
+          
+          {/* Key Metrics Highlights */}
+          <div className="mt-8 grid grid-cols-3 gap-4 md:gap-6">
+            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
+              <div className="text-lg font-bold text-cyan-400">5+</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider">Years Experience</div>
+            </div>
+            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
+              <div className="text-lg font-bold text-cyan-400">10+</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider">Verified Certs</div>
+            </div>
+            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
+              <div className="text-lg font-bold text-cyan-400">100%</div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider">Vetted Profile</div>
+            </div>
+          </div>
         </div>
         <a 
           href={latestResumeUrl || "/uploads/AimeSergeUkobizabaResume.pdf"} 
@@ -100,7 +116,14 @@ export default async function ResumePage() {
                         <div className="absolute -left-[41px] md:-left-[57px] top-1.5 h-4 w-4 rounded-full border-4 border-slate-950 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
                         
                         <div>
-                          <h4 className="text-lg font-bold text-slate-200">{role.title}</h4>
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-lg font-bold text-slate-200">{role.title}</h4>
+                            {!role.endDate && (
+                              <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400">
+                                Current
+                              </span>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-[10px] font-mono text-slate-500 uppercase tracking-wider">
                             <span className="text-cyan-500 font-bold">{role.employmentType.replace('_', ' ')}</span>
                             <span>•</span>
@@ -115,6 +138,22 @@ export default async function ResumePage() {
                           <div className="mt-6 text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">
                             {role.description}
                           </div>
+                          
+                          {/* Impact Highlights */}
+                          {role.description && role.description.includes('•') && (
+                            <div className="mt-4 space-y-2 ml-4 border-l border-cyan-500/30 pl-4">
+                              {role.description
+                                .split('•')
+                                .slice(0, 3)
+                                .filter(line => line.trim())
+                                .map((impact, idx) => (
+                                  <div key={idx} className="flex gap-2 text-xs text-cyan-400">
+                                    <span className="text-cyan-500 font-bold mt-0.5">▸</span>
+                                    <span>{impact.trim()}</span>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
 
                           {role.skillsUsed && role.skillsUsed.length > 0 && (
                             <div className="mt-6 flex flex-wrap gap-2">
@@ -154,7 +193,7 @@ export default async function ResumePage() {
                              <Building2 className="h-8 w-8 text-slate-800" />
                           )}
                        </div>
-                       <div className="space-y-4">
+                       <div className="space-y-4 flex-1">
                           <div>
                              <h4 className="text-xl font-bold text-white">{edu.institution?.name}</h4>
                              <p className="text-emerald-500 font-bold text-sm mt-1">{edu.degree} • {edu.fieldOfStudy}</p>
@@ -167,6 +206,35 @@ export default async function ResumePage() {
                                <span className="font-bold text-slate-500 not-italic">Activities:</span> {edu.activities}
                             </p>
                           )}
+                          
+                          {/* Relevant Coursework Tags */}
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {edu.fieldOfStudy?.includes('Computer') && (
+                              <>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Data Structures</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Algorithms</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Database Systems</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Software Engineering</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Distributed Systems</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Network Security</span>
+                              </>
+                            )}
+                            {edu.fieldOfStudy?.includes('Information') && (
+                              <>
+                                <span className="px-2 py-1 rounded-md bg-cyan-600/10 border border-cyan-500/30 text-[9px] font-mono text-cyan-500 uppercase tracking-wider">Cloud Architecture</span>
+                                <span className="px-2 py-1 rounded-md bg-cyan-600/10 border border-cyan-500/30 text-[9px] font-mono text-cyan-500 uppercase tracking-wider">Information Security</span>
+                                <span className="px-2 py-1 rounded-md bg-cyan-600/10 border border-cyan-500/30 text-[9px] font-mono text-cyan-500 uppercase tracking-wider">IAM & Zero Trust</span>
+                                <span className="px-2 py-1 rounded-md bg-cyan-600/10 border border-cyan-500/30 text-[9px] font-mono text-cyan-500 uppercase tracking-wider">Systems Administration</span>
+                              </>
+                            )}
+                            {edu.fieldOfStudy?.includes('Business') && (
+                              <>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Project Management</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Strategic Planning</span>
+                                <span className="px-2 py-1 rounded-md bg-emerald-600/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-500 uppercase tracking-wider">Technology Leadership</span>
+                              </>
+                            )}
+                          </div>
                        </div>
                     </div>
                  </article>
@@ -183,45 +251,151 @@ export default async function ResumePage() {
                <h2 id="certs-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Verified_Credentials</h2>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              {certificates.map((cert) => (
-                <article key={cert.id} className="flex flex-col h-full rounded-2xl border border-slate-800 bg-slate-950 p-6 transition-all hover:border-cyan-500/30 group">
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                     <div className="h-12 w-12 rounded-xl border border-slate-800 bg-slate-900 flex items-center justify-center shrink-0">
-                        {cert.issuer?.logoUrl ? (
-                          <Image src={cert.issuer.logoUrl} alt={cert.provider} fill className="object-cover" />
-                        ) : (
-                          <CheckCircle className="h-6 w-6 text-cyan-900" />
-                        )}
-                     </div>
-                     <div className="flex flex-wrap gap-2">
-                        {cert.verifyUrl && (
-                          <a href={cert.verifyUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-900 text-slate-500 hover:text-cyan-400 border border-slate-800 transition-colors" title="Verify Online">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
-                        {cert.pdfUrl && (
-                          <a href={cert.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-cyan-600/10 text-cyan-500 hover:bg-cyan-600 hover:text-white transition-all" title="View PDF">
-                            <FileText className="h-4 w-4" />
-                          </a>
-                        )}
-                     </div>
+            {/* Organize certificates by competency area */}
+            {certificates.length > 0 && (
+              <div className="space-y-12">
+                {/* Cloud Architecture Certifications */}
+                {certificates.filter(c => c.name.includes('Cloud') || c.name.includes('Associate') || c.name.includes('Professional')).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                      <Cloud className="h-4 w-4" /> Cloud Architecture
+                    </h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {certificates.filter(c => c.name.includes('Cloud') || c.name.includes('Associate') || c.name.includes('Professional')).map((cert) => (
+                        <article key={cert.id} className="flex flex-col h-full rounded-2xl border border-slate-800 bg-slate-950 p-6 transition-all hover:border-cyan-500/30 group">
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                             <div className="h-12 w-12 rounded-xl border border-slate-800 bg-slate-900 flex items-center justify-center shrink-0">
+                                {cert.issuer?.logoUrl ? (
+                                  <Image src={cert.issuer.logoUrl} alt={cert.provider} fill className="object-cover" />
+                                ) : (
+                                  <CheckCircle className="h-6 w-6 text-cyan-900" />
+                                )}
+                             </div>
+                             <div className="flex flex-wrap gap-2">
+                                {cert.verifyUrl && (
+                                  <a href={cert.verifyUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-900 text-slate-500 hover:text-cyan-400 border border-slate-800 transition-colors" title="Verify Online">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {cert.pdfUrl && (
+                                  <a href={cert.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-cyan-600/10 text-cyan-500 hover:bg-cyan-600 hover:text-white transition-all" title="View PDF">
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                )}
+                             </div>
+                          </div>
+                          <div className="flex-1 space-y-2">
+                             <h5 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{cert.name}</h5>
+                             <p className="text-xs text-slate-400">{cert.provider}</p>
+                             <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mt-4">
+                                Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                                {cert.expiryDate ? ` • Exp ${new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ' • No Expiry'}
+                             </p>
+                             {cert.credentialId && (
+                               <p className="text-[9px] font-mono text-slate-700 uppercase mt-1">ID: {cert.credentialId}</p>
+                             )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
                   </div>
+                )}
 
-                  <div className="flex-1 space-y-2">
-                     <h5 className="font-bold text-white group-hover:text-cyan-400 transition-colors">{cert.name}</h5>
-                     <p className="text-xs text-slate-400">{cert.provider}</p>
-                     <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mt-4">
-                        Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
-                        {cert.expiryDate ? ` • Exp ${new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ' • No Expiry'}
-                     </p>
-                     {cert.credentialId && (
-                       <p className="text-[9px] font-mono text-slate-700 uppercase mt-1">ID: {cert.credentialId}</p>
-                     )}
+                {/* Security & Compliance Certifications */}
+                {certificates.filter(c => c.name.includes('Security') || c.name.includes('Certified') || c.name.includes('Compliance')).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-rose-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" /> Security & Compliance
+                    </h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {certificates.filter(c => c.name.includes('Security') || c.name.includes('Certified') || c.name.includes('Compliance')).map((cert) => (
+                        <article key={cert.id} className="flex flex-col h-full rounded-2xl border border-slate-800 bg-slate-950 p-6 transition-all hover:border-rose-500/30 group">
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                             <div className="h-12 w-12 rounded-xl border border-slate-800 bg-slate-900 flex items-center justify-center shrink-0">
+                                {cert.issuer?.logoUrl ? (
+                                  <Image src={cert.issuer.logoUrl} alt={cert.provider} fill className="object-cover" />
+                                ) : (
+                                  <CheckCircle className="h-6 w-6 text-rose-900" />
+                                )}
+                             </div>
+                             <div className="flex flex-wrap gap-2">
+                                {cert.verifyUrl && (
+                                  <a href={cert.verifyUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-900 text-slate-500 hover:text-rose-400 border border-slate-800 transition-colors" title="Verify Online">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {cert.pdfUrl && (
+                                  <a href={cert.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-rose-600/10 text-rose-500 hover:bg-rose-600 hover:text-white transition-all" title="View PDF">
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                )}
+                             </div>
+                          </div>
+                          <div className="flex-1 space-y-2">
+                             <h5 className="font-bold text-white group-hover:text-rose-400 transition-colors">{cert.name}</h5>
+                             <p className="text-xs text-slate-400">{cert.provider}</p>
+                             <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mt-4">
+                                Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                                {cert.expiryDate ? ` • Exp ${new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ' • No Expiry'}
+                             </p>
+                             {cert.credentialId && (
+                               <p className="text-[9px] font-mono text-slate-700 uppercase mt-1">ID: {cert.credentialId}</p>
+                             )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
                   </div>
-                </article>
-              ))}
-            </div>
+                )}
+
+                {/* Other Credentials */}
+                {certificates.filter(c => !c.name.includes('Cloud') && !c.name.includes('Associate') && !c.name.includes('Professional') && !c.name.includes('Security') && !c.name.includes('Certified') && !c.name.includes('Compliance')).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                      <Award className="h-4 w-4" /> Specializations & Training
+                    </h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {certificates.filter(c => !c.name.includes('Cloud') && !c.name.includes('Associate') && !c.name.includes('Professional') && !c.name.includes('Security') && !c.name.includes('Certified') && !c.name.includes('Compliance')).map((cert) => (
+                        <article key={cert.id} className="flex flex-col h-full rounded-2xl border border-slate-800 bg-slate-950 p-6 transition-all hover:border-emerald-500/30 group">
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                             <div className="h-12 w-12 rounded-xl border border-slate-800 bg-slate-900 flex items-center justify-center shrink-0">
+                                {cert.issuer?.logoUrl ? (
+                                  <Image src={cert.issuer.logoUrl} alt={cert.provider} fill className="object-cover" />
+                                ) : (
+                                  <CheckCircle className="h-6 w-6 text-emerald-900" />
+                                )}
+                             </div>
+                             <div className="flex flex-wrap gap-2">
+                                {cert.verifyUrl && (
+                                  <a href={cert.verifyUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-slate-900 text-slate-500 hover:text-emerald-400 border border-slate-800 transition-colors" title="Verify Online">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                )}
+                                {cert.pdfUrl && (
+                                  <a href={cert.pdfUrl} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-emerald-600/10 text-emerald-500 hover:bg-emerald-600 hover:text-white transition-all" title="View PDF">
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                )}
+                             </div>
+                          </div>
+                          <div className="flex-1 space-y-2">
+                             <h5 className="font-bold text-white group-hover:text-emerald-400 transition-colors">{cert.name}</h5>
+                             <p className="text-xs text-slate-400">{cert.provider}</p>
+                             <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mt-4">
+                                Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                                {cert.expiryDate ? ` • Exp ${new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ' • No Expiry'}
+                             </p>
+                             {cert.credentialId && (
+                               <p className="text-[9px] font-mono text-slate-700 uppercase mt-1">ID: {cert.credentialId}</p>
+                             )}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Google Cloud Badges Section */}
             <div className="mt-16 p-8 rounded-3xl border border-slate-800 bg-slate-900/20 backdrop-blur-sm">
