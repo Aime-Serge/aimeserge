@@ -3,5 +3,11 @@
   "outputDirectory": ".next",
   "env": {
     "NODE_OPTIONS": "--max-old-space-size=3072"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/heartbeat",
+      "schedule": "0 3 * * *"
+    }
+  ]
 }

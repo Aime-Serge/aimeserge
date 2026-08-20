@@ -118,6 +118,14 @@ To apply the versioned database schema to a linked Supabase project:
 supabase db push
 ```
 
+The project also includes a protected daily Supabase heartbeat. Applying the
+migrations creates its dedicated counter table, and Vercel runs the endpoint
+daily through the cron entry in `vercel.json`.
+
+Add `CRON_SECRET` to the Vercel environment variables. Vercel uses it to send
+the authorization header to `/api/cron/heartbeat`; the endpoint rejects
+requests without the matching secret.
+
 ### Environment variables
 
 `.env.example` documents every supported setting. The primary variables are:
@@ -130,6 +138,7 @@ JWT_SECRET=
 ADMIN_EMAIL=
 GEMINI_API_KEY=
 SUPABASE_WEBHOOK_SECRET=
+CRON_SECRET=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
 DISCORD_WEBHOOK_URL=

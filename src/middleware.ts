@@ -9,6 +9,7 @@ import { jwtVerify } from 'jose';
  */
 export async function middleware(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
+  const developmentScriptSource = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
   
   // Define a localized type for the NextRequest with geo/ip extensions
   interface AugmentedRequest extends NextRequest {
@@ -31,8 +32,8 @@ export async function middleware(request: NextRequest) {
   // 2. CSP Injection
   const cspHeader = `
     default-src 'self';
-    script-src 'self' https://*.supabase.co;
-    style-src 'self' https://fonts.googleapis.com;
+    script-src 'self' 'nonce-${nonce}'${developmentScriptSource} https://*.supabase.co;
+    style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co;
     font-src 'self' https://fonts.gstatic.com;
     object-src 'none';

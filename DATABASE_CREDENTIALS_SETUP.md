@@ -39,6 +39,9 @@ DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your/webhook
 # 🔔 Webhooks (REQUIRED IF USING WEBHOOKS)
 SUPABASE_WEBHOOK_SECRET=your-webhook-secret-here
 
+# ⏱️ Daily Supabase heartbeat (required for the Vercel cron)
+CRON_SECRET=your-random-cron-secret-here
+
 # 🤖 AI/Gemini (OPTIONAL)
 GEMINI_API_KEY=your-gemini-api-key-here
 
@@ -149,6 +152,7 @@ Add to `.gitignore` (should already be there):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `CRON_SECRET`
    - `JWT_SECRET`
    - etc.
 
@@ -168,8 +172,14 @@ After setting up `.env.local`:
 - [ ] Has `NEXT_PUBLIC_SUPABASE_URL`
 - [ ] Has `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [ ] Has `SUPABASE_SERVICE_ROLE_KEY`
+- [ ] Has `CRON_SECRET` (configured in Vercel and `.env.local` for local testing)
 - [ ] Has `JWT_SECRET` (32+ characters)
 - [ ] `.gitignore` includes `.env.local`
+
+Apply the heartbeat table and function with the rest of the schema:
+```bash
+supabase db push
+```
 
 Then rebuild:
 ```bash

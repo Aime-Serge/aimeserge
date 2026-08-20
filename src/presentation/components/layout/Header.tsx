@@ -103,7 +103,7 @@ export default function Header() {
         <nav 
           id="mobile-menu"
           aria-label="Mobile Navigation"
-          className="md:hidden animate-in duration-300 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-6 py-4 space-y-3"
+          className="relative z-40 md:hidden animate-in duration-300 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-6 py-4 space-y-3"
         >
           {/* Search on mobile */}
           <div className="mb-4">
