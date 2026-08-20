@@ -2,15 +2,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { securityHeaders } from '@/infrastructure/security/securityHeaders';
 import { jwtVerify } from 'jose';
+import { getEnvVar } from '@/infrastructure/utils/env';
 
 /**
  * Advanced Edge Middleware
  * Handles Zero-Trust Auth, CSP Injection, and Global Rate-Limiting logs.
  */
 export async function middleware(request: NextRequest) {
-  const nonce = btoa(crypto.randomUUID());
-  const developmentScriptSource = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
-  
   // Define a localized type for the NextRequest with geo/ip extensions
   interface AugmentedRequest extends NextRequest {
     ip?: string;
@@ -32,8 +30,8 @@ export async function middleware(request: NextRequest) {
   // 2. CSP Injection
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}'${developmentScriptSource} https://*.supabase.co;
-    style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com;
+    script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://*.supabase.co https://va.vercel-scripts.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co;
     font-src 'self' https://fonts.gstatic.com;
     object-src 'none';
@@ -46,7 +44,6 @@ export async function middleware(request: NextRequest) {
   `.replace(/\s{2,}/g, ' ').trim();
 
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('Content-Security-Policy', cspHeader);
   requestHeaders.set('x-visitor-ip', ip);
   requestHeaders.set('x-visitor-country', country);
@@ -71,14 +68,16 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedPath) {
     const token = request.cookies.get('auth_token')?.value;
-    
-    if (!token) return redirectToLogin(request);
+    const jwtSecret = getEnvVar('JWT_SECRET');
+    const adminEmail = getEnvVar('ADMIN_EMAIL');
+
+    if (!token || !jwtSecret || !adminEmail) return redirectToLogin(request);
 
     try {
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+      const secret = new TextEncoder().encode(jwtSecret);
       const { payload } = await jwtVerify(token, secret);
-      
-      if (payload.role !== 'authenticated' && payload.email !== process.env.ADMIN_EMAIL) {
+
+      if (payload.role !== 'authenticated' || payload.email !== adminEmail) {
         return NextResponse.redirect(new URL('/', request.url));
       }
     } catch {

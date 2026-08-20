@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { getEnvVar } from "@/infrastructure/utils/env";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
@@ -12,16 +13,18 @@ import { jwtVerify } from "jose";
 export async function validateAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
+  const jwtSecret = getEnvVar('JWT_SECRET');
+  const adminEmail = getEnvVar('ADMIN_EMAIL');
 
-  if (!token) {
+  if (!token || !jwtSecret || !adminEmail) {
     throw new Error("Unauthorized Access: Admin privileges required.");
   }
 
   try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || "");
+    const secret = new TextEncoder().encode(jwtSecret);
     const { payload } = await jwtVerify(token, secret);
 
-    if (payload.email !== process.env.ADMIN_EMAIL) {
+    if (payload.role !== 'authenticated' || payload.email !== adminEmail) {
       throw new Error("Unauthorized Access: Identity mismatch.");
     }
 

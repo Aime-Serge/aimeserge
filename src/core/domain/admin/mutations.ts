@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { getEnvVar } from "@/infrastructure/utils/env";
 import { revalidatePath } from "next/cache";
 import { SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
@@ -53,13 +54,21 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
     }
 
     // 2. Security Check: Ensure email matches ADMIN_EMAIL
-    if (data.user.email !== process.env.ADMIN_EMAIL) {
+    const adminEmail = getEnvVar('ADMIN_EMAIL');
+    const jwtSecret = getEnvVar('JWT_SECRET');
+
+    if (!adminEmail || !jwtSecret) {
+      await recordSecurityEvent('UNAUTHORIZED_ACCESS_ATTEMPT', data.user.email, 'CRITICAL', { reason: 'missing_admin_config' });
+      throw new Error("Access Denied: Server auth configuration is incomplete.");
+    }
+
+    if (data.user.email !== adminEmail) {
       await recordSecurityEvent('UNAUTHORIZED_ACCESS_ATTEMPT', data.user.email, 'CRITICAL');
       throw new Error("Access Denied: Identity not recognized as Node Operator.");
     }
 
     // 3. Generate Secure JWT for Middleware (Zero-Trust)
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const secret = new TextEncoder().encode(jwtSecret);
     const token = await new SignJWT({ 
       email: data.user.email,
       role: 'authenticated' 

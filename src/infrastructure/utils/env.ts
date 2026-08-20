@@ -15,6 +15,11 @@ const envSchema = z.object({
 
 type Env = z.infer<typeof envSchema>;
 
+export const getEnvVar = <K extends keyof Env>(key: K): Env[K] | undefined => {
+  const value = process.env[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value as Env[K] : undefined;
+};
+
 export const validateEnv = (): Partial<Env> => {
   const result = envSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
