@@ -1,0 +1,36 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="igloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main background -->
+  <rect width="400" height="225" fill="url(#igloGrad)"/>
+
+  <!-- Sun -->
+  <circle cx="320" cy="60" r="24" fill="#fde68a" opacity="0.85"/>
+
+  <!-- Mountains -->
+  <g fill="#ffffff" opacity="0.18">
+    <path d="M0 160 L70 90 L130 160 Z" />
+    <path d="M90 160 L170 70 L250 160 Z" />
+    <path d="M220 160 L290 100 L360 160 Z" />
+  </g>
+
+  <!-- Sea waves -->
+  <g stroke="#ffffff" stroke-width="2" fill="none" opacity="0.6">
+    <path d="M20 175 Q 50 165 80 175 T 140 175 T 200 175 T 260 175 T 320 175 T 380 175" />
+    <path d="M20 190 Q 50 180 80 190 T 140 190 T 200 190 T 260 190 T 320 190 T 380 190" />
+  </g>
+
+  <!-- Location pin -->
+  <g transform="translate(200,120)">
+    <path d="M0 -22 C12 -22 20 -13 20 -2 C20 12 0 30 0 30 C0 30 -20 12 -20 -2 C-20 -13 -12 -22 0 -22 Z" fill="#ffffff" opacity="0.9"/>
+    <circle cx="0" cy="-3" r="6" fill="#0891b2"/>
+  </g>
+
+  <!-- Label -->
+  <text x="200" y="205" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">IGLO Tours</text>
+</svg>
