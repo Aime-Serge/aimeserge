@@ -3,7 +3,7 @@
  * Provides cloud-native asset resolution with intelligent fallbacks and transformations.
  */
 
-const SUPABASE_URL = "https://kzyqiadzetzprwetyebm.supabase.co";
+const SUPABASE_URL = "https://hzuiwvnkbcgglgzujxjj.supabase.co";
 const BUCKET_NAME = "artifacts";
 
 interface ImageOptions {
