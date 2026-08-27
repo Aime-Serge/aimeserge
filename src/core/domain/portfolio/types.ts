@@ -5,7 +5,7 @@ export interface Organization {
   websiteUrl?: string;
 }
 
-export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'FREELANCE';
+export type EmploymentType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'FREELANCE' | 'VOLUNTEER';
 export type LocationType = 'ON_SITE' | 'HYBRID' | 'REMOTE';
 
 export interface Experience {
