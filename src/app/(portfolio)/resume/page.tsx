@@ -70,7 +70,7 @@ export default async function ResumePage() {
           </div>
         </div>
         <a 
-          href={latestResumeUrl || "/uploads/AimeSergeUkobizabaResume.pdf"} 
+          href={latestResumeUrl || "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf"} 
           download
           target="_blank"
           rel="noopener noreferrer"
