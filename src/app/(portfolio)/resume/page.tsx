@@ -1,7 +1,7 @@
-import { Download, ExternalLink, FileText, CheckCircle, GraduationCap, Briefcase, Cloud, Calendar, Building2, MapPin, Award } from "lucide-react";
+import { Download, ExternalLink, FileText, CheckCircle, GraduationCap, Briefcase, Cloud, Calendar, Building2, MapPin, Award, Trophy } from "lucide-react";
 import BadgeShowcase from "@/presentation/components/features/BadgeShowcase";
 import TestimonialSection from "@/presentation/components/features/TestimonialSection";
-import { getCertificates, getLatestResume, getExperiences, getEducations } from "@/core/domain/portfolio/queries";
+import { getCertificates, getLatestResume, getExperiences, getEducations, getAchievements } from "@/core/domain/portfolio/queries";
 import { testimonials } from "@/core/domain/portfolio/constants";
 import { formatDuration } from "@/infrastructure/utils/dateUtils";
 import Image from "next/image";
@@ -22,10 +22,11 @@ const skillMatrix = [
 ];
 
 export default async function ResumePage() {
-  const [certificates, experiences, educations, latestResumeUrl] = await Promise.all([
+  const [certificates, experiences, educations, achievements, latestResumeUrl] = await Promise.all([
     getCertificates(),
     getExperiences(),
     getEducations(),
+    getAchievements(),
     getLatestResume()
   ]);
 
@@ -413,6 +414,45 @@ export default async function ResumePage() {
                 <BadgeShowcase />
             </div>
           </section>
+
+          {/* Achievements Section */}
+          {achievements.length > 0 && (
+            <section aria-labelledby="achievements-title">
+              <div className="flex items-center gap-4 mb-12">
+                 <div className="h-10 w-10 rounded-xl bg-amber-600/10 flex items-center justify-center border border-amber-500/20">
+                    <Trophy className="h-5 w-5 text-amber-500" />
+                 </div>
+                 <h2 id="achievements-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Achievements</h2>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {achievements.map((achievement) => (
+                  <article key={achievement.id} className="flex items-start gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-6 transition-all hover:border-amber-500/30">
+                    <div className="h-10 w-10 rounded-xl border border-amber-500/20 bg-amber-600/10 flex items-center justify-center shrink-0">
+                      <Trophy className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <h5 className="font-bold text-white">{achievement.title}</h5>
+                      {achievement.issuer && (
+                        <p className="text-xs text-slate-400">{achievement.issuer}</p>
+                      )}
+                      {achievement.description && (
+                        <p className="text-xs text-slate-500 mt-2">{achievement.description}</p>
+                      )}
+                      {achievement.achievedDate && (
+                        <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest mt-2">{achievement.achievedDate}</p>
+                      )}
+                      {achievement.url && (
+                        <a href={achievement.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-mono text-amber-500 hover:text-amber-400 uppercase tracking-widest mt-2">
+                          View <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Sidebar: Skills Matrix */}

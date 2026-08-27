@@ -49,6 +49,15 @@ export interface Certificate {
   credentialId?: string;
 }
 
+export interface Achievement {
+  id: string;
+  title: string;
+  description?: string;
+  issuer?: string;
+  achievedDate?: string;
+  url?: string;
+}
+
 export interface Project {
   id: string;
   slug: string;

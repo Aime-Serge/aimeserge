@@ -2,10 +2,10 @@ import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { getAssetUrl } from "@/infrastructure/utils/storage";
 import { myProjects, fallbackCertificates } from "./constants";
-import { 
-  Certificate, Post, Article, MediaType, Visibility, 
+import {
+  Certificate, Post, Article, MediaType, Visibility,
   CommentPermission, PublicationStatus, ContentBlock,
-  Experience, Education, Organization
+  Experience, Education, Organization, Achievement
 } from "./types";
 
 /**
@@ -192,6 +192,35 @@ export async function getCertificates(): Promise<Certificate[]> {
     },
     ['certificates-list'],
     { tags: ['certificates'], revalidate: 3600 }
+  )();
+}
+
+export async function getAchievements(): Promise<Achievement[]> {
+  return unstable_cache(
+    async () => {
+      const supabase = createServerSupabaseClient();
+      try {
+        const { data, error } = await supabase
+          .from('achievements')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error || !data) return [];
+
+        return data.map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          description: row.description || undefined,
+          issuer: row.issuer || undefined,
+          achievedDate: row.achieved_date || undefined,
+          url: row.url || undefined
+        }));
+      } catch {
+        return [];
+      }
+    },
+    ['achievements-list'],
+    { tags: ['achievements'], revalidate: 3600 }
   )();
 }
 
