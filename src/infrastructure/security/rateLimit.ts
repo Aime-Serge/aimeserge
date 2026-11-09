@@ -1,6 +1,10 @@
 /**
- * Modern In-Memory Rate Limiter for Next.js App Router
- * Optimized for Server Actions and Route Handlers.
+ * In-memory rate limiter for Server Actions and Route Handlers.
+ *
+ * LIMITATION: each serverless/edge instance has its own Map, so limits are
+ * per instance, not global. It stops casual abuse only. For a hard limit,
+ * swap the Map for a shared store (e.g. Upstash Redis @upstash/ratelimit)
+ * behind this same `check()` signature.
  */
 
 interface RateLimitData {
@@ -19,6 +23,8 @@ export const rateLimit = {
    */
   async check(limit: number, windowInMs: number, token: string): Promise<{ success: boolean; remaining: number; reset: number }> {
     const now = Date.now();
+    // Bound memory: drop expired entries once the map gets large.
+    if (cache.size > 5000) this.prune();
     const data = cache.get(token);
 
     if (!data || now > data.reset) {

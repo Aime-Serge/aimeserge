@@ -6,7 +6,7 @@ import {
   Search, RefreshCcw,
   CheckCircle
 } from "lucide-react";
-import { getAllContent, deleteContent } from "@/core/domain/admin/actions";
+import { getAllContent, deleteContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/infrastructure/security/headers";
@@ -104,13 +104,13 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
                 {isLoading ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-xs font-mono animate-pulse">
-                      DECRYPTING_CLOUD_VAULT...
+                      Loading…
                     </td>
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-xs font-mono">
-                      NO_RECORDS_DETECTED
+                      Nothing here yet. Use “Create” to add the first one.
                     </td>
                   </tr>
                 ) : (
@@ -136,7 +136,9 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-3 w-3 text-emerald-500" />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Synced</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {item.status === 'DRAFT' ? 'Draft' : item.status === 'PUBLISHED' ? 'Published' : item.featured ? 'Featured' : 'Saved'}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">

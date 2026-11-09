@@ -1,12 +1,16 @@
 import { getProjects } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
-import { ExternalLink, FileText, ChevronRight, Eye, Heart, Share2, Rocket } from "lucide-react";
-import SecurityAudit from "@/presentation/components/features/SecurityAudit";
+import { ExternalLink, FileText, ChevronRight } from "lucide-react";
 import CaseStudyMetrics from "@/presentation/components/features/CaseStudyMetrics";
+import { SITE, jsonLd as toJsonLd } from "@/config/site";
+
+// Static page, refreshed on admin save (on-demand) or at most daily.
+export const revalidate = 86400;
 
 export const metadata = {
-  title: "Engineering Feed | Aime Serge",
-  description: "Explore security-first, cloud-native projects spanning AI research, real-time systems, and full-stack platforms. Each demonstrates zero-trust architecture and real-world impact.",
+  title: "Projects",
+  description: "Projects by Aime Serge Ukobizaba: web apps, APIs, AI tools and research. Each page explains the problem, what was built and the result.",
+  alternates: { canonical: "/projects" },
 };
 
 export default async function ProjectsPage() {
@@ -15,18 +19,18 @@ export default async function ProjectsPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    "name": "Engineering Solutions - Aime Serge",
-    "description": "Security-first, cloud-native projects demonstrating real-world impact",
-    "url": "https://aimesergeonline.vercel.app/projects",
+    "name": `Projects by ${SITE.name}`,
+    "description": metadata.description,
+    "url": `${SITE.url}/projects`,
     "mainEntity": {
       "@type": "Person",
-      "name": "Aime Serge UKOBIZABA",
-      "jobTitle": "Senior Software Engineer"
+      "name": SITE.name,
+      "jobTitle": "Software Engineer"
     },
     "hasPart": projects.map(project => ({
       "@type": "SoftwareApplication",
       "name": project.title,
-      "description": project.description,
+      "description": project.tagline || project.summary,
       "url": project.url,
       "applicationCategory": "DeveloperApplication"
     }))
@@ -36,47 +40,16 @@ export default async function ProjectsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
       />
       <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
-        <div className="flex items-center gap-2 text-cyan-500 font-mono text-xs uppercase tracking-[0.3em] mb-4">
-          <Rocket className="h-3.5 w-3.5 animate-bounce" />
-          Deployment_Logs_Active
-        </div>
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Engineered <span className="text-cyan-500">Solutions</span>
+          Projects
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          A real-time feed of architectural blueprints, production systems, and security-hardened applications.
+          Things I&apos;ve built and studied. Each case study explains the problem, what I did, the tools I used and the result.
         </p>
-        
-        {/* Proof Metrics Bar */}
-        <div className="mt-8 grid gap-4 md:grid-cols-4 text-center">
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-            <div className="text-2xl font-bold text-emerald-400">18%</div>
-            <div className="text-xs text-slate-400 mt-1">Avg Performance Lift</div>
-          </div>
-          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
-            <div className="text-2xl font-bold text-cyan-400">4</div>
-            <div className="text-xs text-slate-400 mt-1">Verified Testimonials</div>
-          </div>
-          <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4">
-            <div className="text-2xl font-bold text-purple-400">3</div>
-            <div className="text-xs text-slate-400 mt-1">Production Systems</div>
-          </div>
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-            <div className="text-2xl font-bold text-amber-400">A+</div>
-            <div className="text-xs text-slate-400 mt-1">Security Audit</div>
-          </div>
-        </div>
-        
-        {/* Engineering Philosophy */}
-        <div className="mt-8 p-6 rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
-          <p className="text-slate-300 leading-relaxed max-w-3xl">
-            Each project demonstrates a <span className="text-cyan-400 font-semibold">security-first architecture</span>, <span className="text-cyan-400 font-semibold">cloud-native scalability</span>, and <span className="text-cyan-400 font-semibold">real-world impact</span>. From environmental research to urban mobility systems to production platforms—all built with zero-trust principles, reproducible infrastructure, and measurable outcomes.
-          </p>
-        </div>
       </div>
 
       <div className="grid gap-12 lg:grid-cols-[1fr_400px]">
@@ -92,6 +65,12 @@ export default async function ProjectsPage() {
             ))}
           </div>
 
+          {projects.length === 0 && (
+            <p className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-slate-400">
+              Projects are being updated. Please check back soon, or see my code on{" "}
+              <a href={SITE.social.github} className="text-cyan-400 hover:text-cyan-300">GitHub</a>.
+            </p>
+          )}
           {projects.map((project) => (
             <article
               key={project.id}
@@ -150,7 +129,11 @@ export default async function ProjectsPage() {
                       <div className="relative w-full aspect-video bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-cyan-500/30 transition-colors">
                         <img
                           src={project.images[0]}
-                          alt={project.title}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          width={1280}
+                          height={720}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
@@ -186,26 +169,13 @@ export default async function ProjectsPage() {
 
                   {/* Interaction Bar */}
                   <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                        <Eye className="h-4 w-4" />
-                        {project.views}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
-                        <Heart className="h-4 w-4" />
-                        {project.likes}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 cursor-pointer hover:text-cyan-400 transition-colors">
-                        <Share2 className="h-4 w-4" />
-                        Share
-                      </div>
-                    </div>
+                    <span className="text-xs text-slate-500">{project.role}</span>
                     
                     <Link
                       href={`/projects/${project.slug}`}
                       className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white hover:text-cyan-400 transition-colors"
                     >
-                      Audit Case Study
+                      Read case study
                       <ChevronRight className="h-3 w-3" />
                     </Link>
                   </div>
@@ -220,14 +190,13 @@ export default async function ProjectsPage() {
 
         {/* Right Column: Sidebar */}
         <aside className="space-y-8">
-          <SecurityAudit />
           
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
-             <h4 className="text-sm font-bold text-white uppercase tracking-widest font-mono mb-6 border-b border-slate-800 pb-2">Technology Focus</h4>
+             <h2 className="text-sm font-bold text-white mb-6 border-b border-slate-800 pb-2">Tools I use most</h2>
              <div className="flex flex-wrap gap-2">
                 {[
-                  "Node.js", "TypeScript", "GCP", "Docker", "Vertex AI", 
-                  "React", "Next.js", "Python", "Kubernetes", "Zero-Trust"
+                  "TypeScript", "React", "Next.js", "Node.js", "Python",
+                  "Django", "PostgreSQL", "GraphQL", "Google Cloud", "Supabase"
                 ].map((tech: string) => (
                   <span key={tech} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[10px] font-mono text-slate-400 hover:border-cyan-500/50 hover:text-cyan-400 transition-all cursor-pointer">
                     {tech}
@@ -238,7 +207,7 @@ export default async function ProjectsPage() {
              
              <div className="mt-8 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
                 <p className="text-[10px] font-mono text-cyan-500 leading-relaxed uppercase">
-                  All projects are verified for security compliance and high-availability architecture.
+                  Code for most projects is public on GitHub. Ask me for a walkthrough of any of them.
                 </p>
              </div>
           </div>

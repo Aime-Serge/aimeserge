@@ -1,9 +1,9 @@
 "use server";
 
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { KnowledgeMetadata } from "./types";
 import { withShield } from "@/infrastructure/security/shield";
+import { validateAdminSession } from "@/core/domain/admin/queries";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -13,7 +13,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
  */
 async function upsertKnowledgeBase(params: { id: string, content: string, metadata: KnowledgeMetadata }) {
   const { id, content, metadata } = params;
-  const supabase = createServerSupabaseClient();
+  // Admin only: this writes to the knowledge base that the public AI chat and search read from.
+  const supabase = await validateAdminSession();
   
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
@@ -43,7 +44,7 @@ export const upsertKnowledge = withShield("ai_upsert", upsertKnowledgeBase);
  * Deletes content from the knowledge base.
  */
 async function deleteKnowledgeBase(id: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await validateAdminSession();
   
   try {
     const { error } = await supabase

@@ -1,233 +1,244 @@
 import Link from "next/link";
-import { Terminal, Shield, Cloud, Cpu, ArrowRight, CheckCircle2, Globe, TrendingUp, Users, Award } from "lucide-react";
-import ProofBackedCTA from "@/presentation/components/features/ProofBackedCTA";
+import { ArrowRight, Code2, ShieldCheck, Sparkles, FileDown } from "lucide-react";
+import { SITE, jsonLd } from "@/config/site";
+import { getExperiences, getProfile, getFeaturedProjects } from "@/core/domain/portfolio/queries";
 
-export default function Home() {
-  const jsonLd = {
+// Static HTML, refreshed when the profile, projects or experiences change in the admin (or daily).
+export const revalidate = 86400;
+
+/*
+ * Homepage copy rules (see docs/CONTENT_GUIDE.md):
+ *  - Every claim must be checkable on the CV or a linked project.
+ *  - Lead with what the visitor gets, then the technology.
+ *  - No numbers we can't prove.
+ */
+
+const SERVICES = [
+  {
+    icon: Code2,
+    title: "Web apps & APIs",
+    body: "Fast, responsive websites and the back-end services behind them, built with Next.js, React, Node.js, Python and PostgreSQL.",
+    outcome: "You get a product that works on every screen and is easy to extend.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Security built in",
+    body: "Safe logins, protected data, input checks and security reviews from the first line of code, not as an afterthought.",
+    outcome: "Fewer surprises, and less risk for your users and your business.",
+  },
+  {
+    icon: Sparkles,
+    title: "Practical AI features",
+    body: "Smart search, chat assistants and automations that answer from your own content, like the assistant on this site.",
+    outcome: "Your users find answers faster; your team saves time.",
+  },
+];
+
+// Shown only if the database is unreachable or empty.
+const FALLBACK_EXPERIENCE = [
+  { org: "ALX Africa", role: "Software Engineer", when: "2025 – 2026" },
+  { org: "EF NEXUS", role: "Software Developer", when: "2025" },
+  { org: "Bittwork Technology", role: "Software Engineering Intern", when: "2025" },
+  { org: "Rwanda Cancer Relief", role: "Technical Lead (volunteer)", when: "2025 – now" },
+  { org: "IEE Rwanda", role: "Teaching Assistant", when: "2024 – 2025" },
+];
+
+const LEARNING = [
+  "BSc Computer Science, University of Rwanda (in progress)",
+  "ALX Software Engineering programme",
+  "ALX Cybersecurity programme",
+  "AWS AI/ML Scholars: Agentic AI engineering",
+  "Google Cloud skill badges",
+];
+
+const year = (d?: string | null) => (d ? new Date(d).getFullYear() : null);
+
+async function loadExperience() {
+  const rows = await getExperiences().catch(() => []);
+  if (!rows.length) return FALLBACK_EXPERIENCE;
+  return rows.slice(0, 6).map((r) => {
+    const start = year(r.startDate);
+    const end = r.endDate ? year(r.endDate) : "now";
+    return {
+      org: r.company?.name || "Independent",
+      role: r.title,
+      when: start ? (start === end ? `${start}` : `${start} – ${end}`) : "",
+    };
+  });
+}
+
+export default async function Home() {
+  const [EXPERIENCE, profile, featured] = await Promise.all([loadExperience(), getProfile(), getFeaturedProjects(3)]);
+  const personLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    "name": "Aime Serge UKOBIZABA",
-    "jobTitle": "Senior Software Engineer",
-    "url": "https://aimesergeonline.vercel.app",
-    "sameAs": [
-      "https://github.com/AimeSerge",
-      "https://linkedin.com/in/aimeserge"
-    ],
-    "knowsAbout": ["Cybersecurity", "Cloud Architecture", "Artificial Intelligence", "Full-Stack Development"]
+    name: SITE.name,
+    jobTitle: "Software Engineer",
+    url: SITE.url,
+    email: `mailto:${SITE.email}`,
+    address: { "@type": "PostalAddress", addressLocality: "Kigali", addressCountry: "RW" },
+    sameAs: Object.values(SITE.social),
+    knowsAbout: ["Software engineering", "Web development", "Cybersecurity", "Artificial intelligence"],
   };
 
   return (
     <div className="flex flex-col items-center">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      {/* Hero Section */}
-      <section aria-label="Introduction" className="relative w-full overflow-hidden py-20 lg:py-32">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col items-center text-center">
-            {/* Professional Status Badge */}
-            <div className="mb-8 flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-xs font-mono text-cyan-400">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
-              </span>
-              Senior Software Engineer · Google Cloud Certified
-            </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(personLd) }} />
 
-            <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl leading-[1.1]">
-              Building <span className="text-cyan-500">Secure</span>, <span className="text-emerald-500">Scalable</span> & AI-Powered Infrastructure
-            </h1>
-
-            <p className="mt-8 max-w-2xl text-lg text-slate-400">
-              I design and build production systems that prioritize security, performance, and reliability. 
-              Experienced in cloud architecture, AI integration, and scaling systems for real-world impact.
+      {/* Hero: who, what, next step */}
+      <section aria-labelledby="hero-heading" className="w-full py-20 lg:py-28">
+        <div className="container mx-auto px-6 text-center">
+          <div className="mb-6 flex flex-wrap justify-center gap-2">
+            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-sm text-cyan-300">
+              Software Engineer · {profile.location}
             </p>
+            {profile.openToWork && (
+              <p className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                {profile.availabilityNote || "Open to work"}
+              </p>
+            )}
+          </div>
 
-            <div className="mt-12 flex flex-wrap justify-center gap-4">
-              <Link
-                href="/projects"
-                className="group flex items-center gap-2 rounded-xl bg-cyan-600 px-8 py-4 font-bold text-white transition hover:bg-cyan-700 hover:shadow-[0_0_20px_rgba(8,145,178,0.4)]"
-              >
-                View My Work
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/contact"
-                className="flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600/10 px-8 py-4 font-bold text-emerald-400 transition hover:bg-emerald-600/20"
-              >
-                Let&apos;s Talk
-              </Link>
-            </div>
+          <h1
+            id="hero-heading"
+            className="mx-auto max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl"
+          >
+            {profile.headline}
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-400">
+            {profile.bio}
+          </p>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/projects"
+              className="group inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-7 py-3.5 font-semibold text-white transition hover:bg-cyan-500"
+            >
+              See my projects
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600/10 px-7 py-3.5 font-semibold text-emerald-300 transition hover:bg-emerald-600/20"
+            >
+              Get in touch
+            </Link>
+            <a
+              href={profile.cvUrl}
+              download
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-7 py-3.5 font-semibold text-slate-300 transition hover:bg-slate-800"
+            >
+              <FileDown className="h-4 w-4" aria-hidden="true" />
+              Download CV
+            </a>
           </div>
         </div>
       </section>
 
-      {/* About Me / Mission Section */}
-      <section id="about" aria-labelledby="about-heading" className="container mx-auto px-6 py-24 border-y border-slate-800/50">
-        <div className="grid gap-12 lg:grid-cols-2 items-center">
-          <div className="space-y-6">
-            <h2 id="about-heading" className="text-3xl font-bold text-white">Systems Architect & Security Engineer</h2>
-            <p className="text-slate-400 leading-relaxed text-lg">
-              I'm <span className="text-white font-medium">Aime Serge UKOBIZABA</span>, a systems architect focused on building secure, scalable backend systems and cloud infrastructure that solves real problems at national scale.
-            </p>
-            <p className="text-slate-400 leading-relaxed text-lg">
-              My expertise spans <span className="text-cyan-400">security-first architecture</span>, <span className="text-emerald-400">modern AI integration</span>, and working on impactful problems—including Rwanda's urban transport logistics and infrastructure modernization.
-            </p>
-            
-            <div className="grid gap-4 sm:grid-cols-2 mt-8">
-              {[
-                "Security by design",
-                "Scalable architecture",
-                "Production-ready code",
-                "AI-powered systems"
-              ].map(point => (
-                <div key={point} className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span className="text-sm font-mono">{point}</span>
-                </div>
-              ))}
+      {/* Featured work: projects marked "featured" in the admin */}
+      {featured.length > 0 && (
+        <section aria-labelledby="featured-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 id="featured-heading" className="text-3xl font-bold text-white">Featured work</h2>
+              <p className="mt-3 max-w-2xl text-slate-400">A few projects that show how I work, from problem to result.</p>
             </div>
+            <Link href="/projects" className="inline-flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300">
+              All projects <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
-          
-          <div className="relative">
-      {/* Engineering Approach Box */}
-             <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 backdrop-blur-sm">
-                <h3 className="text-xl font-bold text-white mb-6">Engineering Approach</h3>
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-500">
-                      <Shield className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">Security-First</h4>
-                      <p className="text-sm text-slate-500">Encryption, hardened IAM, and threat modeling built into design.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                      <Cloud className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">Cloud-Native Scale</h4>
-                      <p className="text-sm text-slate-500">Serverless, containerized, and auto-scaling for global reach.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
-                      <Cpu className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">AI Integration</h4>
-                      <p className="text-sm text-slate-500">Semantic search, RAG, and LLMs for intelligent systems.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-                      <Terminal className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-semibold">Software Craftsmanship</h4>
-                      <p className="text-sm text-slate-500">Applying DS&A, Clean Code, and System Design patterns.</p>
-                    </div>
-                  </div>
-                </div>
-             </div>
-          </div>
-        </div>
-      </section>
+          <ul className="mt-10 grid gap-6 md:grid-cols-3">
+            {featured.map((p) => (
+              <li key={p.id}>
+                <Link
+                  href={`/projects/${p.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-900/40 p-6 transition hover:border-cyan-500/50"
+                >
+                  {p.images?.[0] && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.images[0]} alt="" loading="lazy" decoding="async" width={640} height={360} className="mb-5 aspect-video w-full rounded-lg border border-slate-800 object-cover" />
+                  )}
+                  <span className="text-xs font-medium text-cyan-400">{p.category}</span>
+                  <h3 className="mt-2 text-lg font-semibold text-white group-hover:text-cyan-300">{p.title}</h3>
+                  {p.tagline && <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{p.tagline}</p>}
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-300">
+                    Read case study <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-      {/* Software Engineering Demonstrations Section */}
-      <section id="expertise" aria-labelledby="expertise-heading" className="container mx-auto px-6 py-24 bg-slate-900/10 border-y border-slate-800/30">
-        <div className="text-center mb-16">
-          <h2 id="expertise-heading" className="text-3xl font-bold text-white mb-4">Software Engineering <span className="text-cyan-500">Demonstrations</span></h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">Beyond specialized tools, I apply rigorous software engineering principles to ensure system reliability and code quality.</p>
-        </div>
-        
-        <div className="grid gap-8 md:grid-cols-3">
-          {[
-            {
-              title: "System Design",
-              desc: "Designing high-availability systems with Load Balancers, Caching, and Microservices.",
-              icon: <Globe className="h-8 w-8 text-cyan-400" />,
-              skills: ["Microservices", "System Design Patterns", "Distributed Systems"]
-            },
-            {
-              title: "Algorithms & Logic",
-              desc: "Expertise in Data Structures and Algorithms for optimized data processing.",
-              icon: <Cpu className="h-8 w-8 text-emerald-400" />,
-              skills: ["Complexity Analysis", "Graph Theory", "Optimization"]
-            },
-            {
-              title: "DevOps & CI/CD",
-              desc: "Automating the software lifecycle with infrastructure as code and CI/CD pipelines.",
-              icon: <Cloud className="h-8 w-8 text-purple-400" />,
-              skills: ["Docker", "Kubernetes", "GitHub Actions"]
-            }
-          ].map((demo, idx) => (
-            <div key={idx} className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 p-8 transition-all hover:border-cyan-500/50 hover:-translate-y-1">
-              <div className="mb-6">{demo.icon}</div>
-              <h3 className="text-xl font-bold text-white mb-3">{demo.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed mb-6">{demo.desc}</p>
-              <div className="flex flex-wrap gap-2">
-                {demo.skills.map(s => (
-                  <span key={s} className="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">{s}</span>
-                ))}
-              </div>
-            </div>
+      {/* What I do: services in outcome language */}
+      <section aria-labelledby="services-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+        <h2 id="services-heading" className="text-3xl font-bold text-white">What I can do for you</h2>
+        <p className="mt-3 max-w-2xl text-slate-400">Three things I focus on, and what each means for your project.</p>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {SERVICES.map(({ icon: Icon, title, body, outcome }) => (
+            <article key={title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
+              <Icon className="h-7 w-7 text-cyan-400" aria-hidden="true" />
+              <h3 className="mt-5 text-xl font-semibold text-white">{title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{body}</p>
+              <p className="mt-4 border-t border-slate-800 pt-4 text-sm font-medium text-emerald-300">{outcome}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* CTA Section - Proof-Backed Conversion */}
-      <section className="container mx-auto px-6 py-24 border-t border-slate-800/50">
-        <ProofBackedCTA
-          title="Why Teams Choose Me"
-          description="Backed by verified results and proven expertise in delivering secure, scalable systems that generate real business impact."
-          primaryCTA={{
-            text: "View Case Studies",
-            href: "/projects"
-          }}
-          secondaryCTA={{
-            text: "Let's Discuss Your Project",
-            href: "/contact"
-          }}
-          proofSignals={[
-            {
-              icon: <TrendingUp className="h-5 w-5" />,
-              label: "Average wait time reduction in deployed systems",
-              value: "18%",
-              highlight: true
-            },
-            {
-              icon: <Award className="h-5 w-5" />,
-              label: "Verified testimonials from technical partners",
-              value: "4/4",
-            },
-            {
-              icon: <Users className="h-5 w-5" />,
-              label: "Monthly visitors to this platform",
-              value: "1,248+",
-            },
-            {
-              icon: <Globe className="h-5 w-5" />,
-              label: "Security audit score (A+ grade)",
-              value: "A+",
-              highlight: true
-            },
-            {
-              icon: <CheckCircle2 className="h-5 w-5" />,
-              label: "Production systems deployed",
-              value: "3",
-            },
-            {
-              icon: <Cloud className="h-5 w-5" />,
-              label: "Multi-region cloud architecture experience",
-              value: "GCP+AWS",
-            }
-          ]}
-          variant="featured"
-        />
+      {/* Proof: real roles and learning, straight from the CV */}
+      <section aria-labelledby="experience-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+        <div className="grid gap-12 lg:grid-cols-2">
+          <div>
+            <h2 id="experience-heading" className="text-3xl font-bold text-white">Where I&apos;ve worked</h2>
+            <ul className="mt-8 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/40">
+              {EXPERIENCE.map((e) => (
+                <li key={`${e.org}-${e.role}`} className="flex flex-wrap items-baseline justify-between gap-2 px-6 py-4">
+                  <span>
+                    <span className="font-semibold text-white">{e.org}</span>
+                    <span className="text-slate-400"> · {e.role}</span>
+                  </span>
+                  <span className="text-sm text-slate-500">{e.when}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-3xl font-bold text-white">What I&apos;m learning</h2>
+            <ul className="mt-8 space-y-3">
+              {LEARNING.map((item) => (
+                <li key={item} className="flex gap-3 text-slate-300">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href="/resume" className="mt-8 inline-flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300">
+              Full resume and certificates <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Closing call to action */}
+      <section className="container mx-auto px-6 pb-24">
+        <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 p-10 text-center md:p-14">
+          <h2 className="text-3xl font-bold text-white">Have a role or a project in mind?</h2>
+          <p className="mx-auto mt-4 max-w-xl text-slate-400">
+            Tell me what you&apos;re working on. {SITE.responseTime}
+          </p>
+          <Link
+            href="/contact"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-8 py-4 font-semibold text-white transition hover:bg-cyan-500"
+          >
+            Start a conversation <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
       </section>
     </div>
   );

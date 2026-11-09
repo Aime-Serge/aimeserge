@@ -1,71 +1,60 @@
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { SearchResult } from "@/types/search";
-import { rateLimit } from "@/infrastructure/security/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { rateLimit } from "@/infrastructure/security/rateLimit";
+import type { SearchResult, SearchResultType } from "@/types/search";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+/**
+ * Site search with Postgres full-text search (`search_site` RPC).
+ * No AI call per query: free and fast. CDN-cached per query string for 5 minutes.
+ */
+type Row = { id: string; kind: SearchResultType; title: string; snippet: string; href: string; tags: string[] | null; rank: number };
 
 export async function GET(request: NextRequest) {
-  const clientToken = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
-  const rateLimitResult = await rateLimit.check(90, 60_000, `search:${clientToken}`);
-
-  if (!rateLimitResult.success) {
-    return NextResponse.json(
-      { error: "Too many search requests. Please retry shortly." },
-      { status: 429 },
-    );
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+  const limited = await rateLimit.check(60, 60_000, `search:${ip}`);
+  if (!limited.success) {
+    return NextResponse.json({ error: "Too many searches. Please wait a moment." }, { status: 429 });
   }
 
-  const query = request.nextUrl.searchParams.get("q")?.trim() || "";
-  const requestedLimit = Number(request.nextUrl.searchParams.get("limit") || 8);
-  const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 20) : 8;
+  const query = (request.nextUrl.searchParams.get("q") || "").trim().slice(0, 100);
+  const requested = Number(request.nextUrl.searchParams.get("limit") || 8);
+  const limit = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), 20) : 8;
 
-  if (query.length < 2) {
-    return NextResponse.json({ query, results: [] });
+  if (query.length < 2) return NextResponse.json({ query, results: [] });
+
+  const supabase = createServerSupabaseClient();
+  let rows: Row[] = [];
+
+  const { data, error } = await supabase.rpc("search_site", { q: query, max_results: limit });
+  if (!error && data) {
+    rows = data as Row[];
+  } else {
+    // Fallback (e.g. migration not applied yet): simple title match on projects and articles.
+    console.error("search_site failed, using title fallback:", error?.message);
+    const like = `%${query.replace(/[%_]/g, "")}%`;
+    const [projects, articles] = await Promise.all([
+      supabase.from("projects").select("id, title, tagline, slug, tools").eq("is_visible", true).ilike("title", like).limit(limit),
+      supabase.from("articles").select("id, title, excerpt, slug, tags").eq("status", "PUBLISHED").ilike("title", like).limit(limit),
+    ]);
+    rows = [
+      ...(projects.data || []).map((p) => ({ id: p.id, kind: "project" as const, title: p.title, snippet: p.tagline || "", href: `/projects/${p.slug}`, tags: p.tools, rank: 1 })),
+      ...(articles.data || []).map((a) => ({ id: a.id, kind: "blog" as const, title: a.title, snippet: a.excerpt || "", href: `/blog/${a.slug}`, tags: a.tags, rank: 1 })),
+    ].slice(0, limit);
   }
 
-  try {
-    const supabase = createServerSupabaseClient();
-    
-    // 1. Generate Embedding for the Search Query
-    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
-    const embeddingResult = await model.embedContent(query);
-    const embedding = embeddingResult.embedding.values;
+  const top = Math.max(...rows.map((r) => r.rank || 0), 0.0001);
+  const results: SearchResult[] = rows.map((r) => ({
+    id: r.id,
+    type: r.kind,
+    title: r.title,
+    snippet: r.snippet,
+    href: r.href,
+    tags: r.tags || [],
+    score: Math.round(((r.rank || 0) / top) * 100),
+  }));
 
-    // 2. Perform Semantic Search via match_knowledge RPC
-    // We reuse the same RAG engine for global search!
-    const { data: matches, error } = await supabase.rpc("match_knowledge", {
-      query_embedding: embedding,
-      match_threshold: 0.3, // Lower threshold for broader global search
-      match_count: limit,
-    });
-
-    if (error) throw error;
-
-    // 3. Transform RAG chunks into SearchResults
-    const results: SearchResult[] = (matches || []).map((match: any) => ({
-      id: match.id,
-      type: match.metadata?.type === 'github' ? 'project' : (match.metadata?.type === 'social' ? 'blog' : match.metadata?.type || 'blog'),
-      title: match.metadata?.title || match.content.split('\n')[0].substring(0, 60),
-      snippet: match.content.substring(0, 160) + "...",
-      href: match.metadata?.url || (match.metadata?.type === 'research' ? '/research' : `/blog/${match.id}`),
-      tags: match.metadata?.tags || [],
-      score: match.similarity * 100,
-    }));
-
-    return NextResponse.json(
-      { query, results },
-      {
-        headers: {
-          "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
-          "X-Search-Engine": "Semantic-Vector-Node",
-        },
-      },
-    );
-  } catch (error) {
-    console.error("Semantic Search Failure:", error);
-    // Fallback to empty results instead of crashing
-    return NextResponse.json({ query, results: [], error: "Search node temporarily offline." });
-  }
+  return NextResponse.json(
+    { query, results },
+    { headers: { "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600" } },
+  );
 }

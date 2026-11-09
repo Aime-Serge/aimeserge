@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAnalytics } from '@/core/domain/admin/mutations';
+import { requireAdminApi } from '@/core/domain/admin/guard';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
   try {
     const analytics = await getAdminAnalytics();
     return NextResponse.json(analytics);

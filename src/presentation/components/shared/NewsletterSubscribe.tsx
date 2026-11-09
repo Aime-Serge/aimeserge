@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Radio, Cpu, CheckCircle2 } from "lucide-react";
-import { subscribeNewsletter } from "@/core/domain/interactions/actions";
+import { subscribeNewsletter } from "@/core/domain/interactions/mutations";
 import { toast } from "react-hot-toast";
 
 export default function NewsletterSubscribe() {
@@ -30,8 +30,8 @@ export default function NewsletterSubscribe() {
     return (
       <div className="mx-auto max-w-xl space-y-4 rounded-2xl bg-emerald-500/10 p-8 border border-emerald-500/30 shadow-2xl text-center">
         <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
-        <h3 className="text-xl font-bold text-white uppercase tracking-widest font-mono">Synchronization_Complete</h3>
-        <p className="text-emerald-400/80 text-sm">Node confirmed. You will receive raw logs before they hit the main feed.</p>
+        <h3 className="text-xl font-bold text-white uppercase tracking-widest font-mono">You&apos;re subscribed</h3>
+        <p className="text-emerald-400/80 text-sm">Thanks! New articles will arrive in your inbox, about once a month.</p>
       </div>
     );
   }
@@ -39,8 +39,8 @@ export default function NewsletterSubscribe() {
   return (
     <div className="mx-auto max-w-xl space-y-4 rounded-2xl bg-[#010409] p-8 border border-slate-800 shadow-2xl">
       <Radio className="mx-auto h-8 w-8 text-cyan-500 animate-pulse" />
-      <h3 className="text-xl font-bold text-white uppercase tracking-widest font-mono">Sync with Node_01</h3>
-      <p className="text-slate-400 text-sm">Subscribe to receive raw logs and architectural breakdowns before they hit the feed.</p>
+      <h3 className="text-xl font-bold text-white uppercase tracking-widest font-mono">Get new articles by email</h3>
+      <p className="text-slate-400 text-sm">About one email a month when I publish something new. No spam, unsubscribe any time.</p>
       
       <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2 mt-6">
         <input 

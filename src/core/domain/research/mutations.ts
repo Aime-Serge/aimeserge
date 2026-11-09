@@ -3,7 +3,7 @@
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { withShield } from "@/infrastructure/security/shield";
 import { type ResearchPaper } from "./types";
-import { mutations as aiMutations } from "@/core/domain/ai";
+import { upsertKnowledge } from "@/core/domain/ai/mutations";
 import { validateAdminSession } from "@/core/domain/admin/queries";
 
 /**
@@ -27,7 +27,7 @@ Structured Content:
 ${sectionsContent}
     `.trim();
 
-    await aiMutations.upsertKnowledge({
+    await upsertKnowledge({
       id: paper.id,
       content: contentToEmbed,
       metadata: {

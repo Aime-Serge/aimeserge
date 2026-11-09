@@ -1,19 +1,21 @@
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
+import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
 import { type ResearchPaper, fallbackResearch } from "./types";
 
 export async function getResearch(): Promise<ResearchPaper[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('research')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error || !data || data.length === 0) return fallbackResearch;
+        if (error) throw error;
+        if (!data || data.length === 0) return fallbackResearch;
 
         return data.map((r) => ({
           id: r.id,
@@ -35,17 +37,21 @@ export async function getResearch(): Promise<ResearchPaper[]> {
           language: r.language || 'en',
           citations: r.citations || 0,
         }));
-      } catch {
-        return fallbackResearch;
+      } catch (err) {
+        throw err;
       }
     },
     ['research-list'],
-    { tags: ['research'], revalidate: 3600 }
-  )();
+    { tags: ['research'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback(fallbackResearch));
 }
 
 export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null> {
-  const supabase = createServerSupabaseClient();
+  return unstable_cache(() => fetchPaperBySlug(slug), ['paper', slug], { tags: ['research'], revalidate: CONTENT_TTL })().catch(contentFallback(null));
+}
+
+async function fetchPaperBySlug(slug: string): Promise<ResearchPaper | null> {
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('research')
@@ -53,7 +59,8 @@ export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null
       .eq('slug', slug)
       .single();
 
-    if (error || !data) return null;
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+    if (!data) return null;
 
     return {
       id: data.id,
@@ -75,7 +82,7 @@ export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null
       language: data.language || 'en',
       citations: data.citations || 0,
     };
-  } catch {
-    return null;
+  } catch (err) {
+    throw err;
   }
 }

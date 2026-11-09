@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Trash2, Mail, Phone, Globe, User, Briefcase, Zap, Activity } from "lucide-react";
-import { deleteContent } from "@/core/domain/admin/actions";
-import { supabase } from "@/infrastructure/database/client";
+import { deleteContent, getAllContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 import { cn } from "@/infrastructure/security/headers";
 
@@ -26,47 +25,25 @@ export default function InquiryVault() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
+  // Read through an admin-only server action. The browser never talks to the
+  // database directly, so the contacts table can stay locked by RLS.
   async function loadInquiries() {
-    const { data } = await supabase
-      .from('contacts')
-      .select('*')
-      .order('created_at', { ascending: false });
-    setInquiries((data as Inquiry[]) || []);
+    const result = await getAllContent('contacts');
+    if (result.success) {
+      setInquiries((result.data as Inquiry[]) || []);
+    } else {
+      toast.error("Couldn't load messages. Please sign in again.");
+    }
     setIsLoading(false);
   }
 
   useEffect(() => {
     loadInquiries();
-
-    // Enable Realtime Synchronization
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'contacts',
-        },
-        (payload) => {
-          const newInquiry = payload.new as Inquiry;
-          setInquiries((prev) => [newInquiry, ...prev]);
-          toast.success(`New inquiry received from ${newInquiry.name}`, {
-            icon: '🚀',
-            style: {
-              borderRadius: '15px',
-              background: '#0f172a',
-              color: '#fff',
-              border: '1px solid #1e293b'
-            },
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Cheap "live" inbox: refresh every 60 s while the tab is visible.
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') loadInquiries();
+    }, 60_000);
+    return () => clearInterval(id);
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -79,7 +56,7 @@ export default function InquiryVault() {
     }
   };
 
-  if (isLoading) return <div className="p-12 text-center animate-pulse text-slate-500 font-mono">FETCHING_INQUIRIES...</div>;
+  if (isLoading) return <div className="p-12 text-center animate-pulse text-slate-500 font-mono">Loading messages…</div>;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[400px_1fr] h-[calc(100vh-250px)]">

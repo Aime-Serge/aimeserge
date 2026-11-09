@@ -1,10 +1,14 @@
-export const securityHeaders = {
-  "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' https://*.supabase.co; style-src 'self' https://fonts.googleapis.com; img-src 'self' blob: data: https://*.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co https://vitals.vercel-insights.com; media-src 'self' blob: data: https://*.supabase.co; object-src 'none'; base-uri 'self'; frame-src 'self' https://www.youtube.com https://player.vimeo.com; frame-ancestors 'none'; upgrade-insecure-requests;",
+/**
+ * Static security headers. Applied to every route (pages AND /api) from
+ * next.config.ts. The Content-Security-Policy is built in middleware.ts
+ * so it can differ between dev and production; it is not duplicated here.
+ */
+export const securityHeaders: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
-  "X-XSS-Protection": "1; mode=block",
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  // Microphone is allowed for this origin only (voice input in the AI chat).
   "Permissions-Policy": "camera=(), microphone=(self), geolocation=(), interest-cohort=()",
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "Cross-Origin-Opener-Policy": "same-origin",
 };

@@ -2,9 +2,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Microscope, Calendar, Download, Eye, FileText, Share2, User, ExternalLink, Hash, Bookmark, BookOpen, Quote } from "lucide-react";
 import Link from "next/link";
-import { getPaperBySlug } from "@/core/domain/research/queries";
+import { getPaperBySlug, getResearch } from "@/core/domain/research/queries";
 import ResearchActionButtons from "@/presentation/components/shared/ResearchActionButtons";
-import SecurityAudit from "@/presentation/components/features/SecurityAudit";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,6 +18,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${paper.title} | Technical Research`,
     description: paper.abstract,
   };
+}
+
+// Pre-render known pages at build; new slugs render on first visit and are cached.
+// Admin saves purge them instantly (see infrastructure/cache/content.ts).
+export const revalidate = 86400;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const papers = await getResearch();
+  return papers.filter((p) => p.slug).map((p) => ({ slug: p.slug }));
 }
 
 export default async function ResearchDetailPage({ params }: Props) {
@@ -90,7 +99,7 @@ export default async function ResearchDetailPage({ params }: Props) {
               {/* Interaction Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-mono">Archive_Views</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-mono">Views</span>
                   <div className="flex items-center gap-2">
                     <Eye className="h-4 w-4 text-emerald-500" />
                     <span className="text-xl font-bold text-white font-mono">{paper.views}</span>
@@ -114,7 +123,7 @@ export default async function ResearchDetailPage({ params }: Props) {
                   <span className="text-[10px] text-slate-500 uppercase font-mono">Format</span>
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-emerald-500" />
-                    <span className="text-xs font-bold text-white font-mono">PDF_V1.4</span>
+                    <span className="text-xs font-bold text-white font-mono">PDF</span>
                   </div>
                 </div>
               </div>
@@ -166,7 +175,7 @@ export default async function ResearchDetailPage({ params }: Props) {
             <div className="sticky top-12 space-y-8">
               {/* Table of Contents */}
               <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
-                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">Archive_Navigation</h4>
+                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">Back to all research</h4>
                 <nav className="space-y-3">
                   {paper.content.map((section) => (
                     <a 
@@ -182,18 +191,18 @@ export default async function ResearchDetailPage({ params }: Props) {
 
               {/* Discovery Layer */}
               <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
-                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">Discovery_Index</h4>
+                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">About this paper</h4>
                 <div className="space-y-6">
                   <div>
-                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Primary_Category</span>
+                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Category</span>
                     <span className="text-xs text-white bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{paper.category || "General Research"}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Language_ISO</span>
+                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Language</span>
                     <span className="text-xs text-white font-mono uppercase">{paper.language}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Taxonomic_Keywords</span>
+                    <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Keywords</span>
                     <div className="flex flex-wrap gap-2">
                       {paper.tags.map(tag => (
                         <span key={tag} className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[9px] font-mono text-emerald-500/80">
@@ -204,33 +213,6 @@ export default async function ResearchDetailPage({ params }: Props) {
                   </div>
                 </div>
               </div>
-
-              <SecurityAudit />
-              
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
-                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-4">Metadata_Inspector</h4>
-                <div className="space-y-4">
-                  <div className="flex justify-between text-[9px] font-mono">
-                    <span className="text-slate-500">SIGNED_BY</span>
-                    <span className="text-white">NODE_ADMIN</span>
-                  </div>
-                  <div className="flex justify-between text-[9px] font-mono">
-                    <span className="text-slate-500">ENCRYPTION</span>
-                    <span className="text-white">AES_256_GCM</span>
-                  </div>
-                  <div className="flex justify-between text-[9px] font-mono">
-                    <span className="text-slate-500">CITATION_REQ</span>
-                    <span className="text-white uppercase">MANDATORY</span>
-                  </div>
-                </div>
-              </div>
-
-              <button className="w-full group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-center transition-all hover:bg-emerald-500/10">
-                <div className="relative z-10 flex items-center justify-center gap-2 text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                  <Share2 className="h-3 w-3" />
-                  Broadcast_Analysis
-                </div>
-              </button>
             </div>
           </aside>
         </div>

@@ -1,12 +1,14 @@
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
+import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
-import { myProjects, fallbackCertificates } from "./constants";
+import { fallbackCertificates } from "./constants";
 import {
   Certificate, Post, Article, MediaType, Visibility,
   CommentPermission, PublicationStatus, ContentBlock,
-  Experience, Education, Organization, Achievement
+  Experience, Education, Organization, Achievement, Profile, Project
 } from "./types";
+import { SITE } from "@/config/site";
 
 /**
  * Fetch Professional Experiences (Relational)
@@ -14,14 +16,15 @@ import {
 export async function getExperiences(): Promise<Experience[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('experiences')
           .select('*, company:organizations(*)')
           .order('start_date', { ascending: false });
 
-        if (error || !data) return [];
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+        if (!data) return [];
 
         return data.map((row: any) => ({
           id: row.id,
@@ -42,13 +45,12 @@ export async function getExperiences(): Promise<Experience[]> {
           } : undefined
         }));
       } catch (err) {
-        console.error("Failed to fetch experiences:", err);
-        return [];
+        throw err;
       }
     },
     ['experiences-list'],
-    { tags: ['experiences'], revalidate: 3600 }
-  )();
+    { tags: ['experiences'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback([]));
 }
 
 /**
@@ -57,14 +59,15 @@ export async function getExperiences(): Promise<Experience[]> {
 export async function getEducations(): Promise<Education[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('educations')
           .select('*, institution:organizations(*)')
           .order('end_date', { ascending: false });
 
-        if (error || !data) return [];
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+        if (!data) return [];
 
         return data.map((row: any) => ({
           id: row.id,
@@ -84,17 +87,20 @@ export async function getEducations(): Promise<Education[]> {
           description: row.description
         }));
       } catch (err) {
-        console.error("Failed to fetch educations:", err);
-        return [];
+        throw err;
       }
     },
     ['educations-list'],
-    { tags: ['educations'], revalidate: 3600 }
-  )();
+    { tags: ['educations'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback([]));
 }
 
 export async function getProjects() {
-  const supabase = createServerSupabaseClient();
+  return unstable_cache(fetchProjects, ['projects-list'], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback([] as ReturnType<typeof mapProjectRow>[]));
+}
+
+async function fetchProjects() {
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -102,16 +108,21 @@ export async function getProjects() {
       .eq('is_visible', true)
       .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) return myProjects;
+    if (error) throw error;
+    if (!data) return [];
 
     return data.map(mapProjectRow);
-  } catch {
-    return myProjects;
+  } catch (err) {
+    throw err;
   }
 }
 
 export async function getProjectBySlug(slug: string) {
-  const supabase = createServerSupabaseClient();
+  return unstable_cache(() => fetchProjectBySlug(slug), ['project', slug], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback(undefined));
+}
+
+async function fetchProjectBySlug(slug: string) {
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -120,11 +131,12 @@ export async function getProjectBySlug(slug: string) {
       .eq('is_visible', true)
       .single();
 
-    if (error || !data) return myProjects.find((p) => p.slug === slug);
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+    if (!data) return undefined;
 
     return mapProjectRow(data);
-  } catch {
-    return myProjects.find((p) => p.slug === slug);
+  } catch (err) {
+    throw err;
   }
 }
 
@@ -153,21 +165,24 @@ function mapProjectRow(row: any) {
     isCurrent: row.is_current,
     contributors: row.contributors ?? [],
     association: row.association,
-    metrics: row.metrics ?? []
+    metrics: row.metrics ?? [],
+    featured: Boolean(row.featured),
+    sortOrder: row.sort_order ?? 0
   };
 }
 
 export async function getCertificates(): Promise<Certificate[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('certificates')
           .select('*, issuer:organizations(*)')
           .order('issue_date', { ascending: false });
 
-        if (error || !data || data.length === 0) return fallbackCertificates;
+        if (error) throw error;
+        if (!data || data.length === 0) return fallbackCertificates;
 
         return data.map((c: any) => ({
           id: c.id,
@@ -186,26 +201,27 @@ export async function getCertificates(): Promise<Certificate[]> {
           } : undefined,
           credentialId: c.credential_id
         }));
-      } catch {
-        return fallbackCertificates;
+      } catch (err) {
+        throw err;
       }
     },
     ['certificates-list'],
-    { tags: ['certificates'], revalidate: 3600 }
-  )();
+    { tags: ['certificates'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback(fallbackCertificates));
 }
 
 export async function getAchievements(): Promise<Achievement[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('achievements')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error || !data) return [];
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+        if (!data) return [];
 
         return data.map((row: any) => ({
           id: row.id,
@@ -215,36 +231,39 @@ export async function getAchievements(): Promise<Achievement[]> {
           achievedDate: row.achieved_date || undefined,
           url: row.url || undefined
         }));
-      } catch {
-        return [];
+      } catch (err) {
+        throw err;
       }
     },
     ['achievements-list'],
-    { tags: ['achievements'], revalidate: 3600 }
-  )();
+    { tags: ['achievements'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback([]));
 }
 
 export async function getPosts(): Promise<Post[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('posts')
           .select('*, article:articles(*)')
           .order('created_at', { ascending: false });
 
-        if (error || !data) return [];
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+        if (!data) return [];
 
-        return data.map(mapPostRow);
+        // Hide feed posts whose article is still a draft (the server key can see drafts).
+        return data
+          .filter((row: any) => !row.article || row.article.status === 'PUBLISHED')
+          .map(mapPostRow);
       } catch (err) {
-        console.error("Failed to fetch posts:", err);
-        return [];
+        throw err;
       }
     },
     ['posts-feed'],
-    { tags: ['posts'], revalidate: 60 }
-  )();
+    { tags: ['posts'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback([]));
 }
 
 function mapPostRow(row: any): Post {
@@ -268,7 +287,7 @@ function mapPostRow(row: any): Post {
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('articles')
@@ -277,27 +296,29 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
           .eq('status', 'PUBLISHED')
           .single();
 
-        if (error || !data) return null;
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+        if (!data) return null;
 
         return mapArticleRow(data);
-      } catch {
-        return null;
+      } catch (err) {
+        throw err;
       }
     },
     [`article-${slug}`],
-    { tags: [`article-${slug}`], revalidate: 60 }
-  )();
+    { tags: ['articles', `article-${slug}`], revalidate: CONTENT_TTL }
+  )().catch(contentFallback(null));
 }
 
 export async function getArticleById(id: string): Promise<Article | null> {
-  const supabase = createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from('articles')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !data) return null;
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
+  if (!data) return null;
   return mapArticleRow(data);
 }
 
@@ -312,6 +333,9 @@ function mapArticleRow(row: any): Article {
     bodyContent: row.body_content as ContentBlock[],
     estimatedReadTime: row.estimated_read_time || 1,
     status: row.status as PublicationStatus,
+    category: row.category || undefined,
+    tags: row.tags || [],
+    publishedAt: row.published_at || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -321,3 +345,63 @@ function mapArticleRow(row: any): Article {
 export const getBroadcasts = getPosts as any;
 export const getBroadcastById = getArticleById as any;
 export const getLatestResume = async () => null; // Fallback
+
+// ─── Profile & featured work (homepage) ──────────────────────────────────
+
+export const DEFAULT_PROFILE: Profile = {
+  headline: "I build secure, reliable software, and add AI where it actually helps.",
+  bio: "I'm Aime Serge. I design and build web apps and APIs, keep them safe from common attacks, and add AI features like smart search and chat assistants.",
+  location: SITE.location,
+  openToWork: false,
+  availabilityNote: "",
+  cvUrl: "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf",
+};
+
+export async function getProfile(): Promise<Profile> {
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicSupabaseClient();
+      const { data, error } = await supabase.from('profile').select('*').eq('id', 1).maybeSingle();
+      if (error) throw error;
+      if (!data) return DEFAULT_PROFILE;
+      return {
+        headline: data.headline || DEFAULT_PROFILE.headline,
+        bio: data.bio || DEFAULT_PROFILE.bio,
+        location: data.location || DEFAULT_PROFILE.location,
+        openToWork: Boolean(data.open_to_work),
+        availabilityNote: data.availability_note || "",
+        cvUrl: data.cv_url || DEFAULT_PROFILE.cvUrl,
+      };
+    },
+    ['profile'],
+    { tags: ['profile'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback(DEFAULT_PROFILE));
+}
+
+/** Projects marked "featured" (by sort order); falls back to the newest three. */
+export async function getFeaturedProjects(limit = 3): Promise<Project[]> {
+  const projects = (await getProjects()) as Project[];
+  const featured = projects
+    .filter((p) => p.featured)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  return (featured.length ? featured : projects).slice(0, limit);
+}
+
+/** Published articles, newest first, for the RSS feed. */
+export async function getPublishedArticles(limit = 30): Promise<Article[]> {
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicSupabaseClient();
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('status', 'PUBLISHED')
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data || []).map(mapArticleRow);
+    },
+    ['articles-published', String(limit)],
+    { tags: ['articles'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback([] as Article[]));
+}

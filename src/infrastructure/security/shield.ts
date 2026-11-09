@@ -14,7 +14,9 @@ interface ShieldOptions {
 const DEFAULT_OPTIONS: ShieldOptions = {
   limit: 10,
   windowInMs: 60 * 1000, // 1 minute
-  auditLog: true,
+  // Audit only what matters (logins, admin writes). Logging every public
+  // form submit cost a DB write per action and could fire DB webhooks.
+  auditLog: false,
   redact: false,
 };
 
@@ -31,14 +33,14 @@ export function withShield<T, R>(
   return async (data: T): Promise<R | { success: false; message: string }> => {
     // 1. Get request context
     const headerList = await headers();
-    const ip = headerList.get("x-forwarded-for") || "unknown";
+    const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const ua = headerList.get("user-agent") || "unknown";
 
     // 2. Rate Limiting
-    const rate = await rateLimit.check(config.limit!, config.windowInMs!, ip);
+    const rate = await rateLimit.check(config.limit!, config.windowInMs!, `${actionName}:${ip}`);
     if (!rate.success) {
-      // Notify Admin of potential Brute Force / Rate Limit violation
-      await notifyAdmin({
+      // Alert only on login brute force; other limits just reject quietly (no alert spam).
+      if (actionName === "admin_login") await notifyAdmin({
         title: "Rate Limit Triggered",
         message: `Security intercept: IP ${ip} exceeded limits on ${actionName}`,
         type: 'SECURITY',
@@ -47,7 +49,7 @@ export function withShield<T, R>(
 
       return { 
         success: false, 
-        message: "Request synchronization failed. Rate limit exceeded." 
+        message: "Too many attempts. Please wait a minute and try again." 
       };
     }
 
@@ -83,7 +85,7 @@ export function withShield<T, R>(
       console.error(`Shield caught error in ${actionName}:`, error);
       return { 
         success: false, 
-        message: "Internal security intercept. Action terminated." 
+        message: "Something went wrong. Please try again." 
       };
     }
   };

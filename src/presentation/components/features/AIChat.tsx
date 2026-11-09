@@ -37,7 +37,9 @@ interface SpeechRecognition extends EventTarget {
   onstart: () => void;
   onend: () => void;
   onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: ((event: Event & { error?: string }) => void) | null;
   start: () => void;
+  stop: () => void;
 }
 
 interface WindowWithSpeech extends Window {
@@ -125,20 +127,25 @@ interface ConversationWindow {
   timestamp: number;
 }
 
-export default function AIChat() {
+export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastFollowUps, setLastFollowUps] = useState<string[]>([]);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState<ConversationWindow[]>([]);
   const [currentWindowId, setCurrentWindowId] = useState<string>('main');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  // Voice input uses the browser's built-in speech recognition (free; no server upload).
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  useEffect(() => {
+    const w = window as WindowWithSpeech;
+    setSpeechSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition));
+  }, []);
   const chatRef = useRef<HTMLDivElement>(null);
 
   // Chat state management
@@ -155,14 +162,22 @@ export default function AIChat() {
     setInput(e.target.value);
   };
 
-  // Custom submit handler
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  // Keep the latest messages in a ref so voice callbacks never send a stale history.
+  const messagesRef = useRef(messages);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    
-    const userMessage = { id: `msg-${Date.now()}`, role: 'user', content: input };
+    void sendMessage(input);
+  };
+
+  // Single entry point for typed questions, voice and suggestion buttons.
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
+
+    const userMessage = { id: `msg-${Date.now()}`, role: 'user', content: text.trim() };
     setIsLoading(true);
-    const newMessages = [...messages, userMessage];
+    const newMessages = [...messagesRef.current, userMessage];
     setMessages(newMessages);
     setInput('');
     
@@ -170,7 +185,13 @@ export default function AIChat() {
       const response = await fetch('/api/v1/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        // Send only the recent turns the server accepts (user/assistant, last 20).
+        body: JSON.stringify({
+          messages: newMessages
+            .filter((m) => (m.role === 'user' || m.role === 'assistant') && m.content.trim())
+            .slice(-20)
+            .map(({ role, content }) => ({ role, content: content.slice(0, 4000) })),
+        })
       });
       
       if (!response.ok) throw new Error('Failed to get response');
@@ -315,60 +336,47 @@ export default function AIChat() {
     setLastFollowUps([]);
   };
 
-  const toggleListening = useCallback(async () => {
+  const toggleListening = useCallback(() => {
     if (isListening) {
-      mediaRecorderRef.current?.stop();
-      setIsListening(false);
-      playCue('stop');
+      recognitionRef.current?.stop();
       return;
     }
+    const w = window as WindowWithSpeech;
+    const Recognition = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Recognition) return;
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('audio', audioBlob);
-
-        try {
-          setInput('Transcribing...');
-          const response = await fetch('/api/v1/ai/voice/stt', {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await response.json();
-          if (data.text) {
-            setVoiceTranscript(data.text);
-            setInput(data.text);
-            setMessages([...messages, { id: `msg-${Date.now()}`, role: 'user', content: data.text }]);
-            playCue('success');
-            setTimeout(() => setVoiceTranscript(''), 3000);
-          }
-        } catch (err) {
-          console.error('STT failed:', err);
-          setInput('Transcription failed.');
-        }
-      };
-
-      mediaRecorder.start();
+    const rec = new Recognition();
+    rec.lang = navigator.language || 'en-US';
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onstart = () => {
       setIsListening(true);
       setVoiceTranscript('');
       playCue('start');
-    } catch (err) {
-      console.error('Microphone access denied:', err);
-    }
-  }, [isListening, messages, setInput]);
+    };
+    rec.onend = () => {
+      setIsListening(false);
+      playCue('stop');
+    };
+    rec.onerror = (event) => {
+      console.warn('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+    rec.onresult = (event) => {
+      const text = event.results[0]?.[0]?.transcript?.trim();
+      if (!text) return;
+      setVoiceTranscript(text);
+      playCue('success');
+      void sendMessage(text);
+      setTimeout(() => setVoiceTranscript(''), 3000);
+    };
+    recognitionRef.current = rec;
+    rec.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isListening]);
 
   const handleSuggestionClick = (suggestion: string) => {
-    setMessages([...messages, { id: `msg-${Date.now()}`, role: 'user', content: suggestion }]);
+    void sendMessage(suggestion);
   };
 
   return (
@@ -391,7 +399,7 @@ export default function AIChat() {
             ref={chatRef}
             aria-label="AI Assistant Chat"
             className={cn(
-              "fixed bottom-6 right-6 z-50 flex h-[550px] w-[350px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300 sm:w-[400px]",
+              "fixed bottom-6 right-6 z-50 flex h-[min(550px,calc(100dvh-3rem))] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300",
               isOpen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
             )}
           >
@@ -401,8 +409,8 @@ export default function AIChat() {
                   <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Digital Twin Node</h3>
-                  <p className="text-[10px] text-slate-500 font-mono">STREAMING_LINK :: ACTIVE</p>
+                  <h3 className="text-sm font-semibold text-white">Ask about my work</h3>
+                  <p className="text-[11px] text-slate-500">AI assistant · answers from my portfolio</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -494,9 +502,12 @@ export default function AIChat() {
 
             <form onSubmit={handleSubmit} className="border-t border-slate-800 bg-slate-900/80 p-3 space-y-2">
               <div className="relative flex items-center gap-2">
+                {speechSupported && (
                 <button
                   type="button"
                   onClick={toggleListening}
+                  aria-label={isListening ? "Stop voice input" : "Ask by voice"}
+                  aria-pressed={isListening}
                   className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition",
                     isListening ? "bg-red-500 text-white animate-pulse" : "bg-slate-800 text-slate-400 hover:text-white"
@@ -504,11 +515,12 @@ export default function AIChat() {
                 >
                   {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </button>
+                )}
                 <div className="relative flex-1 flex items-center">
                   <input
                     value={input}
                     onChange={handleInputChange}
-                    placeholder={isListening ? "Listening..." : "Query the system..."}
+                    placeholder={isListening ? "Listening…" : "Ask a question…"}
                     className="w-full rounded-full border border-slate-700 bg-slate-800 py-2.5 pl-4 pr-12 text-sm text-white placeholder-slate-400 outline-none focus:border-cyan-500"
                     disabled={isLoading}
                   />

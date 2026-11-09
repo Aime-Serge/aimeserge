@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Save, X, Database, Cpu } from "lucide-react";
-import { upsertContent } from "@/core/domain/admin/actions";
+import { upsertContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 
 type ProjectCategory = "AI" | "Security" | "Cloud" | "Software Engineering" | "Full-Stack";
@@ -25,6 +25,8 @@ interface ProjectFormData {
   end_date: { month: string; year: string };
   contributors: string[];
   association: string;
+  featured: boolean;
+  sort_order: number;
 }
 
 interface ProjectEditorProps {
@@ -52,6 +54,8 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
     end_date: initialData?.end_date || { month: "December", year: "2024" },
     contributors: Array.isArray(initialData?.contributors) ? initialData.contributors : [],
     association: initialData?.association || "",
+    featured: Boolean(initialData?.featured),
+    sort_order: Number(initialData?.sort_order ?? 0),
   });
 
   const [newTool, setNewTool] = useState("");
@@ -181,6 +185,31 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
               placeholder="projects/artifact.pdf"
             />
           </div>
+        </div>
+
+        {/* Homepage placement */}
+        <div className="flex flex-wrap items-center gap-6 rounded-2xl border border-slate-800 bg-slate-950 p-6">
+          <label className="flex items-center gap-3 text-sm font-medium text-slate-200">
+            <input
+              type="checkbox"
+              checked={formData.featured}
+              onChange={e => setFormData({ ...formData, featured: e.target.checked })}
+              className="h-4 w-4 accent-cyan-500"
+            />
+            Feature on the homepage
+          </label>
+          <label className="flex items-center gap-3 text-sm text-slate-400">
+            Order
+            <input
+              type="number"
+              min={0}
+              max={999}
+              value={formData.sort_order}
+              onChange={e => setFormData({ ...formData, sort_order: Number(e.target.value) || 0 })}
+              className="w-20 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white"
+            />
+            <span className="text-xs text-slate-500">(lower shows first)</span>
+          </label>
         </div>
 
         {/* LinkedIn Specific: Dates & Current Status */}

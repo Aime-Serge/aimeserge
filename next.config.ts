@@ -1,80 +1,60 @@
-import path from "path";
+import type { NextConfig } from "next";
+import { securityHeaders } from "./src/infrastructure/security/securityHeaders";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+// Only optimise images from our own Supabase storage. A "**" wildcard turns
+// /_next/image into a free public image proxy that anyone can bill to us.
+const supabaseHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "").hostname;
+  } catch {
+    return undefined;
+  }
+})();
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-
-  // Note: Turbopack disabled due to memory constraints in resource-limited environments
-  // SWC is used by default for minification in Next.js 15+
+  poweredByHeader: false,
+  compress: true,
 
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // Reduce build output verbosity to save memory
   logging: {
-    fetches: {
-      fullUrl: false,
-    },
+    fetches: { fullUrl: false },
   },
 
-  // Compress assets more aggressively
-  compress: true,
+  experimental: {
+    // Tree-shake large icon/animation libraries to the parts actually imported.
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
 
-  // Image optimization for Core Web Vitals
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      ...(supabaseHost ? [{ protocol: "https" as const, hostname: supabaseHost }] : []),
+      { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
 
-  // Security and Performance Headers
   async headers() {
+    const staticHeaders = Object.entries(securityHeaders).map(([key, value]) => ({ key, value }));
     return [
+      // Security headers on every route, including /api (middleware does not run there).
+      { source: "/:path*", headers: staticHeaders },
+      // Files in /public/uploads are versioned by name; cache for a week.
       {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, stale-while-revalidate=86400',
-          },
-        ],
+        source: "/uploads/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
       },
       {
-        source: '/public/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+        source: "/icons/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=2592000, immutable" }],
       },
     ];
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

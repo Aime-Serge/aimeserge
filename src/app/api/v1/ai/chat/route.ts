@@ -10,16 +10,17 @@ export const maxDuration = 60;
 export const runtime = 'edge';
 
 // Input validation schema
+// Visitors may only send user/assistant turns. Allowing "system" or "tool"
+// roles from the browser lets anyone inject instructions into the model.
 const chatMessageSchema = z.object({
-  role: z.enum(['user', 'assistant', 'system', 'tool']),
-  content: z.string().min(1).max(10000),
-  id: z.string().optional(),
-  tool_call_id: z.string().optional(),
-  name: z.string().optional(),
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1).max(4000),
+  id: z.string().max(100).optional(),
 });
 
+// Keep only the last 20 turns: enough context, bounded cost per request.
 const chatPayloadSchema = z.object({
-  messages: z.array(chatMessageSchema).min(1).max(100)
+  messages: z.array(chatMessageSchema).min(1).max(40).transform((m) => m.slice(-20)),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Rate limiting
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
-    const rateLimitResult = await rateLimit.check(30, 60_000, `chat:${clientIP}`);
+    const rateLimitResult = await rateLimit.check(15, 60_000, `chat:${clientIP}`);
     
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const payload = chatPayloadSchema.safeParse(rawPayload);
     
     if (!payload.success) {
-      console.error("❌ Invalid Payload:", payload.error);
+      console.error("Invalid chat payload:", payload.error.issues);
       return NextResponse.json(
         { error: "Invalid request format" },
         { status: 400 }
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     if (userQuery) {
       context = await assembleAIContext(userQuery);
     } else {
-      context = "Initiating secure handshake. Welcome the user.";
+      context = "No question yet. Greet the visitor in one short sentence.";
     }
 
     // 5. Stream Response with Vercel AI SDK + Gemini
@@ -76,17 +77,13 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     });
 
-    const convertedMessages: Array<{ role: 'user' | 'assistant' | 'tool'; content: string }> = messages.map(m => {
-      if (m.role === 'system') {
-        return { role: 'user' as const, content: m.content };
-      }
-      return { role: m.role as 'user' | 'assistant' | 'tool', content: m.content };
-    });
+    const convertedMessages = messages.map((m) => ({ role: m.role, content: m.content }));
 
     const result = await streamText({
       model: google('gemini-2.5-flash'),
       system: getSystemPrompt(context),
-      messages: convertedMessages as any,
+      messages: convertedMessages,
+      maxOutputTokens: 800,
     });
 
     return result.toTextStreamResponse();
@@ -94,7 +91,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('❌ AI Node Failure (Streaming):', error);
     return NextResponse.json(
-      { error: "Quantum decoherence detected in the streaming node. Secure re-indexing required." },
+      { error: "The assistant is unavailable right now. Please try again in a minute." },
       { status: 500 }
     );
   }

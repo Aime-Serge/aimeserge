@@ -1,70 +1,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { securityHeaders } from '@/infrastructure/security/securityHeaders';
 import { jwtVerify } from 'jose';
 import { getEnvVar } from '@/infrastructure/utils/env';
 
 /**
- * Advanced Edge Middleware
- * Handles Zero-Trust Auth, CSP Injection, and Global Rate-Limiting logs.
+ * Edge middleware for page routes.
+ *  1. Sets the Content-Security-Policy (static headers live in next.config.ts).
+ *  2. Guards /admin and /dashboard with the signed auth_token cookie.
+ *
+ * /api routes are NOT matched: each admin API route must call requireAdminApi().
  */
+const isDev = process.env.NODE_ENV === 'development';
+
+const CSP = [
+  "default-src 'self'",
+  // 'unsafe-inline' is needed by Next.js inline bootstrap scripts unless nonces are adopted.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://va.vercel-scripts.com`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' blob: data: https://*.supabase.co https://i.ytimg.com",
+  "media-src 'self' blob: data: https://*.supabase.co",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 export async function middleware(request: NextRequest) {
-  // Define a localized type for the NextRequest with geo/ip extensions
-  interface AugmentedRequest extends NextRequest {
-    ip?: string;
-    geo?: {
-      country?: string;
-    };
-  }
-
-  const augRequest = request as AugmentedRequest;
-  const ip = augRequest.ip || request.headers.get('x-forwarded-for') || 'unknown';
-  const country = augRequest.geo?.country || 'unknown';
-
-  // 1. Advanced Security: Block Suspicious Regions (Optional/Configurable)
-  const blockedCountries = ['XX']; // Placeholder for restricted regions if needed
-  if (blockedCountries.includes(country)) {
-    return new NextResponse('Access Denied: Geographic Security Policy.', { status: 403 });
-  }
-
-  // 2. CSP Injection
-  const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://*.supabase.co https://va.vercel-scripts.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' blob: data: https://*.supabase.co;
-    font-src 'self' https://fonts.gstatic.com;
-    object-src 'none';
-    frame-src 'self' https://www.youtube.com https://player.vimeo.com;
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'none';
-    connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co https://vitals.vercel-insights.com;
-    upgrade-insecure-requests;
-  `.replace(/\s{2,}/g, ' ').trim();
-
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('Content-Security-Policy', cspHeader);
-  requestHeaders.set('x-visitor-ip', ip);
-  requestHeaders.set('x-visitor-country', country);
-
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
-  // 3. Inject Security Headers into Response
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-  
-  // Ensure CSP is also in the response headers for extra compatibility
-  response.headers.set('Content-Security-Policy', cspHeader);
-
-  // 4. Protect Admin & Dashboard (Zero-Trust)
-  const isProtectedPath = request.nextUrl.pathname.startsWith('/admin') || 
-                          request.nextUrl.pathname.startsWith('/dashboard');
+  const { pathname } = request.nextUrl;
+  const isProtectedPath = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
 
   if (isProtectedPath) {
     const token = request.cookies.get('auth_token')?.value;
@@ -74,15 +41,24 @@ export async function middleware(request: NextRequest) {
     if (!token || !jwtSecret || !adminEmail) return redirectToLogin(request);
 
     try {
-      const secret = new TextEncoder().encode(jwtSecret);
-      const { payload } = await jwtVerify(token, secret);
-
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
+        algorithms: ['HS256'],
+      });
       if (payload.role !== 'authenticated' || payload.email !== adminEmail) {
         return NextResponse.redirect(new URL('/', request.url));
       }
     } catch {
       return redirectToLogin(request);
     }
+  }
+
+  const response = NextResponse.next();
+  response.headers.set('Content-Security-Policy', CSP);
+
+  // Never let browsers or proxies keep a copy of private pages.
+  if (isProtectedPath || pathname.startsWith('/login')) {
+    response.headers.set('Cache-Control', 'private, no-store');
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   }
 
   return response;
@@ -97,7 +73,8 @@ function redirectToLogin(request: NextRequest) {
 }
 
 export const config = {
+  // Skip API routes, Next internals and static files (saves an edge invocation per asset).
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpe?g|gif|svg|webp|avif|ico|pdf|txt|xml|json|webmanifest)$).*)',
   ],
 };

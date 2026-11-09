@@ -1,4 +1,4 @@
-import { getArticleBySlug } from "@/core/domain/portfolio/queries";
+import { getArticleBySlug, getPosts } from "@/core/domain/portfolio/queries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Eye, Share2, Globe } from "lucide-react";
@@ -33,6 +33,19 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       description: article.excerpt,
     }
   };
+}
+
+// Pre-render known pages at build; new slugs render on first visit and are cached.
+// Admin saves purge them instantly (see infrastructure/cache/content.ts).
+export const revalidate = 86400;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const posts = await getPosts();
+  return posts
+    .map((p) => p.article?.slug)
+    .filter((slug): slug is string => Boolean(slug))
+    .map((id) => ({ id }));
 }
 
 export default async function ArticleDetailPage({ params }: ArticlePageProps) {
@@ -97,18 +110,6 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
             {article.excerpt}
           </p>
         </header>
-
-        {/* Engagement Stats Section */}
-        <div className="mb-12 flex items-center gap-6 py-4 border-y border-slate-800/50">
-          <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 uppercase">
-            <Eye className="h-4 w-4 text-cyan-500" />
-            <span>1.2k Nodes_Reached</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 uppercase">
-            <Share2 className="h-4 w-4 text-emerald-500" />
-            <span>45 Retransmissions</span>
-          </div>
-        </div>
 
         {/* Main Content Body */}
         <ArticleRenderer blocks={article.bodyContent} />
