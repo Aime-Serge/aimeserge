@@ -11,6 +11,8 @@ import {
   recordSyndication,
 } from "@/core/domain/portfolio/syndication-queries";
 import { Broadcast, SyndicationPlatform } from "@/core/domain/portfolio/types";
+import { validateAdminSession } from "@/core/domain/admin/queries";
+import { SITE } from "@/config/site";
 
 /**
  * Check if a string is a valid SyndicationPlatform
@@ -33,7 +35,7 @@ function isValidPlatform(platform: string): platform is SyndicationPlatform {
  */
 function formatContentForSyndication(
   broadcast: Broadcast,
-  baseUrl: string = "https://aimeserge.me"
+  baseUrl: string = SITE.url
 ) {
   const contentUrl = `${baseUrl}/blog/${broadcast.slug}`;
 
@@ -46,7 +48,7 @@ function formatContentForSyndication(
     tags: broadcast.hashtags || [],
     coverImageUrl: broadcast.coverImageUrl,
     authorBio:
-      "Software Engineer & AI Researcher. Building scalable systems at the intersection of cloud and intelligence.",
+      `${SITE.name}: ${SITE.description}`,
   };
 
   return content;
@@ -67,6 +69,9 @@ export async function syndicateContentAction(
   errors: Record<string, string>;
 }> {
   try {
+    // Admin only: this posts to external platforms using the owner's API tokens.
+    await validateAdminSession();
+
     // Validate input
     if (!broadcast.id || !broadcast.slug) {
       throw new Error("Invalid content: missing id or slug");
@@ -204,6 +209,8 @@ export async function publishArticleWithFullDistribution(
   };
 }> {
   try {
+    await validateAdminSession();
+
     // Validate article data
     if (!broadcast.title || !broadcast.slug) {
       throw new Error("Article must have title and slug");
@@ -264,11 +271,7 @@ export async function resyndicateContentAction(
   failedPlatforms: string[];
 }> {
   try {
-    // Get article from database
-    const { createServerSupabaseClient } = await import(
-      "@/infrastructure/database/server"
-    );
-    const supabase = createServerSupabaseClient();
+    const supabase = await validateAdminSession();
 
     const { data: broadcast, error } = await supabase
       .from("broadcasts")

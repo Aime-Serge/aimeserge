@@ -8,17 +8,22 @@ import Image from "next/image";
 import { cn } from "@/infrastructure/security/headers";
 import { Experience } from "@/core/domain/portfolio/types";
 
+// Static page, refreshed on admin save (on-demand) or at most daily.
+export const revalidate = 86400;
+
 export const metadata = {
-  title: "Professional Blueprint | Aime Serge UKOBIZABA",
-  description: "Senior Software Engineer, Google Cloud Architect, and AI Specialist with 5+ years deploying secure, scalable systems. AWS & GCP certified. Expertise: Cloud Architecture, Zero-Trust Security, ML Systems, Full-Stack Engineering. Verifiable credentials and peer-validated achievements.",
+  title: "Resume",
+  description: "Experience, education and certificates of Aime Serge Ukobizaba, software engineer in Kigali, Rwanda. Download the CV as a PDF.",
+  alternates: { canonical: "/resume" },
 };
 
+// Tools listed plainly. Self-rated percentages were removed: readers can't verify them.
 const skillMatrix = [
-  { name: "Backend Engineering", tools: "Node.js, Python (Django/DRF), REST APIs", level: 95 },
-  { name: "Cloud & DevOps", tools: "Google Cloud Platform, Vercel, CI/CD", level: 88 },
-  { name: "Cybersecurity", tools: "IAM, API Hardening, Zero-Trust", level: 82 },
-  { name: "Frontend Development", tools: "React, Next.js, Tailwind CSS", level: 90 },
-  { name: "AI & ML", tools: "Vertex AI, LLM Prompting, MLOps", level: 85 }
+  { name: "Back end", tools: "Node.js, Python (Django, DRF), REST and GraphQL APIs, PostgreSQL" },
+  { name: "Front end", tools: "React, Next.js, TypeScript, Tailwind CSS" },
+  { name: "Security", tools: "Authentication, access control, input validation, security reviews" },
+  { name: "Cloud & delivery", tools: "Google Cloud, Vercel, Supabase, Git and CI/CD" },
+  { name: "AI", tools: "LLM apps, retrieval-augmented search (RAG), prompt design, agents" }
 ];
 
 export default async function ResumePage() {
@@ -48,27 +53,23 @@ export default async function ResumePage() {
       <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between mb-20">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Professional <span className="text-cyan-500">Blueprint</span>
+            Resume
           </h1>
           <p className="mt-6 text-slate-400 text-lg md:text-xl max-w-2xl leading-relaxed">
-            Architecting secure, scalable AI systems and cloud infrastructure. Verifiable expertise in high-performance computing.
+            My work experience, education and certificates. Every certificate links to the issuer so you can check it.
           </p>
           
-          {/* Key Metrics Highlights */}
-          <div className="mt-8 grid grid-cols-3 gap-4 md:gap-6">
-            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
-              <div className="text-lg font-bold text-cyan-400">5+</div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider">Years Experience</div>
+          {/* Counts come from the database, so they stay true as content changes. */}
+          <dl className="mt-8 grid max-w-md grid-cols-2 gap-4">
+            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
+              <dd className="text-lg font-bold text-cyan-400">{Object.keys(groupedExperiences).length}</dd>
+              <dt className="text-xs text-slate-500">Organisations</dt>
             </div>
-            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
-              <div className="text-lg font-bold text-cyan-400">10+</div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider">Verified Certs</div>
+            <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
+              <dd className="text-lg font-bold text-cyan-400">{certificates.length}</dd>
+              <dt className="text-xs text-slate-500">Certificates & badges</dt>
             </div>
-            <div className="p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
-              <div className="text-lg font-bold text-cyan-400">100%</div>
-              <div className="text-xs text-slate-500 uppercase tracking-wider">Vetted Profile</div>
-            </div>
-          </div>
+          </dl>
         </div>
         <a 
           href={latestResumeUrl || "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf"} 
@@ -78,7 +79,7 @@ export default async function ResumePage() {
           className="flex items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-8 py-4 font-bold text-white transition hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(8,145,178,0.4)] shadow-lg"
         >
           <Download className="h-5 w-5" />
-          DOWNLOAD_CV_NODE
+          Download CV (PDF)
         </a>
       </div>
 
@@ -91,7 +92,7 @@ export default async function ResumePage() {
                <div className="h-10 w-10 rounded-xl bg-cyan-600/10 flex items-center justify-center border border-cyan-500/20">
                   <Briefcase className="h-5 w-5 text-cyan-500" />
                </div>
-               <h2 id="experience-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Technical_Experience</h2>
+               <h2 id="experience-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Experience</h2>
             </div>
 
             <div className="space-y-16">
@@ -108,7 +109,6 @@ export default async function ResumePage() {
                   
                   <div className="mb-8">
                     <h3 className="text-xl font-bold text-white leading-none">{group.company.name}</h3>
-                    <p className="text-slate-500 text-xs mt-2 uppercase tracking-widest font-mono">Organization Node // Verified</p>
                   </div>
 
                   {/* Roles Timeline */}
@@ -182,7 +182,7 @@ export default async function ResumePage() {
                <div className="h-10 w-10 rounded-xl bg-emerald-600/10 flex items-center justify-center border border-emerald-500/20">
                   <GraduationCap className="h-5 w-5 text-emerald-500" />
                </div>
-               <h2 id="edu-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Academic_Foundations</h2>
+               <h2 id="edu-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Education</h2>
             </div>
 
             <div className="grid gap-8">
@@ -251,7 +251,7 @@ export default async function ResumePage() {
                <div className="h-10 w-10 rounded-xl bg-cyan-600/10 flex items-center justify-center border border-cyan-500/20">
                   <Award className="h-5 w-5 text-cyan-500" />
                </div>
-               <h2 id="certs-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Verified_Credentials</h2>
+               <h2 id="certs-title" className="text-2xl font-bold text-white uppercase tracking-tighter">Certificates</h2>
             </div>
 
             {/* Organize certificates by competency area */}
@@ -405,7 +405,7 @@ export default async function ResumePage() {
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-3">
                     <Cloud className="h-5 w-5 text-emerald-400" />
-                    <h4 className="font-bold text-white uppercase tracking-widest text-sm">Cloud_Skills_Matrix</h4>
+                    <h4 className="font-bold text-white uppercase tracking-widest text-sm">Cloud skill badges</h4>
                   </div>
                   <a href="https://www.skills.google/public_profiles/ea12c24b-9b3d-43a0-b983-96cd33bd7b40" target="_blank" rel="noopener noreferrer" className="text-[9px] font-mono text-emerald-500 hover:text-emerald-400 transition-colors uppercase tracking-widest flex items-center gap-2">
                     LIVE_NODE_PROFILE <ExternalLink className="h-3 w-3" />
@@ -460,44 +460,32 @@ export default async function ResumePage() {
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 backdrop-blur-md sticky top-24">
             <div className="flex items-center gap-2 mb-8">
                <div className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
-               <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white">Neural_Skills_Matrix</h3>
+               <h3 className="text-sm font-bold text-white">Skills & tools</h3>
             </div>
             
             <div className="space-y-8">
               {skillMatrix.map(skill => (
                 <div key={skill.name} className="space-y-3">
-                  <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest">
-                    <span className="text-slate-400">{skill.name}</span>
-                    <span className="text-cyan-500">{skill.level}%</span>
-                  </div>
-                  <div className="h-1 w-full rounded-full bg-slate-800/50 overflow-hidden">
-                    <div 
-                      className="h-full rounded-full bg-cyan-500 shadow-[0_0_15px_rgba(8,145,178,0.5)] transition-all duration-1000" 
-                      style={{ width: `${skill.level}%` }}
-                    />
-                  </div>
-                  <p className="text-[9px] text-slate-600 font-mono leading-relaxed">{skill.tools}</p>
+                  <p className="text-sm font-semibold text-slate-200">{skill.name}</p>
+                  <p className="text-sm text-slate-400 leading-relaxed">{skill.tools}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-12 pt-8 border-t border-slate-800/50">
-               <p className="text-[10px] text-slate-500 leading-relaxed italic">
-                 &quot;This matrix represents active deployment nodes and theoretical proficiencies across the tech stack.&quot;
-               </p>
-            </div>
           </div>
         </aside>
       </div>
 
-      {/* Testimonials Section */}
-      <div className="mt-24 pt-20 border-t border-slate-800/30">
-        <TestimonialSection 
-          testimonials={testimonials}
-          title="Professional Recognition"
-          subtitle="Verified feedback from collaborators, technical partners, and industry professionals"
-        />
-      </div>
+      {/* Testimonials render only when real, attributable quotes exist in constants.ts */}
+      {testimonials.length > 0 && (
+        <div className="mt-24 pt-20 border-t border-slate-800/30">
+          <TestimonialSection
+            testimonials={testimonials}
+            title="What people say"
+            subtitle="Quotes from people I've worked with. Each one is shared with their permission."
+          />
+        </div>
+      )}
     </div>
   );
 }

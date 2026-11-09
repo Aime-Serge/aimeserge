@@ -4,6 +4,7 @@ import {
   getSyndicationConfigs,
   recordSyndication,
 } from "@/core/domain/portfolio/syndication-queries";
+import { requireAdminApi } from "@/core/domain/admin/guard";
 
 /**
  * POST /api/v1/admin/syndicate
@@ -12,22 +13,27 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const auth = request.headers.get("authorization");
-    if (!auth || !auth.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    // Verify admin session (signed, httpOnly auth_token cookie)
+    const denied = await requireAdminApi();
+    if (denied) return denied;
 
     const { contentId, contentType, content, platforms } = await request.json();
 
-    if (!contentId || !content) {
+    if (!contentId) {
       return NextResponse.json(
-        { error: "Missing required fields: contentId, content" },
+        { error: "Missing required field: contentId" },
         { status: 400 }
       );
+    }
+
+    // The dashboard sends only an ID: load the stored article and syndicate it.
+    if (!content) {
+      if (!Array.isArray(platforms) || platforms.length === 0) {
+        return NextResponse.json({ error: "Choose at least one platform" }, { status: 400 });
+      }
+      const { resyndicateContentAction } = await import("@/core/domain/portfolio/syndication-actions");
+      const result = await resyndicateContentAction(String(contentId), platforms.map(String));
+      return NextResponse.json({ contentId, ...result }, { status: result.success ? 200 : 207 });
     }
 
     // Load syndication configs
@@ -98,6 +104,8 @@ export async function POST(request: NextRequest) {
  */
 
 export async function GET(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const contentId = searchParams.get("contentId");

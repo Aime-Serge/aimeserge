@@ -74,7 +74,7 @@ export default function BroadcastAudioPlayer({ text, title }: BroadcastAudioPlay
       
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest">Audio_Stream_Available</span>
+          <span className="text-[10px] font-mono text-cyan-500 uppercase tracking-widest">Listen to this article</span>
           {isPlaying && <span className="flex gap-0.5 h-2 items-end">
             <span className="w-0.5 bg-cyan-500 animate-[bounce_0.5s_infinite]"></span>
             <span className="w-0.5 bg-cyan-500 animate-[bounce_0.7s_infinite]"></span>

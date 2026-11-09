@@ -5,10 +5,15 @@ import { cn } from "@/infrastructure/security/headers";
 import { isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
 import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
 import Image from "next/image";
+import { SITE, jsonLd as toJsonLd } from "@/config/site";
+
+// Static page, refreshed on admin save (on-demand) or at most daily.
+export const revalidate = 86400;
 
 export const metadata = {
-  title: "Engineering Insights | Aime Serge",
-  description: "Professional feed of technical posts, long-form articles, and architectural insights on cloud engineering, cybersecurity, and AI systems. Timeless engineering wisdom and production learnings.",
+  title: "Blog",
+  description: "Articles and short posts by Aime Serge Ukobizaba on building software, security and AI, written in plain language.",
+  alternates: { canonical: "/blog" },
 };
 
 export default async function BlogPage() {
@@ -17,13 +22,13 @@ export default async function BlogPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    "name": "Engineering Insights - Aime Serge",
-    "description": "Professional feed of technical posts and architectural insights",
-    "url": "https://aimesergeonline.vercel.app/blog",
+    "name": `${SITE.name}: Blog`,
+    "description": metadata.description,
+    "url": `${SITE.url}/blog`,
     "creator": {
       "@type": "Person",
-      "name": "Aime Serge UKOBIZABA",
-      "jobTitle": "Senior Software Engineer"
+      "name": SITE.name,
+      "jobTitle": "Software Engineer"
     },
     "blogPost": posts
       .filter(post => post.article)
@@ -34,7 +39,7 @@ export default async function BlogPage() {
         "datePublished": post.article?.createdAt || post.createdAt,
         "author": {
           "@type": "Person",
-          "name": "Aime Serge UKOBIZABA"
+          "name": SITE.name
         }
       }))
   };
@@ -43,27 +48,16 @@ export default async function BlogPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
       />
       <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
-        <div className="flex items-center gap-2 text-cyan-500 font-mono text-xs uppercase tracking-[0.3em] mb-4">
-          <Radio className="h-3.5 w-3.5 animate-pulse" />
-          Live_Professional_Feed
-        </div>
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Engineering <span className="text-cyan-500">Insights</span>
+          Blog
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Timeless technical wisdom: production learnings, architectural breakthroughs, and professional milestones in cloud engineering and cybersecurity.
+          Notes on what I build and learn: software, security and AI, explained without the jargon.
         </p>
-        
-        {/* Feed Purpose */}
-        <div className="mt-8 p-4 rounded-lg border border-cyan-500/20 bg-cyan-500/5">
-          <p className="text-sm text-slate-300">
-            Articles, posts, and technical observations spanning distributed systems, security architecture, and AI-driven infrastructure. Each piece represents real-world lessons and production experience.
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-8">
@@ -83,7 +77,7 @@ export default async function BlogPage() {
                     <h3 className="text-sm font-bold text-white">Aime Serge UKOBIZABA</h3>
                     <span className="text-[10px] text-slate-500">• 1st</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 line-clamp-1">Senior Software Engineer | Cybersecurity & Cloud Architect</p>
+                  <p className="text-[10px] text-slate-500 line-clamp-1">{SITE.headline}</p>
                   <div className="flex items-center gap-1 text-[9px] text-slate-600 uppercase font-mono">
                     <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                     <span>•</span>

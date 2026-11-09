@@ -205,45 +205,15 @@ export const fallbackCertificates: Certificate[] = [];
 
 export const fallbackBroadcasts: Broadcast[] = [];
 
-export const testimonials: Testimonial[] = [
-  {
-    id: "testimonial-1",
-    authorName: "Dr. Emmanuel Ndayisaba",
-    authorRole: "Climate Data Analyst",
-    authorCompany: "East African Climate Research Consortium",
-    quote: "Aime's computational approach to climate modeling provided critical insights into regional warming trends. The rigor and transparency of the analysis sets a new standard for climate research in Sub-Saharan Africa.",
-    context: "Climate Modeling East Africa Project",
-    date: "2025-01-15",
-    verified: true
-  },
-  {
-    id: "testimonial-2",
-    authorName: "Sarah Musyoka",
-    authorRole: "Operations Lead",
-    authorCompany: "Flex Transport Solutions",
-    quote: "The IoT telemetry infrastructure and predictive optimization reduced our operational costs by 22% while dramatically improving passenger experience. Aime's systems thinking transformed how we approach fleet management.",
-    context: "Urban Mobility IoT Project",
-    date: "2024-12-20",
-    verified: true
-  },
-  {
-    id: "testimonial-3",
-    authorName: "James Karanja",
-    authorRole: "Principal Architect",
-    authorCompany: "CloudTech East Africa",
-    quote: "Aime demonstrates exceptional capability in designing security-hardened systems at scale. The portfolio platform itself is evidence of production-grade engineering and architectural maturity.",
-    context: "Technical Collaboration & Architecture Review",
-    date: "2024-11-30",
-    verified: true
-  },
-  {
-    id: "testimonial-4",
-    authorName: "Amara Okonkwo",
-    authorRole: "University Professor",
-    authorCompany: "African Institute of Technology",
-    quote: "Beyond technical excellence, Aime exhibits a rare commitment to making advanced technology accessible to developing regions. Their research directly addresses regional challenges.",
-    context: "Academic Partnership - Research Mentorship",
-    date: "2025-02-05",
-    verified: true
-  }
-];
+/**
+ * Testimonials shown on /resume.
+ *
+ * Intentionally empty. The previous four entries were marked "verified" but
+ * could not be matched to the CV or any public profile. Showing unverifiable
+ * quotes is the fastest way to lose a recruiter's trust.
+ *
+ * Add a quote only when: the person agreed in writing, the name/role/company
+ * are real, and ideally a public source exists (e.g. a LinkedIn recommendation
+ * URL in `context`). Then set verified: true.
+ */
+export const testimonials: Testimonial[] = [];

@@ -56,6 +56,7 @@ export const uploadResume = withShield("resume_upload", uploadResumeBase);
 export async function syncBroadcastToKnowledge(broadcast: Broadcast) {
   const { mutations: aiMutations } = await import("@/core/domain/ai");
   try {
+    await validateAdminSession();
     let contentToEmbed = `[Social Broadcast: ${broadcast.contentType}] Topic: ${broadcast.title}\n`;
     
     if (broadcast.contentType === 'POST') {

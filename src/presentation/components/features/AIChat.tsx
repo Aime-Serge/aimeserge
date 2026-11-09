@@ -125,12 +125,12 @@ interface ConversationWindow {
   timestamp: number;
 }
 
-export default function AIChat() {
+export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastFollowUps, setLastFollowUps] = useState<string[]>([]);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState<ConversationWindow[]>([]);
@@ -170,7 +170,13 @@ export default function AIChat() {
       const response = await fetch('/api/v1/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        // Send only the recent turns the server accepts (user/assistant, last 20).
+        body: JSON.stringify({
+          messages: newMessages
+            .filter((m) => (m.role === 'user' || m.role === 'assistant') && m.content.trim())
+            .slice(-20)
+            .map(({ role, content }) => ({ role, content: content.slice(0, 4000) })),
+        })
       });
       
       if (!response.ok) throw new Error('Failed to get response');
@@ -391,7 +397,7 @@ export default function AIChat() {
             ref={chatRef}
             aria-label="AI Assistant Chat"
             className={cn(
-              "fixed bottom-6 right-6 z-50 flex h-[550px] w-[350px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300 sm:w-[400px]",
+              "fixed bottom-6 right-6 z-50 flex h-[min(550px,calc(100dvh-3rem))] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300",
               isOpen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
             )}
           >
@@ -401,8 +407,8 @@ export default function AIChat() {
                   <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Digital Twin Node</h3>
-                  <p className="text-[10px] text-slate-500 font-mono">STREAMING_LINK :: ACTIVE</p>
+                  <h3 className="text-sm font-semibold text-white">Ask about my work</h3>
+                  <p className="text-[11px] text-slate-500">AI assistant · answers from my portfolio</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -508,7 +514,7 @@ export default function AIChat() {
                   <input
                     value={input}
                     onChange={handleInputChange}
-                    placeholder={isListening ? "Listening..." : "Query the system..."}
+                    placeholder={isListening ? "Listening…" : "Ask a question…"}
                     className="w-full rounded-full border border-slate-700 bg-slate-800 py-2.5 pl-4 pr-12 text-sm text-white placeholder-slate-400 outline-none focus:border-cyan-500"
                     disabled={isLoading}
                   />

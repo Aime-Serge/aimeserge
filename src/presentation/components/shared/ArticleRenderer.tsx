@@ -1,5 +1,4 @@
-"use client";
-
+// Server component: sanitize-html (≈65 kB) stays on the server instead of shipping to the browser.
 import React from "react";
 import { ContentBlock } from "@/core/domain/portfolio/types";
 import Image from "next/image";

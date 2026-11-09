@@ -9,7 +9,7 @@ import {
   Shield, LayoutDashboard, Database, FileText, 
   MessageSquare, Plus, 
   TrendingUp, Users, Download, Bot, Send, 
-  Mic, Activity, Zap, Cpu, Award, Brain, Globe
+  Mic, Activity, Zap, Cpu, Award, Brain, Globe, User
 } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
 import { isTextUIPart, type UIMessage } from "ai";
@@ -17,7 +17,8 @@ import { toast } from "react-hot-toast";
 import ProjectEditor from "@/presentation/components/features/ProjectEditor";
 import CredentialEditor from "@/presentation/components/features/CredentialEditor";
 import ResearchEditor from "@/presentation/components/features/ResearchEditor";
-import BroadcastEditor from "@/presentation/components/features/BroadcastEditor";
+import ArticleEditor from "@/presentation/components/features/ArticleEditor";
+import ProfileEditor from "@/presentation/components/features/ProfileEditor";
 import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
 import AdminContentManager from "@/presentation/components/features/AdminContentManager";
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
   const [showProjectEditor, setShowProjectEditor] = useState(false);
   const [showCredentialEditor, setShowCredentialEditor] = useState(false);
   const [showResearchEditor, setShowResearchEditor] = useState(false);
-  const [showBroadcastEditor, setShowBroadcastEditor] = useState(false);
+  const [showArticleEditor, setShowArticleEditor] = useState(false);
 
   // Edit States
   const [editingItem, setEditingItem] = useState<EditableAdminItem | undefined>(undefined);
@@ -68,7 +69,7 @@ export default function AdminDashboard() {
     setEditingItem(item);
     if (activeTab === 'projects') setShowProjectEditor(true);
     else if (activeTab === 'research') setShowResearchEditor(true);
-    else if (activeTab === 'broadcasts') setShowBroadcastEditor(true);
+    else if (activeTab === 'articles') setShowArticleEditor(true);
     else setShowCredentialEditor(true);
   };
 
@@ -186,7 +187,8 @@ export default function AdminDashboard() {
     { id: "resume", label: "Resume/CV", icon: FileText },
     { id: "projects", label: "Projects", icon: Database },
     { id: "research", label: "Research", icon: FileText },
-    { id: "broadcasts", label: "Blog", icon: TrendingUp },
+    { id: "profile", label: "Profile", icon: User },
+    { id: "articles", label: "Blog", icon: TrendingUp },
     { id: "syndication", label: "Syndication", icon: Globe },
     { id: "training", label: "AI Training", icon: Brain },
     { id: "certificates", label: "Certificates", icon: Award },
@@ -266,8 +268,8 @@ export default function AdminDashboard() {
                 setEditingItem(undefined);
                 if (activeTab === 'projects') setShowProjectEditor(true);
                 else if (activeTab === 'research') setShowResearchEditor(true);
-                else if (activeTab === 'broadcasts') setShowBroadcastEditor(true);
-                else setShowCredentialEditor(true);
+                else if (activeTab === 'articles') setShowArticleEditor(true);
+                else if (activeTab === 'certificates') setShowCredentialEditor(true);
               }}
               className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2 text-xs"
             >
@@ -299,10 +301,10 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-          {showBroadcastEditor && (
+          {showArticleEditor && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
               <div className="max-w-4xl w-full my-auto">
-                <BroadcastEditor initialData={editingItem as ComponentProps<typeof BroadcastEditor>["initialData"]} onClose={() => setShowBroadcastEditor(false)} />
+                <ArticleEditor initialData={editingItem as ComponentProps<typeof ArticleEditor>["initialData"]} onClose={() => setShowArticleEditor(false)} />
               </div>
             </div>
           )}
@@ -393,7 +395,10 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Content Management Modules */}
-                {["projects", "research", "broadcasts", "certificates"].includes(activeTab) && (
+                {/* Homepage hero, availability badge, CV link */}
+                {activeTab === "profile" && <ProfileEditor />}
+
+                {["projects", "research", "articles", "certificates"].includes(activeTab) && (
                   <AdminContentManager table={activeTab} onEdit={handleEdit} />
                 )}
                 </div>

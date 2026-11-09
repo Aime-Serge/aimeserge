@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { getEnvVar } from "@/infrastructure/utils/env";
 import { revalidatePath } from "next/cache";
+import { revalidateContent } from "@/infrastructure/cache/content";
 import { SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
 import { withShield } from "@/infrastructure/security/shield";
@@ -10,9 +11,29 @@ import { validateAdminSession } from "./queries";
 import { sanitizeContentBlocks, sanitizeHtmlContent } from '@/infrastructure/security/sanitizer';
 
 /**
- * Internal helper to record security events.
+ * Tables the admin dashboard may read, write or delete.
+ * Any other table name is rejected, even for a valid admin session.
  */
-export async function recordSecurityEvent(
+const ADMIN_TABLES = new Set([
+  "projects", "research", "broadcasts", "certificates", "contacts",
+  "experiences", "educations", "achievements", "organizations",
+  "articles", "profile",
+]);
+
+function assertAdminTable(table: string) {
+  if (!ADMIN_TABLES.has(table)) throw new Error(`Table "${table}" is not editable from the dashboard.`);
+}
+
+/** First IP in x-forwarded-for (the client), not the whole proxy chain. */
+function clientIp(raw: string | null) {
+  return raw?.split(",")[0]?.trim() || "unknown";
+}
+
+/**
+ * Internal helper to record security events.
+ * Not exported: exports from a "use server" file become public endpoints.
+ */
+async function recordSecurityEvent(
   event_type: string, 
   user_email: string | null | undefined, 
   severity: 'INFO' | 'WARN' | 'CRITICAL' = 'INFO',
@@ -21,7 +42,7 @@ export async function recordSecurityEvent(
   const supabase = createServerSupabaseClient();
   const headerList = await headers();
   
-  const ip = headerList.get('x-forwarded-for') || 'unknown';
+  const ip = clientIp(headerList.get('x-forwarded-for'));
   const ua = headerList.get('user-agent') || 'unknown';
 
   await supabase.from('security_logs').insert({
@@ -50,7 +71,7 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
 
     if (error || !data.user) {
       await recordSecurityEvent('LOGIN_FAILURE', email, 'WARN', { error: error?.message });
-      throw new Error(error?.message || "Auth failed");
+      throw new Error("Email or password is incorrect.");
     }
 
     // 2. Security Check: Ensure email matches ADMIN_EMAIL
@@ -59,12 +80,12 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
 
     if (!adminEmail || !jwtSecret) {
       await recordSecurityEvent('UNAUTHORIZED_ACCESS_ATTEMPT', data.user.email, 'CRITICAL', { reason: 'missing_admin_config' });
-      throw new Error("Access Denied: Server auth configuration is incomplete.");
+      throw new Error("Sign-in is not configured on the server.");
     }
 
     if (data.user.email !== adminEmail) {
       await recordSecurityEvent('UNAUTHORIZED_ACCESS_ATTEMPT', data.user.email, 'CRITICAL');
-      throw new Error("Access Denied: Identity not recognized as Node Operator.");
+      throw new Error("Email or password is incorrect.");
     }
 
     // 3. Generate Secure JWT for Middleware (Zero-Trust)
@@ -108,6 +129,7 @@ async function upsertContentBase(params: { table: string, payload: object, path:
   const { table, payload, path } = params;
   try {
     const supabase = await validateAdminSession();
+    assertAdminTable(table);
 
     // Defensive sanitization: clean common rich-content fields before DB write
     let safePayload: any = { ...(payload as any) };
@@ -142,6 +164,7 @@ async function upsertContentBase(params: { table: string, payload: object, path:
     const recordId = data && typeof data === 'object' && 'id' in data ? (data as { id: string }).id : 'unknown';
     await recordSecurityEvent('CONTENT_UPSERT', process.env.ADMIN_EMAIL!, 'INFO', { table, id: recordId });
 
+    revalidateContent(table);
     revalidatePath(path);
     return { success: true, data };
   } catch (err: unknown) {
@@ -227,7 +250,7 @@ export async function getAdminAnalytics(): Promise<AdminAnalytics> {
  * Evaluates the current security posture of the application.
  */
 export async function getSecurityStatus(): Promise<SecurityStatus> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await validateAdminSession();
   const headerList = await headers();
   
   // 1. Fetch recent activity from security_logs
@@ -283,7 +306,14 @@ async function deleteContentBase(params: { table: string, id: string, path: stri
   const { table, id, path } = params;
   try {
     const supabase = await validateAdminSession();
-    
+    assertAdminTable(table);
+
+    // Deleting an article also removes its feed post and its AI-search entry.
+    if (table === 'articles') {
+      await supabase.from('posts').delete().eq('article_id', id);
+      await supabase.from('knowledge').delete().eq('id', id);
+    }
+
     const { error } = await supabase
       .from(table)
       .delete()
@@ -291,6 +321,7 @@ async function deleteContentBase(params: { table: string, id: string, path: stri
 
     if (error) throw error;
 
+    revalidateContent(table);
     revalidatePath(path);
     return { success: true };
   } catch (err: unknown) {
@@ -340,7 +371,7 @@ Category: ${project.category}
       }
     });
   } catch (error) {
-    console.error("Project Sync Error:", error);
+    console.error("Project sync error:", error);
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
@@ -357,6 +388,7 @@ export async function syncProjectToKnowledge(project: Parameters<typeof syncProj
 export async function getAllContent(table: string) {
   try {
     const supabase = await validateAdminSession();
+    assertAdminTable(table);
     
     const { data, error } = await supabase
       .from(table)

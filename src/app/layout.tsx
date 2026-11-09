@@ -7,47 +7,45 @@ import ClientWrapper from "@/presentation/components/layout/ClientWrapper";
 import ScrollToTop from "@/presentation/components/shared/ScrollToTop";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SITE } from "@/config/site";
 
 export const viewport: Viewport = {
   themeColor: "#020617",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale: people must be able to pinch-zoom (WCAG 1.4.4).
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "Aime Serge Ukobizaba | Senior Software Engineer",
-    template: "%s | Aime Serge Portfolio"
+    default: `${SITE.name} | ${SITE.headline}`,
+    template: `%s | ${SITE.shortName}`,
   },
-  description: "Advanced Portfolio of Aime Serge UKOBIZABA, specializing in Cybersecurity, Cloud Infrastructure, and AI-Powered Solutions. ALX Ventures Rwanda Ambassador.",
-  metadataBase: new URL('https://aimesergeonline.vercel.app'),
+  description: SITE.description,
+  metadataBase: new URL(SITE.url),
   alternates: {
-    canonical: '/',
+    canonical: "/",
+    types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE.name}: Blog` }] },
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: "/icons/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://aimesergeonline.vercel.app",
-    siteName: "Aime Serge Portfolio",
-    images: [{
-      url: "/logo.png",
-      width: 1200,
-      height: 630,
-      alt: "Aime Serge Portfolio"
-    }],
+    url: SITE.url,
+    siteName: SITE.name,
+    title: `${SITE.name} | ${SITE.headline}`,
+    description: SITE.description,
+    images: [{ url: "/icons/og.jpg", width: 1200, height: 630, alt: `${SITE.name}, ${SITE.headline}` }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aime Serge Ukobizaba | Senior Software Engineer",
-    description: "Cybersecurity Analyst & Cloud Architect. Building the future of AI and Cloud.",
-    images: ["/logo.png"],
+    title: `${SITE.name} | ${SITE.headline}`,
+    description: SITE.description,
+    images: ["/icons/og.jpg"],
   },
 };
 

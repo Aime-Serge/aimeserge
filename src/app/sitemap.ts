@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next';
+import { SITE } from '@/config/site';
 import { getProjects, getPosts } from '@/core/domain/portfolio/queries';
 import type { Project, Post } from '@/core/domain/portfolio/types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://aimesergeonline.vercel.app';
+  const baseUrl = SITE.url;
   const now = new Date();
 
   // Base routes

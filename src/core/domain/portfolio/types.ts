@@ -61,6 +61,10 @@ export interface Achievement {
 export interface Project {
   id: string;
   slug: string;
+  /** Shown in "Featured work" on the homepage. */
+  featured?: boolean;
+  /** Lower numbers appear first. */
+  sortOrder?: number;
   title: string; 
   tagline: string;
   role: string;
@@ -124,8 +128,21 @@ export interface ContentBlock {
   };
 }
 
+/** Single-row table that drives the homepage hero. */
+export interface Profile {
+  headline: string;
+  bio: string;
+  location: string;
+  openToWork: boolean;
+  availabilityNote: string;
+  cvUrl: string;
+}
+
 export interface Article {
   id: string;
+  category?: string;
+  tags?: string[];
+  publishedAt?: string;
   title: string;
   slug: string;
   coverImageUrl?: string;

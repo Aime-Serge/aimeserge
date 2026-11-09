@@ -5,12 +5,18 @@ import { type ContactSubmission } from "./types";
 import { withShield } from "@/infrastructure/security/shield";
 import { contactSubmissionSchema, newsletterSubscriptionSchema } from "./schemas";
 import { notifyAdmin } from "@/infrastructure/utils/notifications";
+import { SITE } from "@/config/site";
 
 async function submitContactFormBase(formData: ContactSubmission) {
   // Validate input
   const validatedFields = contactSubmissionSchema.safeParse(formData);
   if (!validatedFields.success) {
-    return { success: false, message: "Invalid data: " + validatedFields.error.message };
+    return { success: false, message: validatedFields.error.issues[0]?.message || "Please check the form and try again." };
+  }
+
+  // Honeypot filled in: almost certainly a bot. Pretend success, store nothing.
+  if (validatedFields.data.website) {
+    return { success: true, message: "Thanks! Your message has been sent." };
   }
 
   const supabase = createServerSupabaseClient();
@@ -32,8 +38,6 @@ async function submitContactFormBase(formData: ContactSubmission) {
           location: data.location,
           linkedin_url: data.linkedinUrl,
           whatsapp: data.whatsapp,
-          gender: data.gender,
-          marital_status: data.maritalStatus,
           message: data.message,
           newsletter_opt_in: data.newsletterOptIn,
         }
@@ -41,13 +45,13 @@ async function submitContactFormBase(formData: ContactSubmission) {
 
     if (error) {
       console.error("Supabase submission error:", error);
-      return { success: false, message: `System failure: ${error.message} [Ref: TRANSMISSION_ERR]` };
+      return { success: false, message: `Your message couldn't be sent. Please email me at ${SITE.email}.` };
     }
 
     // Trigger Enhanced Notification Pipeline
     await notifyAdmin({
       title: "New Inquiry Received",
-      message: `A new inquiry node has been synchronized from ${data.name}.`,
+      message: `New message from ${data.name}.`,
       type: 'INQUIRY',
       data: {
         Name: data.name,
@@ -58,10 +62,10 @@ async function submitContactFormBase(formData: ContactSubmission) {
       }
     });
 
-    return { success: true, message: "Inquiry successfully logged in the secure vault." };
+    return { success: true, message: "Thanks! Your message has been sent. I'll reply within 1–2 working days." };
   } catch (err) {
     console.error("Fatal contact submission error:", err);
-    return { success: false, message: "Encryption failure during handshake." };
+    return { success: false, message: `Your message couldn't be sent. Please email me at ${SITE.email}.` };
   }
 }
 
@@ -88,7 +92,7 @@ async function subscribeNewsletterBase(email: string) {
           email: validatedEmail,
           contact_type: 'Individual',
           interest: 'Other',
-          message: '[AUTOMATED_SUBSCRIPTION] Direct entry from technical feed.',
+          message: '[NEWSLETTER] Subscribed from the website.',
           newsletter_opt_in: true, 
         }
       ]);
@@ -102,21 +106,21 @@ async function subscribeNewsletterBase(email: string) {
             email: validatedEmail,
             contact_type: 'Individual',
             interest: 'Other',
-            message: '[SUBSCRIPTION_SYNC] This user is a technical feed subscriber.',
+            message: '[NEWSLETTER] Subscribed from the website.',
           }
         ]);
-       return { success: true, message: "Connection established (Fallback node synced)." };
+       return { success: true, message: "You're subscribed. Thanks!" };
     }
 
     if (error) {
-      if (error.code === '23505') return { success: true, message: "Node already synchronized." };
+      if (error.code === '23505') return { success: true, message: "You're already subscribed." };
       throw error;
     }
 
-    return { success: true, message: "Connection established. Node synced." };
+    return { success: true, message: "You're subscribed. Thanks!" };
   } catch (err) {
     console.error("Newsletter Error:", err);
-    return { success: false, message: "Transmission failed. Secure node handshake timeout." };
+    return { success: false, message: "Subscription failed. Please try again later." };
   }
 }
 

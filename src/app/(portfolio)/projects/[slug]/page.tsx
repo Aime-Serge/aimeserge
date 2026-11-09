@@ -1,9 +1,19 @@
-import { getProjectBySlug } from "@/core/domain/portfolio/queries";
+import { getProjectBySlug, getProjects } from "@/core/domain/portfolio/queries";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import { isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
+
+// Pre-render known pages at build; new slugs render on first visit and are cached.
+// Admin saves purge them instantly (see infrastructure/cache/content.ts).
+export const revalidate = 86400;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const projects = await getProjects();
+  return projects.filter((p) => p.slug).map((p) => ({ slug: p.slug }));
+}
 
 interface ProjectPageProps {
   params: Promise<{ slug: string }>;
@@ -59,7 +69,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             {/* Contributors Section */}
             {project.contributors && project.contributors.length > 0 && (
               <section aria-label="Project Contributors">
-                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Engineered By</h2>
+                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Built by</h2>
                 <div className="flex flex-wrap gap-3">
                   {project.contributors.map((person: string) => (
                     <div key={person} className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-1.5 text-sm font-medium text-slate-300">
@@ -96,7 +106,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             )}
 
             <section aria-labelledby="mission-title">
-              <h2 id="mission-title" className="mb-4 text-2xl font-bold text-white uppercase tracking-wider font-mono">Mission Analysis</h2>
+              <h2 id="mission-title" className="mb-4 text-2xl font-bold text-white uppercase tracking-wider font-mono">The story</h2>
               <div className="leading-relaxed text-lg text-slate-400 whitespace-pre-wrap">
                 {project.description}
               </div>
@@ -105,7 +115,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             {/* Visual Media Section (Images) */}
             {project.images && project.images.length > 0 && (
               <section aria-label="Project Gallery">
-                <h2 className="mb-6 text-2xl font-bold text-white">Visual Documentation</h2>
+                <h2 className="mb-6 text-2xl font-bold text-white">Screenshots</h2>
                 <div className="grid gap-6 sm:grid-cols-2">
                   {project.images.map((img: string, idx: number) => (
                     <div key={idx} className="group relative aspect-video overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all hover:border-cyan-500/50">
@@ -134,7 +144,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             </section>
 
             <section aria-labelledby="role-title">
-              <h2 id="role-title" className="mb-4 text-2xl font-bold text-white">Project Role</h2>
+              <h2 id="role-title" className="mb-4 text-2xl font-bold text-white">My role</h2>
               <p className="text-slate-400 bg-slate-900/50 border border-slate-800 rounded-lg p-4 inline-block font-medium">
                 {project.role}
               </p>

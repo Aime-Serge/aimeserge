@@ -57,12 +57,12 @@ export default function ResearchSidebar({ papers }: ResearchSidebarProps) {
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
         <div className="flex items-center gap-2 mb-4">
           <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-widest">Node_Impact_Metrics</span>
+          <span className="text-[10px] font-bold text-white uppercase tracking-widest">Reach</span>
         </div>
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-[9px] font-mono">
-              <span className="text-slate-500 uppercase">Impact_Factor</span>
+              <span className="text-slate-500 uppercase">Engagement score</span>
               <span className="text-emerald-400">{impactFactor}</span>
             </div>
             <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
@@ -75,11 +75,11 @@ export default function ResearchSidebar({ papers }: ResearchSidebarProps) {
 
           <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4">
             <div className="space-y-1">
-              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Total_Downloads</span>
+              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Downloads</span>
               <p className="text-sm font-bold text-white font-mono">{totalDownloads.toLocaleString()}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Total_Reach</span>
+              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Views</span>
               <p className="text-sm font-bold text-white font-mono">{totalViews.toLocaleString()}</p>
             </div>
           </div>

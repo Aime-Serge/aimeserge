@@ -32,15 +32,17 @@ export const createServerSupabaseClient = () => {
 
     // Return a placeholder client that won't crash the build
     // This allows SSG to complete even without DB credentials
-    return createClient(
-      'https://placeholder.supabase.co',
-      'placeholder-key-for-build-safety'
-    );
+    // Fail fast instead of waiting ~60 s per query for a placeholder host to time out.
+    // Callers catch the error and use their fallback content.
+    return createClient('https://placeholder.supabase.co', 'placeholder-key-for-build-safety', {
+      global: { fetch: () => Promise.reject(new Error('Supabase is not configured (missing env vars)')) },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
 
   // Prefer service role key (server-side operations)
   const keyType = supabaseServiceKey ? 'service role' : 'anon';
-  console.log(`✅ Supabase client initialized with ${keyType} key`);
+  if (process.env.NODE_ENV === 'development') console.log(`✅ Supabase client initialized with ${keyType} key`);
 
   return createClient(supabaseUrl, supabaseKey);
 };

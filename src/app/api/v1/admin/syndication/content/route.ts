@@ -3,6 +3,7 @@ import {
   getArticlesForSyndication,
   getSyndicationStatusForContent,
 } from "@/core/domain/portfolio/syndication-content-queries";
+import { requireAdminApi } from "@/core/domain/admin/guard";
 
 /**
  * GET /api/v1/admin/syndication/content
@@ -10,17 +11,11 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin authentication (in production, verify JWT token)
-    const auth = request.headers.get("authorization");
-    if (!auth) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const denied = await requireAdminApi();
+    if (denied) return denied;
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "20", 10);
+    const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10) || 20, 1), 100);
 
     // Fetch articles
     const articles = await getArticlesForSyndication(limit);

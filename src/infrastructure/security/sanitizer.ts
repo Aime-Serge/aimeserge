@@ -8,10 +8,14 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     img: ["src", "alt", "title", "width", "height"],
     iframe: ["src", "title", "allow", "allowfullscreen"],
   },
-  allowedSchemes: ["http", "https", "data", "blob"],
+  // No data:/blob: links: they can carry HTML/JS. Images may still use them.
+  allowedSchemes: ["http", "https", "mailto"],
   allowedSchemesByTag: {
     img: ["http", "https", "data", "blob"],
   },
+  // Only embed video players we trust.
+  allowedIframeHostnames: ["www.youtube.com", "youtube.com", "www.youtube-nocookie.com", "player.vimeo.com"],
+  allowIframeRelativeUrls: false,
   transformTags: {
     // Strip any inline event handlers
     "*": (tagName, attribs) => {

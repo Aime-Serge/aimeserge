@@ -31,11 +31,11 @@ export function withShield<T, R>(
   return async (data: T): Promise<R | { success: false; message: string }> => {
     // 1. Get request context
     const headerList = await headers();
-    const ip = headerList.get("x-forwarded-for") || "unknown";
+    const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const ua = headerList.get("user-agent") || "unknown";
 
     // 2. Rate Limiting
-    const rate = await rateLimit.check(config.limit!, config.windowInMs!, ip);
+    const rate = await rateLimit.check(config.limit!, config.windowInMs!, `${actionName}:${ip}`);
     if (!rate.success) {
       // Notify Admin of potential Brute Force / Rate Limit violation
       await notifyAdmin({
@@ -47,7 +47,7 @@ export function withShield<T, R>(
 
       return { 
         success: false, 
-        message: "Request synchronization failed. Rate limit exceeded." 
+        message: "Too many attempts. Please wait a minute and try again." 
       };
     }
 
@@ -83,7 +83,7 @@ export function withShield<T, R>(
       console.error(`Shield caught error in ${actionName}:`, error);
       return { 
         success: false, 
-        message: "Internal security intercept. Action terminated." 
+        message: "Something went wrong. Please try again." 
       };
     }
   };

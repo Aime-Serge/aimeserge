@@ -46,19 +46,19 @@ export default function Header() {
         <Link 
           href="/" 
           className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded-lg"
-          aria-label="Home"
+          aria-label="Aime Serge Ukobizaba, home"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-600/20 text-cyan-500 transition-colors group-hover:bg-cyan-600 group-hover:text-white">
             <Shield className="h-5 w-5" />
           </div>
-          <span className="text-lg font-bold tracking-tight text-white font-mono">
-            AIME<span className="text-cyan-500">_</span>SERGE<span className="text-cyan-500">_</span>UKOBIZABA
+          <span className="text-lg font-bold tracking-tight text-white">
+            Aime Serge<span className="hidden sm:inline text-slate-400 font-normal"> Ukobizaba</span>
           </span>
         </Link>
 
         {/* Desktop Nav */}
         <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-6">
-          <GlobalSearch className="w-[320px]" />
+          <GlobalSearch className="w-[240px] lg:w-[300px]" />
           {navItems.map((item) => (
             <Link
               key={item.href}
