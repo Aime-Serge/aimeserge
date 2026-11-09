@@ -46,3 +46,20 @@ export const createServerSupabaseClient = () => {
 
   return createClient(supabaseUrl, supabaseKey);
 };
+
+/**
+ * Read-only client for PUBLIC pages. Uses the anon key, so Row-Level Security
+ * decides what visitors may see (e.g. drafts stay hidden at the database level).
+ * Admin writes keep using createServerSupabaseClient() (service role).
+ */
+export const createPublicSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) {
+    // Missing anon key: fall back to the server client (also handles "no credentials at all").
+    return createServerSupabaseClient();
+  }
+  return createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+};

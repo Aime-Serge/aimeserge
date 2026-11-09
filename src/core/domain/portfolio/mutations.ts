@@ -3,8 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { validateAdminSession } from "@/core/domain/admin/queries";
 import { withShield } from "@/infrastructure/security/shield";
-import { syndicateContentAction } from "./syndication-actions";
-import { Broadcast } from "./types";
 
 /**
  * Secure Resume Asset Management
@@ -48,96 +46,4 @@ async function uploadResumeBase(file: File) {
   }
 }
 
-export const uploadResume = withShield("resume_upload", uploadResumeBase);
-
-/**
- * Syncs a broadcast to the AI Knowledge Base (pgvector)
- */
-export async function syncBroadcastToKnowledge(broadcast: Broadcast) {
-  const { mutations: aiMutations } = await import("@/core/domain/ai");
-  try {
-    await validateAdminSession();
-    let contentToEmbed = `[Social Broadcast: ${broadcast.contentType}] Topic: ${broadcast.title}\n`;
-    
-    if (broadcast.contentType === 'POST') {
-      contentToEmbed += `Content: ${broadcast.textContent}\nHashtags: ${broadcast.hashtags.join(', ')}`;
-    } else {
-      contentToEmbed += `Excerpt: ${broadcast.excerpt}\nRead Time: ${broadcast.estimatedReadTime} min\nContent Blocks: ${JSON.stringify(broadcast.bodyBlocks)}`;
-    }
-
-    await aiMutations.upsertKnowledge({
-      id: broadcast.id,
-      content: contentToEmbed,
-      metadata: {
-        type: 'broadcast',
-        contentType: broadcast.contentType,
-        slug: broadcast.slug,
-        title: broadcast.title
-      }
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Knowledge Sync Error:", error);
-    return { success: false, error };
-  }
-}
-
-/**
- * Distribution Bridge: Automatically creates a Social Post from a published Article.
- */
-export async function publishArticleWithSocialSync(article: Broadcast) {
-  const supabase = await validateAdminSession();
-  
-  try {
-    // 1. Save/Update the Article
-    const { error: articleError } = await supabase
-      .from('broadcasts')
-      .upsert({
-        ...article,
-        content_type: 'ARTICLE',
-        status: 'PUBLISHED',
-        updated_at: new Date().toISOString()
-      });
-
-    if (articleError) throw articleError;
-
-    // 2. Create the Distribution Post (The "Announcement" in the feed)
-    const distributionPost = {
-      content_type: 'POST',
-      status: 'PUBLISHED',
-      title: `Distribution: ${article.title}`,
-      text_content: `🚀 Just published a new article: "${article.title}"\n\n${article.excerpt}\n\nCheck it out here 👇`,
-      media_type: 'EXTERNAL_LINK',
-      media_payload: {
-        url: `https://aimeserge.me/blog/${article.slug}`,
-        ogTitle: article.title,
-        ogImage: article.coverImageUrl,
-        ogDescription: article.excerpt
-      },
-      hashtags: article.hashtags,
-      category: article.category
-    };
-
-    const { error: postError } = await supabase
-      .from('broadcasts')
-      .insert(distributionPost);
-
-    if (postError) throw postError;
-
-    // 3. Sync to Knowledge
-    await syncBroadcastToKnowledge(article);
-
-    // 4. Trigger Syndication (async, non-blocking)
-    // Errors in syndication don't fail the publish
-    syndicateContentAction(article).catch((error) => {
-      console.warn("Syndication failed after publishing:", error);
-      // Log but don't throw - article is already published
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Distribution Bridge Failure:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Handshake failed during distribution." };
-  }
-}
+export const uploadResume = withShield("resume_upload", uploadResumeBase, { auditLog: true });

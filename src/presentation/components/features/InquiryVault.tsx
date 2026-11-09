@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { MessageSquare, Trash2, Mail, Phone, Globe, User, Briefcase, Zap, Activity } from "lucide-react";
-import { deleteContent, getAllContent } from "@/core/domain/admin/actions";
+import { deleteContent, getAllContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 import { cn } from "@/infrastructure/security/headers";
 

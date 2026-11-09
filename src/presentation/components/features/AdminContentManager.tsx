@@ -6,7 +6,7 @@ import {
   Search, RefreshCcw,
   CheckCircle
 } from "lucide-react";
-import { getAllContent, deleteContent } from "@/core/domain/admin/actions";
+import { getAllContent, deleteContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/infrastructure/security/headers";

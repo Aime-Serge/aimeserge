@@ -101,7 +101,7 @@ async function saveArticleBase(input: ArticleInput): Promise<ActionResult<{ id: 
   }
 }
 
-const shieldedSaveArticle = withShield("save_article", saveArticleBase, { limit: 30 });
+const shieldedSaveArticle = withShield("save_article", saveArticleBase, { limit: 30, auditLog: true });
 export async function saveArticle(input: ArticleInput) {
   return shieldedSaveArticle(input);
 }
@@ -146,7 +146,7 @@ async function saveProfileBase(input: ProfileInput): Promise<ActionResult> {
   }
 }
 
-const shieldedSaveProfile = withShield("save_profile", saveProfileBase, { limit: 20 });
+const shieldedSaveProfile = withShield("save_profile", saveProfileBase, { limit: 20, auditLog: true });
 export async function saveProfile(input: ProfileInput) {
   return shieldedSaveProfile(input);
 }

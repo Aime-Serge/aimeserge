@@ -1,8 +1,8 @@
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
-import { myProjects, fallbackCertificates } from "./constants";
+import { fallbackCertificates } from "./constants";
 import {
   Certificate, Post, Article, MediaType, Visibility,
   CommentPermission, PublicationStatus, ContentBlock,
@@ -16,7 +16,7 @@ import { SITE } from "@/config/site";
 export async function getExperiences(): Promise<Experience[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('experiences')
@@ -59,7 +59,7 @@ export async function getExperiences(): Promise<Experience[]> {
 export async function getEducations(): Promise<Education[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('educations')
@@ -96,11 +96,11 @@ export async function getEducations(): Promise<Education[]> {
 }
 
 export async function getProjects() {
-  return unstable_cache(fetchProjects, ['projects-list'], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback(myProjects));
+  return unstable_cache(fetchProjects, ['projects-list'], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback([] as ReturnType<typeof mapProjectRow>[]));
 }
 
 async function fetchProjects() {
-  const supabase = createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -109,7 +109,7 @@ async function fetchProjects() {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    if (!data || data.length === 0) return myProjects;
+    if (!data) return [];
 
     return data.map(mapProjectRow);
   } catch (err) {
@@ -118,11 +118,11 @@ async function fetchProjects() {
 }
 
 export async function getProjectBySlug(slug: string) {
-  return unstable_cache(() => fetchProjectBySlug(slug), ['project', slug], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback(myProjects.find((p) => p.slug === slug)));
+  return unstable_cache(() => fetchProjectBySlug(slug), ['project', slug], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback(undefined));
 }
 
 async function fetchProjectBySlug(slug: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('projects')
@@ -132,7 +132,7 @@ async function fetchProjectBySlug(slug: string) {
       .single();
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no row
-    if (!data) return myProjects.find((p) => p.slug === slug);
+    if (!data) return undefined;
 
     return mapProjectRow(data);
   } catch (err) {
@@ -174,7 +174,7 @@ function mapProjectRow(row: any) {
 export async function getCertificates(): Promise<Certificate[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('certificates')
@@ -213,7 +213,7 @@ export async function getCertificates(): Promise<Certificate[]> {
 export async function getAchievements(): Promise<Achievement[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('achievements')
@@ -243,7 +243,7 @@ export async function getAchievements(): Promise<Achievement[]> {
 export async function getPosts(): Promise<Post[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('posts')
@@ -287,7 +287,7 @@ function mapPostRow(row: any): Post {
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('articles')
@@ -310,7 +310,7 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
 }
 
 export async function getArticleById(id: string): Promise<Article | null> {
-  const supabase = createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from('articles')
     .select('*')
@@ -360,7 +360,7 @@ export const DEFAULT_PROFILE: Profile = {
 export async function getProfile(): Promise<Profile> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       const { data, error } = await supabase.from('profile').select('*').eq('id', 1).maybeSingle();
       if (error) throw error;
       if (!data) return DEFAULT_PROFILE;
@@ -391,7 +391,7 @@ export async function getFeaturedProjects(limit = 3): Promise<Project[]> {
 export async function getPublishedArticles(limit = 30): Promise<Article[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       const { data, error } = await supabase
         .from('articles')
         .select('*')

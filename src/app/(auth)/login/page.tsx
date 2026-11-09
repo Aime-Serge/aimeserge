@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { loginAdmin } from "@/core/domain/admin/actions";
+import { loginAdmin } from "@/core/domain/admin/mutations";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 

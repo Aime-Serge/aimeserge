@@ -112,11 +112,17 @@ Migration: `supabase/migrations/20261109130000_phase2_dynamic_content.sql`
 5. Projects have **Feature on homepage** + **Order** → "Featured work" section (falls back to the newest three).
 6. `/feed.xml` RSS feed, linked in the page `<head>`.
 
-### Phase 3: simplify and cut cost (≈2–3 days)
-1. Delete syndication and switch to RSS. Switch search to Postgres FTS, and voice input to the browser API.
-2. Flatten folders to the layout above.
-3. Remove the `constants.ts` content copies and old seed duplication; keep one seed file for local dev.
-4. Use the anon key + RLS for public reads; keep the service role for admin writes only.
+### Phase 3: simplify and cut cost ✅ done (code). ⚠ Apply `20261109140000_full_text_search.sql`
+1. **Syndication removed** (service, actions, queries, dashboard, 2 API routes; ≈1,100 lines). Cross-posting now uses `/feed.xml` (Dev.to: Settings → Extensions → "Publishing to DEV from RSS"; Hashnode: Import → RSS).
+2. **Search uses Postgres full-text search** (`search_site` RPC over projects, research and published articles, weighted title > summary > tags > body). There is no Gemini call per search. A title-match fallback runs until the migration is applied.
+3. **Voice input uses the browser's speech recognition**; `/api/v1/ai/voice/stt` and `/tts` are deleted, and the mic button hides in browsers without support. Also fixed: voice questions and suggestion buttons were added to the chat but never sent.
+4. **Single source of truth:** the hard-coded project copies (`myProjects`) are deleted, and pages show an empty state if the DB has no rows. Applied seed migrations stay as history.
+5. **Public reads use the anon key**, so RLS decides what visitors see; the service role is used only for admin actions and search.
+6. **Barrel files removed** (`core/domain/*/actions.ts`, `index.ts`). Client code imports the specific `mutations.ts` file, so nothing is exported to the browser by accident.
+7. **Audit log** only for logins and admin writes; rate-limit email alerts only for login brute force.
+8. **Dead code deleted:** 12 unused components/utils, the audio player, the security widget, unused schemas, `uuid`.
+
+Not done on purpose: physically moving folders to the `content/ admin/ lib/` layout. After the deletions, the current tree is small and clear, and a mass move would touch every import for little gain. Do it when a feature needs it.
 
 ### Phase 4: optional hardening
 - Upstash Redis for global rate limits (free tier).

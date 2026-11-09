@@ -65,6 +65,12 @@ export default async function ProjectsPage() {
             ))}
           </div>
 
+          {projects.length === 0 && (
+            <p className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-slate-400">
+              Projects are being updated. Please check back soon, or see my code on{" "}
+              <a href={SITE.social.github} className="text-cyan-400 hover:text-cyan-300">GitHub</a>.
+            </p>
+          )}
           {projects.map((project) => (
             <article
               key={project.id}

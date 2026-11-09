@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Microscope, Save, X, Upload, Database, Plus, Trash2, Link as LinkIcon } from "lucide-react";
-import { upsertContent, uploadArtifact } from "@/core/domain/admin/actions";
-import { syncResearchToKnowledge } from "@/core/domain/research/actions";
+import { upsertContent, uploadArtifact } from "@/core/domain/admin/mutations";
+import { syncResearchToKnowledge } from "@/core/domain/research/mutations";
 import { type ResearchPaper, type ResearchAuthor, type ResearchSection } from "@/core/domain/research/types";
 import { toast } from "react-hot-toast";
 

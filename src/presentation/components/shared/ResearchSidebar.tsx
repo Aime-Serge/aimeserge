@@ -1,7 +1,6 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import SecurityAudit from "@/presentation/components/features/SecurityAudit";
 import { type ResearchPaper } from "@/core/domain/research/types";
 
 interface ResearchSidebarProps {
@@ -27,7 +26,6 @@ export default function ResearchSidebar({ papers }: ResearchSidebarProps) {
 
   return (
     <aside className="space-y-8">
-      <SecurityAudit />
       
       <div className="rounded-2xl border border-slate-800 bg-emerald-500/5 p-6 backdrop-blur-sm">
          <h4 className="text-sm font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6 border-b border-emerald-500/20 pb-2">Research Clusters</h4>

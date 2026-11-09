@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/infrastructure/database/server";
+import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
@@ -7,7 +7,7 @@ import { type ResearchPaper, fallbackResearch } from "./types";
 export async function getResearch(): Promise<ResearchPaper[]> {
   return unstable_cache(
     async () => {
-      const supabase = createServerSupabaseClient();
+      const supabase = createPublicSupabaseClient();
       try {
         const { data, error } = await supabase
           .from('research')
@@ -51,7 +51,7 @@ export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null
 }
 
 async function fetchPaperBySlug(slug: string): Promise<ResearchPaper | null> {
-  const supabase = createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   try {
     const { data, error } = await supabase
       .from('research')

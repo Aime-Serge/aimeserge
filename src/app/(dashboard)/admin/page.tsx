@@ -23,7 +23,6 @@ import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
 import AdminContentManager from "@/presentation/components/features/AdminContentManager";
 import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
-import SyndicationDashboard from "@/presentation/components/features/SyndicationDashboard";
 type EditableAdminItem = Record<string, unknown>;
 
 type AdminChatMessage = UIMessage & {
@@ -189,7 +188,6 @@ export default function AdminDashboard() {
     { id: "research", label: "Research", icon: FileText },
     { id: "profile", label: "Profile", icon: User },
     { id: "articles", label: "Blog", icon: TrendingUp },
-    { id: "syndication", label: "Syndication", icon: Globe },
     { id: "training", label: "AI Training", icon: Brain },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "inquiries", label: "Inquiries", icon: MessageSquare },
@@ -387,11 +385,6 @@ export default function AdminDashboard() {
                 {/* AI Training Module */}
                 {activeTab === "training" && (
                 <ManualSyncTool />
-                )}
-
-                {/* Content Syndication Module */}
-                {activeTab === "syndication" && (
-                <SyndicationDashboard />
                 )}
 
                 {/* Content Management Modules */}

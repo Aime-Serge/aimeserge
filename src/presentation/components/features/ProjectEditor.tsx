@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Save, X, Database, Cpu } from "lucide-react";
-import { upsertContent } from "@/core/domain/admin/actions";
+import { upsertContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 
 type ProjectCategory = "AI" | "Security" | "Cloud" | "Software Engineering" | "Full-Stack";

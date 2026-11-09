@@ -117,7 +117,7 @@ async function loginAdminBase(credentials: { email: string; passcode: string }) 
   }
 }
 
-const internalLoginAdmin = withShield("admin_login", loginAdminBase, { limit: 5 });
+const internalLoginAdmin = withShield("admin_login", loginAdminBase, { limit: 5, auditLog: true });
 export async function loginAdmin(credentials: { email: string; passcode: string }) {
   return internalLoginAdmin(credentials);
 }
@@ -174,7 +174,7 @@ async function upsertContentBase(params: { table: string, payload: object, path:
   }
 }
 
-const internalUpsertContent = withShield("content_upsert", upsertContentBase);
+const internalUpsertContent = withShield("content_upsert", upsertContentBase, { auditLog: true });
 export async function upsertContent(params: { table: string, payload: object, path: string }) {
   return internalUpsertContent(params);
 }
@@ -214,7 +214,7 @@ async function uploadArtifactBase(params: { file: File, path: string }) {
   }
 }
 
-const internalUploadArtifact = withShield("upload_artifact", uploadArtifactBase);
+const internalUploadArtifact = withShield("upload_artifact", uploadArtifactBase, { auditLog: true });
 export async function uploadArtifact(params: { file: File, path: string }) {
   return internalUploadArtifact(params);
 }
@@ -329,7 +329,7 @@ async function deleteContentBase(params: { table: string, id: string, path: stri
   }
 }
 
-const internalDeleteContent = withShield("delete_content", deleteContentBase);
+const internalDeleteContent = withShield("delete_content", deleteContentBase, { auditLog: true });
 export async function deleteContent(params: { table: string, id: string, path: string }) {
   return internalDeleteContent(params);
 }
