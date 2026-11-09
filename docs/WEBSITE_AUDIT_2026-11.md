@@ -82,7 +82,7 @@
 
 ### Decisions needed from Aime
 1. **GitHub handle:** the code used both `github.com/aime-serge` (footer) and `github.com/AimeSerge` (project links, JSON-LD). These are different accounts. Set the right one in `src/config/site.ts`.
-2. **Domain:** the code used `aimesergeonline.vercel.app`, the CV says `aimeserge.vercel.app`, and syndication used `aimeserge.me`. Set `NEXT_PUBLIC_SITE_URL` in Vercel to the real one.
+2. **Domain:** ✅ resolved. The live site is `https://aimeserge.vercel.app` (matches the CV); `aimesergeonline.vercel.app` does not exist. Override with `NEXT_PUBLIC_SITE_URL` if you add a custom domain.
 3. **Testimonials:** the four removed quotes (Dr. Emmanuel Ndayisaba, Sarah Musyoka, James Karanja, Amara Okonkwo) couldn't be matched to anything. If they're real, re-add them with permission and a source; the section reappears automatically.
 4. **Project metrics to verify or remove** (in DB seeds/constants): "94 % model accuracy", "8,760+ hourly observations" (that's one year of hours, but the study covers 24 years), "22 % cost reduction" (testimonial) vs "18 %" (old homepage).
 5. **CV:** it has the same issue as the old site ("engagement up 98 %", "UX up 95 %", "vulnerabilities down 60 %"). Recruiters read these as filler. Keep only figures you can explain in an interview.

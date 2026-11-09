@@ -9,7 +9,7 @@ export const SITE = {
   headline: "Software Engineer · Cybersecurity · AI",
   description:
     "Software engineer in Kigali, Rwanda. I build secure web apps, APIs and AI features, and I write about what I learn.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://aimesergeonline.vercel.app").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://aimeserge.vercel.app").replace(/\/$/, ""),
   email: "aimeserge51260@gmail.com",
   location: "Kigali, Rwanda",
   responseTime: "I reply within 1–2 working days.",
