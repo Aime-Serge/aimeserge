@@ -1,0 +1,24 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="slGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0e7490"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#slGrad)"/>
+  <g transform="translate(200,95)">
+    <!-- Envelope -->
+    <g transform="translate(-55,0)">
+      <rect x="-60" y="-40" width="120" height="80" rx="8" fill="#ffffff" opacity="0.92"/>
+      <path d="M-60 -36 L0 6 L60 -36" fill="none" stroke="#1e1b4b" stroke-width="3" stroke-linejoin="round" opacity="0.6"/>
+      <rect x="-45" y="18" width="40" height="6" rx="3" fill="#f87171"/>
+    </g>
+    <!-- Magnifier -->
+    <g transform="translate(55,-5)">
+      <circle r="34" fill="#ffffff" opacity="0.12" stroke="#5eead4" stroke-width="6"/>
+      <line x1="24" y1="24" x2="52" y2="52" stroke="#5eead4" stroke-width="8" stroke-linecap="round"/>
+      <path d="M-14 0 L-4 10 L16 -12" fill="none" stroke="#fcd34d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <text x="200" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Second Look · Phishing checker</text>
+</svg>
