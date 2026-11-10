@@ -4,7 +4,7 @@ How we write for this site. Use it for every page, project case study, blog post
 
 ## Positioning
 
-**One line:** *"I find the risks that hold people back, research them, and build technology that fixes them."*
+**One line:** *"I find and understand the risks that hold people back, research around them, and build technology that fixes them."*
 
 Three pillars, in this order, on every page that introduces Aime:
 

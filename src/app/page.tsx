@@ -165,7 +165,7 @@ export default async function Home() {
 
           <h1
             id="hero-heading"
-            className="mx-auto max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl"
+            className="mx-auto max-w-4xl text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-5xl"
           >
             {profile.headline}
           </h1>

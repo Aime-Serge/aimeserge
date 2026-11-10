@@ -14,7 +14,7 @@ export const SITE = {
   location: "Kigali, Rwanda",
   responseTime: "I reply within 1–2 working days.",
   /** One-line positioning used on the homepage, in metadata and by the AI assistant. */
-  positioning: "I find the risks that hold people back, research them, and build technology that fixes them.",
+  positioning: "I find and understand the risks that hold people back, research around them, and build technology that fixes them.",
   social: {
     github: "https://github.com/aime-serge",
     linkedin: "https://www.linkedin.com/in/aimesergeukobizaba/",

@@ -9,7 +9,7 @@
 -- 1. Homepage hero (profile)
 -- ─────────────────────────────────────────────────────────────────────────
 UPDATE public.profile
-   SET headline = 'I find the risks that hold people back, research them, and build technology that fixes them.',
+   SET headline = 'I find and understand the risks that hold people back, research around them, and build technology that fixes them.',
        bio = 'I''m Aime Serge, a software engineer and founder in Kigali. I study real problems in health, small business, climate and online safety, and turn what I learn into safe, simple tools for communities, people and organisations.',
        updated_at = now()
  WHERE id = 1
