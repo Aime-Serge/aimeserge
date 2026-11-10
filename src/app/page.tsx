@@ -37,7 +37,8 @@ const SERVICES = [
 // Shown only if the database is unreachable or empty.
 const FALLBACK_EXPERIENCE = [
   { org: "INEZA AI", role: "Founder & Product Manager", when: "2026 – now" },
-  { org: "Z-Gate LTD", role: "Product Manager & Software Engineer", when: "2026 – now" },
+  { org: "DukaAI", role: "Co-Founder & UX Analyst", when: "2026 – now" },
+  { org: "Z-Gate LTD", role: "Assistant Product Manager", when: "2026 – now" },
   { org: "Innovation Hacks", role: "Full-stack Developer Intern", when: "2026" },
   { org: "ALX Africa", role: "ALX Ventures Rwanda Ambassador", when: "2026 – now" },
   { org: "ALX Africa", role: "Software Engineer", when: "2025 – 2026" },
