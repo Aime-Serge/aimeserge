@@ -16,6 +16,8 @@ MIGRATIONS=(
   supabase/migrations/20261109120000_rls_lockdown.sql
   supabase/migrations/20261109130000_phase2_dynamic_content.sql
   supabase/migrations/20261109140000_full_text_search.sql
+  supabase/migrations/20261110120000_seed_ineza_ai.sql
+  supabase/migrations/20261110130000_seed_dukaai.sql
 )
 BASE_TABLES="projects research certificates contacts articles posts broadcasts experiences educations organizations achievements knowledge"
 

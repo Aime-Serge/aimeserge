@@ -1,0 +1,35 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dukaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#0e7490"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#dukaGrad)"/>
+  <g transform="translate(200,95)">
+    <!-- Handwritten notebook -->
+    <g transform="translate(-75,0) rotate(-6)">
+      <rect x="-45" y="-55" width="90" height="110" rx="6" fill="#ffffff" opacity="0.92"/>
+      <g stroke="#0e7490" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7">
+        <path d="M-32 -35 q8 -6 16 0 t16 0 t16 0"/>
+        <path d="M-32 -15 q8 -6 16 0 t16 0"/>
+        <path d="M-32 5 q8 -6 16 0 t16 0 t16 0 t10 0"/>
+        <path d="M-32 25 q8 -6 16 0 t16 0"/>
+      </g>
+    </g>
+    <!-- Arrow -->
+    <path d="M-15 0 H20 M10 -10 L20 0 L10 10" stroke="#fcd34d" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Digital records -->
+    <g transform="translate(80,0)">
+      <rect x="-50" y="-55" width="100" height="110" rx="8" fill="#ffffff" opacity="0.14" stroke="#ffffff" stroke-opacity="0.45" stroke-width="1.5"/>
+      <g fill="#ffffff" opacity="0.6">
+        <rect x="-35" y="15" width="14" height="25" rx="2"/>
+        <rect x="-15" y="0" width="14" height="40" rx="2"/>
+        <rect x="5" y="-12" width="14" height="52" rx="2"/>
+      </g>
+      <rect x="-35" y="-40" width="60" height="8" rx="3" fill="#ffffff" opacity="0.85"/>
+      <rect x="-35" y="-26" width="40" height="6" rx="3" fill="#fcd34d" opacity="0.85"/>
+    </g>
+  </g>
+  <text x="200" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">DukaAI · Notebook to records</text>
+</svg>

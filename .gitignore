@@ -48,3 +48,6 @@ next-env.d.ts
 
 # local database backups (contain personal data)
 /backups/
+!.env.example
+/research_notes/
+/reports/

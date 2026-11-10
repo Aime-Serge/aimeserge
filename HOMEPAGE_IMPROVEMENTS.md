@@ -260,7 +260,7 @@ review, or AI-powered solution, let's discuss your project."
    ```
 
 2. **Verify live site**
-   - Visit [aimesergeonline.vercel.app](https://aimesergeonline.vercel.app)
+   - Visit [aimeserge.vercel.app](https://aimeserge.vercel.app)
    - Check CTAs work
    - Test "Let's Talk" → contact form
    - Verify mobile view
