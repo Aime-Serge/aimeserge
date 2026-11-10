@@ -16,6 +16,7 @@ import { isTextUIPart, type UIMessage } from "ai";
 import { toast } from "react-hot-toast";
 import ProjectEditor from "@/presentation/components/features/ProjectEditor";
 import CredentialEditor from "@/presentation/components/features/CredentialEditor";
+import CvImporter from "@/presentation/components/features/CvImporter";
 import ResearchEditor from "@/presentation/components/features/ResearchEditor";
 import ArticleEditor from "@/presentation/components/features/ArticleEditor";
 import ProfileEditor from "@/presentation/components/features/ProfileEditor";
@@ -389,7 +390,7 @@ export default function AdminDashboard() {
 
                 {/* Content Management Modules */}
                 {/* Homepage hero, availability badge, CV link */}
-                {activeTab === "profile" && <ProfileEditor />}
+                {activeTab === "profile" && <div className="space-y-8"><CvImporter /><ProfileEditor /></div>}
 
                 {["projects", "research", "articles", "certificates"].includes(activeTab) && (
                   <AdminContentManager table={activeTab} onEdit={handleEdit} />
