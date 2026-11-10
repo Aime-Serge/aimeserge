@@ -1,7 +1,7 @@
 -- Sync the resume with the November 2026 CV.
 -- Safe to run more than once.
 
--- 1. New role: Product Manager & Software Engineer at Z-Gate LTD (Aug 2026 - now)
+-- 1. New role at Z-Gate LTD (title corrected to Assistant Product Manager in 20261110170000) (Aug 2026 - now)
 INSERT INTO organizations (name)
 SELECT 'Z-Gate LTD' WHERE NOT EXISTS (SELECT 1 FROM organizations WHERE name = 'Z-Gate LTD');
 
