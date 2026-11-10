@@ -48,20 +48,21 @@ export default function NewsletterSubscribe() {
           type="email" 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="operator@nexus.core" 
-          className="flex-1 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono"
+          placeholder="you@example.com"
+          aria-label="Your email address" 
+          className="flex-1 rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
         />
         <button 
           disabled={isPending}
-          className="rounded-xl bg-cyan-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-cyan-700 uppercase tracking-widest font-mono flex items-center justify-center gap-2"
+          className="rounded-xl bg-cyan-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-cyan-700 flex items-center justify-center gap-2"
         >
           {isPending ? (
             <>
               <Cpu className="h-4 w-4 animate-spin" />
-              SYNCING...
+              Subscribing…
             </>
           ) : (
-            "CONNECT"
+            "Subscribe"
           )}
         </button>
       </form>

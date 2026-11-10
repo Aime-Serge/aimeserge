@@ -6,16 +6,16 @@ import { cn } from '@/infrastructure/security/headers';
 import { useRouter } from 'next/navigation';
 
 const SUGGESTIONS = [
-  "Show me your projects",
-  "Go to your resume",
-  "How do you handle cloud security?",
-  "Navigate to contact page"
+  "What is Aime building right now?",
+  "What problems does his research solve?",
+  "Is Aime open to work or partnerships?",
+  "How do I get in touch?"
 ];
 
 const FOLLOW_UP_SUGGESTIONS: Record<string, string[]> = {
-  "projects": ["Tell me about Urban Transport project", "What technologies did you use?", "Go to projects page"],
-  "security": ["Show me your security certifications", "How do you implement Zero Trust?", "What is HSTS?"],
-  "cloud": ["Which cloud providers do you use?", "Do you use Kubernetes?", "Show me Cloud projects"],
+  "projects": ["Tell me about INEZA AI", "What does DukaAI do?", "Go to projects page"],
+  "security": ["How does Aime keep people's data safe?", "Show me his security certificates", "Go to resume"],
+  "cloud": ["What is his climate research about?", "Which tools does he use?", "Show me the research page"],
   "contact": ["What is your LinkedIn?", "Send me to the contact form"],
 };
 
@@ -385,7 +385,7 @@ export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean 
         <>
           <button
             onClick={() => setIsOpen(true)}
-            aria-label="Open AI Assistant"
+            aria-label="Ask my AI assistant about my work"
             className={cn(
               "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-cyan-600 text-white shadow-lg transition-all duration-300 hover:bg-cyan-500 hover:shadow-[0_0_20px_rgba(8,145,178,0.5)] focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950",
               isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
@@ -397,7 +397,7 @@ export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean 
           <div
             role="dialog"
             ref={chatRef}
-            aria-label="AI Assistant Chat"
+            aria-label="Chat with the AI assistant"
             className={cn(
               "fixed bottom-6 right-6 z-50 flex h-[min(550px,calc(100dvh-3rem))] w-[calc(100vw-2rem)] max-w-[400px] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300",
               isOpen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
@@ -424,7 +424,7 @@ export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean 
                 <button
                   onClick={clearChat}
                   className="rounded-full p-2 text-slate-400 transition hover:bg-slate-800 hover:text-amber-400"
-                  title="Reset Conversation"
+                  title="Start a new conversation"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -441,7 +441,7 @@ export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean 
               {messages.length === 0 && (
                 <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
                   <Bot className="mb-3 h-10 w-10 opacity-30" />
-                  <p className="text-sm mb-6">Grounded in official project data.<br/>How can I assist you today?</p>
+                  <p className="text-sm mb-6">I answer from Aime&apos;s own portfolio.<br/>What would you like to know?</p>
                   <div className="grid grid-cols-1 gap-2 w-full max-w-[280px]">
                     {SUGGESTIONS.map((s) => (
                       <button
@@ -473,9 +473,9 @@ export default function AIChat({ defaultOpen = false }: { defaultOpen?: boolean 
                   >
                     {m.content}
                     {m.toolInvocations?.map((tool) => (
-                      <div key={tool.toolCallId} className="mt-2 border-t border-slate-700 pt-2 text-[10px] text-cyan-400 font-mono">
-                        SYNCING_EXTERNAL_NODE: {tool.toolName}...
-                        {tool.state === 'result' && <span className="text-emerald-400 ml-1">✓ DONE</span>}
+                      <div key={tool.toolCallId} className="mt-2 border-t border-slate-700 pt-2 text-xs text-cyan-400">
+                        {tool.state === 'result' ? "Found it" : "Looking that up…"}
+                        {tool.state === 'result' && <span className="text-emerald-400 ml-1">✓</span>}
                       </div>
                     ))}
                   </div>

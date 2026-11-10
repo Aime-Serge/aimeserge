@@ -1,6 +1,6 @@
 import { getPosts } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
-import { Clock, Radio, Globe, MessageSquare, Repeat2, Heart, Send, PlayCircle, MoreHorizontal } from "lucide-react";
+import { Clock, Globe, Heart } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
 import { isAllowedIframeSrc } from '@/infrastructure/security/sanitizer';
 import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
@@ -56,11 +56,20 @@ export default async function BlogPage() {
           Blog
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Notes on what I build and learn: software, security and AI, explained without the jargon.
+          What I&apos;m building, researching and learning: ventures, health and business tech, security and AI, explained without the jargon.
         </p>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-8">
+        {posts.length === 0 && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+            <p className="text-slate-300">New posts are on the way.</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Subscribe below to get them by email, or read about{" "}
+              <Link href="/projects" className="text-cyan-400 hover:underline">my ventures and projects</Link> meanwhile.
+            </p>
+          </div>
+        )}
         {posts.map((post) => (
           <article
             key={post.id}
@@ -74,20 +83,16 @@ export default async function BlogPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white">Aime Serge UKOBIZABA</h3>
-                    <span className="text-[10px] text-slate-500">• 1st</span>
+                    <h3 className="text-sm font-bold text-white">{SITE.name}</h3>
                   </div>
                   <p className="text-[10px] text-slate-500 line-clamp-1">{SITE.headline}</p>
                   <div className="flex items-center gap-1 text-[9px] text-slate-600 uppercase font-mono">
-                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     <span>•</span>
                     <Globe className="h-2 w-2" />
                   </div>
                 </div>
               </div>
-              <button className="text-slate-500 hover:text-white transition">
-                <MoreHorizontal className="h-5 w-5" />
-              </button>
             </div>
 
             {/* Post Content */}
@@ -99,7 +104,7 @@ export default async function BlogPage() {
               {post.hashtags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {post.hashtags.map(tag => (
-                    <span key={tag} className="text-xs font-bold text-cyan-500 hover:underline cursor-pointer">
+                    <span key={tag} className="text-xs font-medium text-cyan-500/80">
                       #{tag}
                     </span>
                   ))}
@@ -222,22 +227,6 @@ export default async function BlogPage() {
                 <span>•</span>
                 <span>{post.engagement.views} views</span>
               </div>
-            </div>
-
-            {/* Action Bar */}
-            <div className="flex items-center border-t border-slate-800/50">
-               <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
-                  <Heart className="h-4 w-4" /> Like
-               </button>
-               <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
-                  <MessageSquare className="h-4 w-4" /> Comment
-               </button>
-               <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
-                  <Repeat2 className="h-4 w-4" /> Repost
-               </button>
-               <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
-                  <Send className="h-4 w-4" /> Send
-               </button>
             </div>
           </article>
         ))}

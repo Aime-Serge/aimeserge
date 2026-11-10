@@ -5,11 +5,12 @@ import { SITE } from "@/config/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: `Get in touch with ${SITE.name} about a job, a freelance project or a collaboration.`,
+  description: `Get in touch with ${SITE.name} about a job, a project, a partnership or investment, or a research collaboration.`,
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
+  const { topic } = await searchParams;
   return (
     <div className="container mx-auto px-6 py-16 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.3fr]">
@@ -17,8 +18,8 @@ export default function ContactPage() {
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">Let&apos;s talk</h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-              Hiring, a freelance project, or an idea you want to build together? Send me a short note and
-              I&apos;ll get back to you.
+              Hiring, a project, a partnership, or research you want to do together? Send me a short note
+              and I&apos;ll get back to you. Community groups, NGOs and students are welcome too.
             </p>
           </div>
 
@@ -49,7 +50,7 @@ export default function ContactPage() {
           </ul>
         </div>
 
-        <ContactForm />
+        <ContactForm initialInterest={topic} />
       </div>
     </div>
   );

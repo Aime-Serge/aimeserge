@@ -21,8 +21,11 @@ const inputClass =
   "w-full rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-cyan-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40";
 const labelClass = "mb-2 block text-sm font-medium text-slate-300";
 
-export default function ContactForm() {
-  const [form, setForm] = useState<ContactSubmission>(EMPTY);
+/** `initialInterest` comes from links like /contact?topic=Hiring (homepage "work with me" cards). */
+export default function ContactForm({ initialInterest }: { initialInterest?: string }) {
+  const startInterest =
+    initialInterest && (CONTACT_INTERESTS as readonly string[]).includes(initialInterest) ? initialInterest : EMPTY.interest;
+  const [form, setForm] = useState<ContactSubmission>({ ...EMPTY, interest: startInterest });
   const [isPending, setIsPending] = useState(false);
 
   const update = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -82,7 +85,7 @@ export default function ContactForm() {
                 onChange={update}
                 className="sr-only"
               />
-              {type === "Individual" ? "An individual" : "A company"}
+              {type === "Individual" ? "An individual" : "An organisation"}
             </label>
           ))}
         </div>
@@ -99,7 +102,7 @@ export default function ContactForm() {
         </div>
         {isBusiness && (
           <div>
-            <label htmlFor="companyName" className={labelClass}>Company <span className="text-slate-500">(optional)</span></label>
+            <label htmlFor="companyName" className={labelClass}>Organisation or company <span className="text-slate-500">(optional)</span></label>
             <input id="companyName" name="companyName" maxLength={150} autoComplete="organization" value={form.companyName} onChange={update} className={inputClass} />
           </div>
         )}
@@ -129,7 +132,7 @@ export default function ContactForm() {
           value={form.message}
           onChange={update}
           className={inputClass}
-          placeholder="A few lines about the role, project or idea, and your timeline."
+          placeholder="A few lines about the role, project, partnership or research idea, and your timeline."
         />
       </div>
 

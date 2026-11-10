@@ -1,5 +1,11 @@
 /** Topics offered in the contact form. Kept here (no zod) so client code stays light. */
-export const CONTACT_INTERESTS = ["Hiring", "Freelance project", "Collaboration", "Research", "Other"] as const;
+export const CONTACT_INTERESTS = [
+  "Hiring",
+  "Freelance project",
+  "Partnership or investment",
+  "Research collaboration",
+  "Other",
+] as const;
 
 export interface ContactSubmission {
   name: string;

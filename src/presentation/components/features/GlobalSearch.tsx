@@ -15,7 +15,7 @@ interface GlobalSearchProps {
 function getResultTypeLabel(type: SearchResult["type"]): string {
   if (type === "project") return "Project";
   if (type === "research") return "Research";
-  return "Broadcast";
+  return "Post";
 }
 
 function trimSnippet(snippet: string, maxLength = 120): string {
@@ -27,7 +27,7 @@ function trimSnippet(snippet: string, maxLength = 120): string {
 
 export default function GlobalSearch({
   className,
-  placeholder = "Search projects, research, broadcasts...",
+  placeholder = "Search projects, research, posts…",
   onNavigate,
 }: GlobalSearchProps) {
   const [query, setQuery] = useState("");
@@ -106,7 +106,7 @@ export default function GlobalSearch({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           className="w-full rounded-xl border border-slate-800 bg-slate-900/60 py-2 pl-9 pr-9 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-          aria-label="Search portfolio content"
+          aria-label="Search the site"
         />
         {isLoading ? (
           <Loader2 className="absolute right-3 h-4 w-4 animate-spin text-cyan-400" />
@@ -145,7 +145,7 @@ export default function GlobalSearch({
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {result.tags.slice(0, 4).map((tag) => (
                     <span key={tag} className="text-[10px] font-mono text-slate-500">
-                      #{tag.replace(/\s+/g, "")}
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -155,7 +155,7 @@ export default function GlobalSearch({
 
           {hasNoResults && (
             <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 text-center">
-              <p className="text-xs text-slate-400">No indexed content matched your query.</p>
+              <p className="text-xs text-slate-400">Nothing found. Try another word, like “health” or “climate”.</p>
             </div>
           )}
         </div>

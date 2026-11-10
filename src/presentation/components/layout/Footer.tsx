@@ -26,6 +26,7 @@ export default function Footer() {
         <div className="mb-10 grid gap-10 md:grid-cols-3">
           <div className="space-y-4">
             <p className="text-lg font-bold text-white">{SITE.name}</p>
+            <p className="text-sm font-medium text-slate-300">{SITE.headline}</p>
             <p className="text-sm leading-relaxed text-slate-400">{SITE.description}</p>
             <ul className="flex gap-3">
               {SOCIAL.map(({ label, href, Icon }) => (
@@ -75,7 +76,10 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800/50 pt-6 text-xs text-slate-500 md:flex-row">
-          <p>© {year} {SITE.name}. Built with Next.js and hosted on Vercel.</p>
+          <p>
+            © {year} {SITE.name}. Like the command line?{" "}
+            <Link href="/terminal" className="underline hover:text-slate-300">Browse this site by typing commands</Link>.
+          </p>
           <p>
             Messages you send through the contact form are used only to reply to you.
           </p>

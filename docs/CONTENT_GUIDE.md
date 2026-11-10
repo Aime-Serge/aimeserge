@@ -2,7 +2,20 @@
 
 How we write for this site. Use it for every page, project case study, blog post, toast and error message.
 
-## Who reads this site
+## Positioning
+
+**One line:** *"I find the risks that hold people back, research them, and build technology that fixes them."*
+
+Three pillars, in this order, on every page that introduces Aime:
+
+1. **Innovator and founder.** Starts things: INEZA AI (health, founder), DukaAI (small business, co-founder), ALX Ventures Rwanda Ambassador.
+2. **Research for impact.** Studies a risk before building: who is affected, how big it is, why. Climate (communities), health access (clinics and patients), small-business records (shops and lenders), digital safety (people and organisations).
+3. **Builds it safe and smart.** Software engineering, security and AI are *how* the impact happens, not the headline.
+
+Always frame work as **risk → who it affects → what I did → what changed**. Name the audience: communities, individuals, or organisations.
+
+Proof we can use (checkable): 2nd place Hacktoberfest Hack Day Kigali 2026 (DukaAI); 4th place Innovate With Google Cloud Hackathon; INEZA AI with ALU's Center for Health Innovation and Impact (Africa Health Collaborative); ALX Ventures Rwanda Ambassador; Rwanda Cancer Relief technical lead (volunteer). Don't add impact numbers until they are measured.
+
 
 | Reader | What they want in 30 seconds | What wins them |
 |---|---|---|
@@ -10,6 +23,8 @@ How we write for this site. Use it for every page, project case study, blog post
 | **Hiring manager / engineer** | Can he really do it? | Project case studies with code links and honest results |
 | **Client / founder** | Can he solve my problem, and how do I start? | Outcomes ("your users find answers faster"), a short contact form |
 | **Partner / academic** | Research quality | A plain summary at the top of each paper, method, data source |
+| **Partner / investor / incubator** | Is he a founder who ships? What's the venture? | Ventures first (INEZA AI, DukaAI), the problem each solves, stage, and a "Partner or invest" path |
+| **Community group / NGO / public body** | Can his work reduce a risk we face? | Risk-first stories in plain words, and a "Research together" path |
 
 Write for the **recruiter first**. If they understand it, everyone does.
 

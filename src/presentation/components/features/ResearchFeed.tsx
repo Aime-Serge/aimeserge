@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState, useMemo } from "react";
 import { Microscope, Eye, Download, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +52,7 @@ export default function ResearchFeed({ initialPapers }: ResearchFeedProps) {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <input
             type="text"
-            placeholder="Search research artifacts..."
+            placeholder="Search papers by title or topic…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-2.5 text-sm text-white focus:border-emerald-500 outline-none transition-all"
@@ -84,7 +86,7 @@ export default function ResearchFeed({ initialPapers }: ResearchFeedProps) {
               onClick={() => setSelectedTags([])}
               className="px-3 py-1.5 rounded-lg text-[10px] font-mono text-rose-400 hover:bg-rose-500/10 transition-all"
             >
-              CLEAR
+              Clear filters
             </button>
           )}
         </div>
@@ -181,15 +183,27 @@ export default function ResearchFeed({ initialPapers }: ResearchFeedProps) {
             animate={{ opacity: 1 }}
             className="rounded-2xl border border-dashed border-slate-800 p-12 text-center"
           >
-            <p className="text-slate-500 font-mono text-sm">
-              [!] NO ARTIFACTS MATCHING YOUR SEARCH CRITERIA...
-            </p>
-            <button 
-              onClick={() => { setSearchQuery(""); setSelectedTags([]); }}
-              className="mt-4 text-emerald-500 text-xs font-bold uppercase tracking-widest hover:underline"
-            >
-              Reset Filters
-            </button>
+            {initialPapers.length === 0 ? (
+              <>
+                <p className="text-slate-300">Full papers are being written up and will appear here soon.</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Meanwhile, read the studies behind my{" "}
+                  <Link href="/projects/climate-modeling-east-africa" className="text-emerald-400 hover:underline">climate research</Link>{" "}
+                  and{" "}
+                  <Link href="/projects/urban-mobility-iot" className="text-emerald-400 hover:underline">urban transport case study</Link>.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-slate-400 text-sm">No papers match your search.</p>
+                <button
+                  onClick={() => { setSearchQuery(""); setSelectedTags([]); }}
+                  className="mt-4 text-emerald-500 text-sm font-semibold hover:underline"
+                >
+                  Clear search and filters
+                </button>
+              </>
+            )}
           </motion.div>
         )}
       </div>

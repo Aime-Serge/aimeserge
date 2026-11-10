@@ -8,11 +8,13 @@ export const SITE = {
   shortName: "Aime Serge",
   headline: "Software Engineer · Cybersecurity · Agentic AI · Founder, INEZA AI",
   description:
-    "Software engineer in Kigali, Rwanda. I build secure web apps, APIs and AI features, and I write about what I learn.",
+    "Software engineer, innovator and researcher in Kigali, Rwanda. I study the risks facing communities, people and organisations, then build safe, practical technology that reduces them.",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://aimeserge.vercel.app").replace(/\/$/, ""),
   email: "aimeserge51260@gmail.com",
   location: "Kigali, Rwanda",
   responseTime: "I reply within 1–2 working days.",
+  /** One-line positioning used on the homepage, in metadata and by the AI assistant. */
+  positioning: "I find the risks that hold people back, research them, and build technology that fixes them.",
   social: {
     github: "https://github.com/aime-serge",
     linkedin: "https://www.linkedin.com/in/aimesergeukobizaba/",

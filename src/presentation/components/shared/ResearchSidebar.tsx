@@ -1,87 +1,79 @@
-"use client";
-
-import { Activity } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, FlaskConical } from "lucide-react";
 import { type ResearchPaper } from "@/core/domain/research/types";
 
 interface ResearchSidebarProps {
   papers: ResearchPaper[];
 }
 
+// Studies published as project case studies, so visitors always have something to read.
+const STUDIES = [
+  { title: "Climate change in East Africa, 2000–2024", href: "/projects/climate-modeling-east-africa" },
+  { title: "Real-time data for urban transit in Kigali", href: "/projects/urban-mobility-iot" },
+  { title: "INEZA AI: connected care for clinics", href: "/projects/ineza-ai" },
+  { title: "DukaAI: clear records for small shops", href: "/projects/dukaai" },
+];
+
 export default function ResearchSidebar({ papers }: ResearchSidebarProps) {
-  // Dynamically calculate clusters from tags
-  const clusters = papers.reduce((acc: Record<string, number>, paper) => {
-    paper.tags.forEach(tag => {
+  // Topics come from the papers' tags, most common first.
+  const counts = papers.reduce((acc: Record<string, number>, paper) => {
+    paper.tags.forEach((tag) => {
       acc[tag] = (acc[tag] || 0) + 1;
     });
     return acc;
   }, {});
-
-  const sortedClusters = Object.entries(clusters)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
+  const topics = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   const totalDownloads = papers.reduce((acc, p) => acc + (p.downloads || 0), 0);
-  const totalViews = papers.reduce((acc, p) => acc + (p.views || 0), 0);
-  const impactFactor = papers.length > 0 ? ((totalDownloads * 2 + totalViews) / papers.length / 10).toFixed(1) : "0.0";
 
   return (
     <aside className="space-y-8">
-      
-      <div className="rounded-2xl border border-slate-800 bg-emerald-500/5 p-6 backdrop-blur-sm">
-         <h4 className="text-sm font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6 border-b border-emerald-500/20 pb-2">Research Clusters</h4>
-         
-         {sortedClusters.length > 0 ? (
-           <ul className="space-y-4">
-              {sortedClusters.map(([name, count]) => (
-                <li key={name} className="flex items-center justify-between text-xs group cursor-pointer">
-                  <div className="flex items-center gap-2 text-slate-400 group-hover:text-emerald-400 transition-colors">
-                    <span className="h-1 w-1 bg-emerald-500 rounded-full" />
-                    {name}
-                  </div>
-                  <span className="font-mono text-slate-600 group-hover:text-emerald-500">({count})</span>
-                </li>
-              ))}
-           </ul>
-         ) : (
-           <p className="text-[10px] text-slate-600 font-mono italic uppercase">No clusters indexed yet...</p>
-         )}
+      {topics.length > 0 && (
+        <div className="rounded-2xl border border-slate-800 bg-emerald-500/5 p-6">
+          <h2 className="mb-4 text-sm font-semibold text-white">Topics</h2>
+          <ul className="space-y-3">
+            {topics.map(([name, count]) => (
+              <li key={name} className="flex items-center justify-between text-sm text-slate-400">
+                <span>{name}</span>
+                <span className="text-slate-600">
+                  {count} {count === 1 ? "paper" : "papers"}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {totalDownloads > 0 && (
+            <p className="mt-6 border-t border-slate-800 pt-4 text-xs text-slate-500">
+              Papers downloaded {totalDownloads.toLocaleString()} times so far.
+            </p>
+          )}
+        </div>
+      )}
 
-         <button className="w-full mt-8 rounded-xl border border-emerald-500/30 bg-emerald-500/5 py-3 text-[10px] font-bold text-emerald-500 uppercase tracking-widest hover:bg-emerald-500/10 transition-all">
-            Request Full Archive
-         </button>
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+        <h2 className="mb-4 text-sm font-semibold text-white">Studies you can read now</h2>
+        <ul className="space-y-3">
+          {STUDIES.map((s) => (
+            <li key={s.href}>
+              <Link href={s.href} className="group flex items-start gap-2 text-sm text-slate-400 hover:text-emerald-400">
+                <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                {s.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {/* Real-time Telemetry */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold text-white uppercase tracking-widest">Reach</span>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-[9px] font-mono">
-              <span className="text-slate-500 uppercase">Engagement score</span>
-              <span className="text-emerald-400">{impactFactor}</span>
-            </div>
-            <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-emerald-500 transition-all duration-1000" 
-                style={{ width: `${Math.min(parseFloat(impactFactor) * 10, 100)}%` }} 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4">
-            <div className="space-y-1">
-              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Downloads</span>
-              <p className="text-sm font-bold text-white font-mono">{totalDownloads.toLocaleString()}</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[8px] text-slate-500 uppercase font-mono tracking-tighter">Views</span>
-              <p className="text-sm font-bold text-white font-mono">{totalViews.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
+        <FlaskConical className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+        <h2 className="mt-3 text-base font-semibold text-white">Research with me</h2>
+        <p className="mt-2 text-sm text-slate-400">
+          Working on a risk that affects a community, a group of people or an organisation? Let&apos;s study it together.
+        </p>
+        <Link
+          href={`/contact?topic=${encodeURIComponent("Research collaboration")}`}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
+        >
+          Propose a study <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </div>
     </aside>
   );

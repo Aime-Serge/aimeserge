@@ -23,14 +23,14 @@ const defaultIcons = {
 
 export default function CaseStudyMetrics({
   metrics,
-  title = "Measured Impact"
+  title = "Results"
 }: CaseStudyMetricsProps) {
   if (!metrics || metrics.length === 0) return null;
 
   return (
     <div className="space-y-4">
       {title && (
-        <h4 className="text-sm font-bold text-white uppercase tracking-widest mb-4">
+        <h4 className="text-sm font-semibold text-white mb-4">
           {title}
         </h4>
       )}
@@ -49,7 +49,7 @@ export default function CaseStudyMetrics({
                 <div className="text-lg font-bold text-cyan-400 truncate">
                   {metric.value}
                 </div>
-                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">
+                <div className="text-xs text-slate-400 mt-1">
                   {metric.label}
                 </div>
                 {metric.context && (
