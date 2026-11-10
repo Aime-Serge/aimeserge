@@ -76,7 +76,34 @@ export const fallbackProjects: Project[] = [
     contributors: [ME], association: "Ongoing venture · Rwanda → East Africa → global",
   },
   {
-    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 4,
+    id: "second-look", slug: "second-look", featured: true, sortOrder: 4,
+    title: "Second Look",
+    tagline: "Paste a suspicious email and get a plain-language verdict on whether it's phishing, and why.",
+    role: "Designer & Developer",
+    summary: "A phishing risk checker for people who aren't security experts: it explains which warning signs it found, and only keeps a record when the user agrees.",
+    description: `The problem: phishing emails trick people into giving away passwords and money by copying trusted brands and creating panic. Most people can't tell a fake "PayPal" or "bank" email from a real one, and the tools that can are built for IT teams.
+
+What I built: a web app where you paste an email and get a clear verdict (likely phishing or likely safe) with the warning signs behind it, in plain words. It checks for sender addresses that imitate a known brand (like paypa1.com), a display name that claims a brand the address doesn't match, a reply-to address that goes somewhere else, links that hide behind raw IP addresses or link shorteners, and pressure language like "verify within 24 hours".
+
+Built responsibly: nothing is stored unless the user ticks a consent box, and even then the subject line is only kept as a fingerprint (hash), never as text. Users can report a wrong verdict; reports are reviewed by a person instead of retraining the model automatically, so one bad click can't quietly make it worse. A missed phishing email is treated as worse than a false alarm.
+
+Status: a working, tested prototype (14 automated tests). It runs on a rule-based checker today, and includes the pipeline to train a machine-learning model on public phishing datasets before a pilot with real users, which waits on mentor review and pilot consent.`,
+    tools: ["Python", "Flask", "scikit-learn", "SQLite", "pytest"],
+    features: [
+      "Plain-language verdict with the warning signs it found",
+      "Spots look-alike brand domains and mismatched senders",
+      "Flags hidden links and pressure language",
+      "Consent before anything is stored; subject lines kept only as a hash",
+      "Users can report a wrong verdict for human review",
+    ],
+    category: "Security · AI",
+    images: ["/uploads/second-look-thumbnail.svg"],
+    createdAt: "2026-08-19", isVisible: true, isCurrent: true,
+    startDate: { month: "August", year: "2026" },
+    contributors: [ME], association: "Independent Project · Online safety",
+  },
+  {
+    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 5,
     title: "Professional Portfolio & AI-Powered Content Platform",
     tagline: "This website: portfolio, blog and research, with AI search and chat.",
     role: "Full-Stack Engineer & Architect",

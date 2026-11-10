@@ -12,15 +12,12 @@ set -euo pipefail
 : "${DATABASE_URL:?Set DATABASE_URL first (see the header of this script).}"
 cd "$(dirname "$0")/.."
 
-MIGRATIONS=(
-  supabase/migrations/20261109120000_rls_lockdown.sql
-  supabase/migrations/20261109130000_phase2_dynamic_content.sql
-  supabase/migrations/20261109140000_full_text_search.sql
-  supabase/migrations/20261110120000_seed_ineza_ai.sql
-  supabase/migrations/20261110130000_seed_dukaai.sql
-  supabase/migrations/20261110140000_sync_cv_nov_2026.sql
-  supabase/migrations/20261110150000_add_ineza_and_innovation_hacks_roles.sql
-)
+# Every migration from the November 2026 work onward, in filename (= date) order.
+# Each one is safe to run more than once.
+MIGRATIONS=()
+for f in supabase/migrations/*.sql; do
+  [[ "$(basename "$f")" > "20261109120000" || "$(basename "$f")" == 20261109120000* ]] && MIGRATIONS+=("$f")
+done
 BASE_TABLES="projects research certificates contacts articles posts broadcasts experiences educations organizations achievements knowledge"
 
 echo "1/4 Backing up…"
