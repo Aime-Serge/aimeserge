@@ -13,6 +13,12 @@ import type { Achievement, Certificate, Education, Experience, Organization } fr
  * Mirrors supabase/migrations up to 20261110190000.
  */
 
+/**
+ * Never shown on the site, even if a CV lists them (checked by name, case-insensitive).
+ * Used by the "Update from CV" import in /admin.
+ */
+export const RESUME_EXCLUDE = ["University of Rwanda"];
+
 const org = (id: string, name: string): Organization => ({ id, name });
 const INEZA = org("ineza-ai", "INEZA AI");
 const DUKA = org("dukaai", "DukaAI");

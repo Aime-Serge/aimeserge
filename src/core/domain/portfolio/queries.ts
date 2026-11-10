@@ -355,7 +355,8 @@ function mapArticleRow(row: any): Article {
 // Keep legacy export for backward compatibility
 export const getBroadcasts = getPosts as any;
 export const getBroadcastById = getArticleById as any;
-export const getLatestResume = async () => null; // Fallback
+/** The CV the Download button serves: the profile's CV link (set by "Update from CV" in /admin). */
+export const getLatestResume = async (): Promise<string | null> => (await getProfile()).cvUrl || null;
 
 // ─── Profile & featured work (homepage) ──────────────────────────────────
 
