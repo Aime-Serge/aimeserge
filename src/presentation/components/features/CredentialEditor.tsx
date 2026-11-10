@@ -108,7 +108,6 @@ export default function CredentialEditor({ initialData, onClose }: CredentialEdi
               <option value="Google Cloud">Google Cloud</option>
               <option value="AWS">AWS</option>
               <option value="CompTIA">CompTIA</option>
-              <option value="University of Rwanda">University of Rwanda</option>
             </select>
           </div>
 

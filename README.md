@@ -1,6 +1,6 @@
 # Aime Serge UKOBIZABA — Professional Portfolio Platform
 
-[Live portfolio](https://aimesergeonline.vercel.app/) · [Projects](https://aimesergeonline.vercel.app/projects) · [Research](https://aimesergeonline.vercel.app/research) · [LinkedIn](https://linkedin.com/in/aimeserge) · [GitHub](https://github.com/AimeSerge)
+[Live portfolio](https://aimeserge.vercel.app/) · [Projects](https://aimeserge.vercel.app/projects) · [Research](https://aimeserge.vercel.app/research) · [LinkedIn](https://linkedin.com/in/aimeserge) · [GitHub](https://github.com/AimeSerge)
 
 This repository contains the source for Aime Serge UKOBIZABA’s professional portfolio: a full-stack platform that presents engineering work, technical research, credentials, and professional writing in one accessible experience. It is designed to give recruiters and admissions reviewers direct evidence of technical depth, system design practice, security awareness, and scholarly communication.
 
@@ -160,7 +160,7 @@ Production deployments should provide the same required secrets through the host
 **Aime Serge UKOBIZABA**
 Software Engineer · Cybersecurity Analyst · Aspiring AI Engineer
 
-- Portfolio: [aimesergeonline.vercel.app](https://aimesergeonline.vercel.app/)
+- Portfolio: [aimeserge.vercel.app](https://aimeserge.vercel.app/)
 - Email: [aimeserge51260@gmail.com](mailto:aimeserge51260@gmail.com)
 - LinkedIn: [linkedin.com/in/aimeserge](https://linkedin.com/in/aimeserge)
 - GitHub: [github.com/AimeSerge](https://github.com/AimeSerge)

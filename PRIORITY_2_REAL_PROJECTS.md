@@ -154,7 +154,7 @@ Features Implemented:
 ```
 
 ### 🔗 Live Proof
-- **Live URL:** https://aimesergeonline.vercel.app/
+- **Live URL:** https://aimeserge.vercel.app/
 - **GitHub:** https://github.com/AimeSerge/aimeserge
 - **Dynamic Routes:** Every project page is dynamically generated from database
 - **AI Features:** Chat works in real-time with semantic retrieval

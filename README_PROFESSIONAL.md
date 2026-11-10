@@ -1,6 +1,6 @@
 # Aime Serge UKOBIZABA — Professional Portfolio & Engineering Demonstration
 
-**Live Portfolio:** [aimesergeonline.vercel.app](https://aimesergeonline.vercel.app) · **GitHub:** [@AimeSerge](https://github.com/AimeSerge) · **LinkedIn:** [aimeserge](https://linkedin.com/in/aimeserge)
+**Live Portfolio:** [aimeserge.vercel.app](https://aimeserge.vercel.app) · **GitHub:** [@AimeSerge](https://github.com/AimeSerge) · **LinkedIn:** [aimeserge](https://linkedin.com/in/aimeserge)
 
 ---
 
@@ -381,7 +381,7 @@ vercel deploy --prod
 
 ## Live Portfolio Evaluation
 
-Visit **[aimesergeonline.vercel.app](https://aimesergeonline.vercel.app)** and notice:
+Visit **[aimeserge.vercel.app](https://aimeserge.vercel.app)** and notice:
 
 ✅ **Professional branding** — Cyber-themed aesthetic, consistent design language  
 ✅ **Multiple entry points** — Projects, research, blog, resume—cater to different audiences  
@@ -425,7 +425,7 @@ Environment requirements for production:
 
 ## Contact & Professional Links
 
-- **Portfolio:** [aimesergeonline.vercel.app](https://aimesergeonline.vercel.app)
+- **Portfolio:** [aimeserge.vercel.app](https://aimeserge.vercel.app)
 - **GitHub:** [@AimeSerge](https://github.com/AimeSerge)
 - **LinkedIn:** [aimeserge](https://linkedin.com/in/aimeserge)
 - **Email:** Available via portfolio contact form

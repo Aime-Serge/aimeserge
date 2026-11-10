@@ -23,7 +23,9 @@ const skillMatrix = [
   { name: "Front end", tools: "React, Next.js, TypeScript, Tailwind CSS" },
   { name: "Security", tools: "Authentication, access control, input validation, security reviews" },
   { name: "Cloud & delivery", tools: "Google Cloud, Vercel, Supabase, Git and CI/CD" },
-  { name: "AI", tools: "LLM apps, retrieval-augmented search (RAG), prompt design, agents" }
+  { name: "AI", tools: "LLM apps, retrieval-augmented search (RAG), prompt design, agentic and responsible AI" },
+  { name: "Product & leadership", tools: "Product management, project management, agile teams, UI/UX and human-centred design" },
+  { name: "Languages", tools: "English and Kinyarwanda (native), French and Kiswahili (proficient)" }
 ];
 
 export default async function ResumePage() {
