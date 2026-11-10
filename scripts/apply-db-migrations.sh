@@ -19,6 +19,7 @@ MIGRATIONS=(
   supabase/migrations/20261110120000_seed_ineza_ai.sql
   supabase/migrations/20261110130000_seed_dukaai.sql
   supabase/migrations/20261110140000_sync_cv_nov_2026.sql
+  supabase/migrations/20261110150000_add_ineza_and_innovation_hacks_roles.sql
 )
 BASE_TABLES="projects research certificates contacts articles posts broadcasts experiences educations organizations achievements knowledge"
 

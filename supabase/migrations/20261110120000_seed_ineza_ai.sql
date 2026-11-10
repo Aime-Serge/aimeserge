@@ -24,7 +24,7 @@ INSERT INTO public.projects (
   'https://v0-ineza-ai.vercel.app/',
   ARRAY['/uploads/ineza-ai-thumbnail.svg'],
   TRUE, TRUE,
-  '{"month":"","year":"2026"}'::jsonb,
+  '{"month":"March","year":"2026"}'::jsonb,
   NULL,
   ARRAY['Aime Serge UKOBIZABA', 'Pierre BAHATI'],
   'ALU Center for Health Innovation and Impact (CHII) · Africa Health Collaborative',
