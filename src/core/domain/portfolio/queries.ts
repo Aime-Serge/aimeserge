@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
 import { fallbackCertificates } from "./constants";
+import { fallbackProjects } from "./fallbackProjects";
 import {
   Certificate, Post, Article, MediaType, Visibility,
   CommentPermission, PublicationStatus, ContentBlock,
@@ -95,8 +96,11 @@ export async function getEducations(): Promise<Education[]> {
   )().catch(contentFallback([]));
 }
 
-export async function getProjects() {
-  return unstable_cache(fetchProjects, ['projects-list'], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback([] as ReturnType<typeof mapProjectRow>[]));
+/** Projects from the database; the built-in list if the database is down or empty. */
+export async function getProjects(): Promise<Project[]> {
+  const rows = await unstable_cache(fetchProjects, ['projects-list'], { tags: ['projects'], revalidate: CONTENT_TTL })()
+    .catch(contentFallback([] as Project[]));
+  return rows.length ? rows : fallbackProjects;
 }
 
 async function fetchProjects() {
@@ -117,8 +121,12 @@ async function fetchProjects() {
   }
 }
 
-export async function getProjectBySlug(slug: string) {
-  return unstable_cache(() => fetchProjectBySlug(slug), ['project', slug], { tags: ['projects'], revalidate: CONTENT_TTL })().catch(contentFallback(undefined));
+export async function getProjectBySlug(slug: string): Promise<Project | undefined> {
+  const row = await unstable_cache(() => fetchProjectBySlug(slug), ['project', slug], { tags: ['projects'], revalidate: CONTENT_TTL })()
+    .catch(contentFallback(undefined));
+  if (row) return row;
+  // Only fall back when the whole list is the built-in one, so a project hidden in /admin stays hidden.
+  return (await getProjects()) === fallbackProjects ? fallbackProjects.find((p) => p.slug === slug) : undefined;
 }
 
 async function fetchProjectBySlug(slug: string) {
@@ -380,7 +388,7 @@ export async function getProfile(): Promise<Profile> {
 
 /** Projects marked "featured" (by sort order); falls back to the newest three. */
 export async function getFeaturedProjects(limit = 3): Promise<Project[]> {
-  const projects = (await getProjects()) as Project[];
+  const projects = await getProjects();
   const featured = projects
     .filter((p) => p.featured)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
