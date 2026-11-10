@@ -1,0 +1,39 @@
+<svg viewBox="0 0 400 225" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="globalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="225" fill="url(#globalGrad)"/>
+  <!-- Routes: Kigali hub to East African cities -->
+  <g stroke="#ffffff" stroke-opacity="0.55" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M150 105 L205 62"/>
+    <path d="M150 105 L250 78"/>
+    <path d="M150 105 L232 150"/>
+    <path d="M150 105 L120 140"/>
+  </g>
+  <!-- Next milestone: global -->
+  <path d="M250 78 Q300 55 330 80" stroke="#fcd34d" stroke-width="2" stroke-dasharray="5 5" fill="none"/>
+  <!-- City dots -->
+  <g fill="#ffffff">
+    <circle cx="205" cy="62" r="5" opacity="0.9"/>
+    <circle cx="250" cy="78" r="5" opacity="0.9"/>
+    <circle cx="232" cy="150" r="5" opacity="0.9"/>
+    <circle cx="120" cy="140" r="5" opacity="0.9"/>
+  </g>
+  <!-- Kigali hub with parcel -->
+  <circle cx="150" cy="105" r="16" fill="#fcd34d"/>
+  <rect x="142" y="97" width="16" height="16" rx="2" fill="#1e3a8a"/>
+  <path d="M142 103 H158 M150 97 V103" stroke="#fcd34d" stroke-width="1.5"/>
+  <!-- Globe -->
+  <g transform="translate(345,92)" stroke="#fcd34d" stroke-width="2" fill="none">
+    <circle r="16"/>
+    <ellipse rx="7" ry="16"/>
+    <path d="M-16 0 H16"/>
+  </g>
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">
+    <text x="150" y="134" text-anchor="middle" font-weight="600">Kigali</text>
+  </g>
+  <text x="200" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Rwanda → East Africa → the world</text>
+</svg>

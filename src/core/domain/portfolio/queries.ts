@@ -2,7 +2,7 @@ import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
-import { fallbackCertificates } from "./constants";
+import { resumeExperiences, resumeEducations, resumeCertificates as fallbackCertificates, resumeAchievements } from "@/config/resume";
 import { fallbackProjects } from "./fallbackProjects";
 import {
   Certificate, Post, Article, MediaType, Visibility,
@@ -15,7 +15,7 @@ import { SITE } from "@/config/site";
  * Fetch Professional Experiences (Relational)
  */
 export async function getExperiences(): Promise<Experience[]> {
-  return unstable_cache(
+  const rows = await unstable_cache(
     async () => {
       const supabase = createPublicSupabaseClient();
       try {
@@ -52,13 +52,14 @@ export async function getExperiences(): Promise<Experience[]> {
     ['experiences-list'],
     { tags: ['experiences'], revalidate: CONTENT_TTL }
   )().catch(contentFallback([]));
+  return rows.length ? rows : resumeExperiences;
 }
 
 /**
  * Fetch Educational Background (Relational)
  */
 export async function getEducations(): Promise<Education[]> {
-  return unstable_cache(
+  const rows = await unstable_cache(
     async () => {
       const supabase = createPublicSupabaseClient();
       try {
@@ -94,6 +95,7 @@ export async function getEducations(): Promise<Education[]> {
     ['educations-list'],
     { tags: ['educations'], revalidate: CONTENT_TTL }
   )().catch(contentFallback([]));
+  return rows.length ? rows : resumeEducations;
 }
 
 /** Projects from the database; the built-in list if the database is down or empty. */
@@ -219,7 +221,7 @@ export async function getCertificates(): Promise<Certificate[]> {
 }
 
 export async function getAchievements(): Promise<Achievement[]> {
-  return unstable_cache(
+  const rows = await unstable_cache(
     async () => {
       const supabase = createPublicSupabaseClient();
       try {
@@ -246,6 +248,7 @@ export async function getAchievements(): Promise<Achievement[]> {
     ['achievements-list'],
     { tags: ['achievements'], revalidate: CONTENT_TTL }
   )().catch(contentFallback([]));
+  return rows.length ? rows : resumeAchievements;
 }
 
 export async function getPosts(): Promise<Post[]> {
