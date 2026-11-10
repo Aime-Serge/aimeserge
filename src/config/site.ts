@@ -6,7 +6,7 @@
 export const SITE = {
   name: "Aime Serge Ukobizaba",
   shortName: "Aime Serge",
-  headline: "Software Engineer · Cybersecurity · AI",
+  headline: "Software Engineer · Cybersecurity · Agentic AI · Founder, INEZA AI",
   description:
     "Software engineer in Kigali, Rwanda. I build secure web apps, APIs and AI features, and I write about what I learn.",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://aimeserge.vercel.app").replace(/\/$/, ""),

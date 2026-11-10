@@ -36,18 +36,18 @@ const SERVICES = [
 
 // Shown only if the database is unreachable or empty.
 const FALLBACK_EXPERIENCE = [
+  { org: "Z-Gate LTD", role: "Product Manager & Software Engineer", when: "2026 – now" },
+  { org: "ALX Africa", role: "ALX Ventures Rwanda Ambassador", when: "2026 – now" },
   { org: "ALX Africa", role: "Software Engineer", when: "2025 – 2026" },
   { org: "EF NEXUS", role: "Software Developer", when: "2025" },
   { org: "Bittwork Technology", role: "Software Engineering Intern", when: "2025" },
   { org: "Rwanda Cancer Relief", role: "Technical Lead (volunteer)", when: "2025 – now" },
-  { org: "IEE Rwanda", role: "Teaching Assistant", when: "2024 – 2025" },
 ];
 
 const LEARNING = [
-  "BSc Computer Science, University of Rwanda (in progress)",
   "ALX Software Engineering programme",
   "ALX Cybersecurity programme",
-  "AWS AI/ML Scholars: Agentic AI engineering",
+  "AWS AI/ML Scholars: Agentic AI engineering (graduate)",
   "Google Cloud skill badges",
 ];
 
