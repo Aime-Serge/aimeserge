@@ -1,0 +1,57 @@
+# Updates the Resume page whenever a new CV PDF is pushed to cv/ on main.
+# Secrets (GitHub -> Settings -> Secrets and variables -> Actions):
+#   GEMINI_API_KEY            required
+#   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET   optional: also update the database
+#   DISCORD_WEBHOOK_URL       optional: get a message after each sync
+name: Update website from CV
+
+on:
+  push:
+    branches: [main]
+    paths: ["cv/**.pdf", "cv/**.PDF"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cv-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Read the CV and update the site data
+        run: npx -y tsx@4.20.3 scripts/cv-sync.ts
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Publish
+        run: |
+          git config user.name "cv-sync[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/config/resume.generated.json public/cv/
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "chore: update resume from CV"
+            git push
+          fi

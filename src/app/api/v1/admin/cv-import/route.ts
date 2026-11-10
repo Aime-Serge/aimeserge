@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateObject } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { requireAdminApi } from "@/core/domain/admin/guard";
 import { validateAdminSession } from "@/core/domain/admin/queries";
-import { cvSchema, cvModelSchema, normaliseMonth } from "@/core/domain/admin/cv-schema";
-import { RESUME_EXCLUDE } from "@/config/resume";
 import { rateLimit } from "@/infrastructure/security/rateLimit";
+import { readCv, isPdf } from "@/core/domain/admin/cv-reader";
 
 /**
  * Admin only. Step 1 of "Update from CV": upload a PDF, store it, and read it
@@ -16,18 +13,6 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const MAX_BYTES = 4 * 1024 * 1024; // Vercel request body limit is 4.5 MB
-
-const RULES = `You turn a CV into structured data for a personal website.
-- Copy facts exactly: organisation names, titles, dates. Never invent anything.
-- Dates as YYYY-MM (or YYYY if no month). Ongoing roles: endDate null.
-- employmentType: INTERNSHIP for internships, VOLUNTEER for volunteer roles, PART_TIME for ambassador/part-time, otherwise FULL_TIME.
-- Founder or co-founder roles listed in the headline or summary with a start date are experiences too.
-- Rewrite each description in plain, simple English for non-technical readers, first person, 1–3 sentences.
-- Remove percentages and impact numbers unless the CV says where they come from. Keep rankings like "top 1%" and counts like "15+ projects".
-- Certificates come from education/training programmes and the certifications list; merge duplicates.
-- Achievements are awards and competition placings.
-- Leave out references, phone numbers, emails and hobbies.
-- Leave out anything from these organisations: ${RESUME_EXCLUDE.join(", ") || "none"}.`;
 
 export async function POST(request: NextRequest) {
   const denied = await requireAdminApi();
@@ -46,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   // Check the real file signature, not just the name or browser-supplied type.
-  if (String.fromCharCode(...bytes.slice(0, 5)) !== "%PDF-") {
+  if (!isPdf(bytes)) {
     return NextResponse.json({ error: "That file isn't a PDF." }, { status: 400 });
   }
 
@@ -65,49 +50,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const google = createGoogleGenerativeAI({ apiKey });
-    const { object } = await generateObject({
-      model: google("gemini-2.5-flash"),
-      schema: cvModelSchema,
-      system: RULES,
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: "Read this CV." },
-          { type: "file", data: bytes, mediaType: "application/pdf" },
-        ],
-      }],
-    });
-
-    // Enforce the exclusion list in code too, not only in the prompt.
-    const excluded = (name?: string) => RESUME_EXCLUDE.some((x) => name?.toLowerCase().includes(x.toLowerCase()));
-    const opt = (v?: string | null) => normaliseMonth(v) ?? undefined;
-    const candidate = {
-      experiences: object.experiences
-        .filter((e) => !excluded(e.organization))
-        .map((e) => ({ ...e, startDate: opt(e.startDate) ?? "", endDate: e.endDate == null ? null : normaliseMonth(e.endDate) ?? null })),
-      educations: object.educations
-        .filter((e) => !excluded(e.institution))
-        .map((e) => ({ ...e, startDate: opt(e.startDate), endDate: opt(e.endDate) })),
-      certificates: object.certificates
-        .filter((c) => !excluded(c.provider) && !excluded(c.name))
-        .map((c) => ({ ...c, issueDate: opt(c.issueDate) ?? "", expiryDate: opt(c.expiryDate) })),
-      achievements: object.achievements,
-    };
-    // Drop entries without a usable date rather than failing the whole import.
-    candidate.experiences = candidate.experiences.filter((e) => e.startDate);
-    candidate.certificates = candidate.certificates.filter((c) => c.issueDate);
-
-    const checked = cvSchema.safeParse(candidate);
-    if (!checked.success) {
-      console.error("CV draft failed validation:", checked.error.issues.slice(0, 3));
-      return NextResponse.json({ error: "The CV was read but some entries look wrong. Try again." }, { status: 502 });
-    }
-    const draft = checked.data;
-
+    const draft = await readCv(bytes, apiKey);
     return NextResponse.json({ draft, cvUrl }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("CV read failed:", err);
-    return NextResponse.json({ error: "Couldn't read the CV. Try again, or check that the PDF has selectable text." }, { status: 502 });
+    const message = err instanceof Error && err.message.startsWith("The CV") ? err.message : "Couldn't read the CV. Try again, or check that the PDF has selectable text.";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

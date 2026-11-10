@@ -4,6 +4,7 @@ import TestimonialSection from "@/presentation/components/features/TestimonialSe
 import { getCertificates, getLatestResume, getExperiences, getEducations, getAchievements } from "@/core/domain/portfolio/queries";
 import { testimonials } from "@/core/domain/portfolio/constants";
 import { formatDuration } from "@/infrastructure/utils/dateUtils";
+import { RESUME_CV_URL } from "@/config/resume";
 import Image from "next/image";
 import { cn } from "@/infrastructure/security/headers";
 import { Experience } from "@/core/domain/portfolio/types";
@@ -94,7 +95,7 @@ export default async function ResumePage() {
           </dl>
         </div>
         <a 
-          href={latestResumeUrl || "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf"} 
+          href={latestResumeUrl || RESUME_CV_URL} 
           download
           target="_blank"
           rel="noopener noreferrer"

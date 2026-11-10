@@ -1,4 +1,6 @@
 import type { Achievement, Certificate, Education, Experience, Organization } from "@/core/domain/portfolio/types";
+import type { CvData } from "@/core/domain/admin/cv-schema";
+import generatedJson from "./resume.generated.json";
 
 /**
  * YOUR RESUME, IN ONE PLACE.
@@ -8,7 +10,10 @@ import type { Achievement, Certificate, Education, Experience, Organization } fr
  * As soon as a section has entries in the database (edited in /admin), the
  * database wins for that section.
  *
- * To update after a new CV: edit the lists below (newest first), commit, push.
+ * AUTOMATIC UPDATES: put a new CV PDF in the cv/ folder and push to main.
+ * A GitHub Action (.github/workflows/cv-sync.yml) reads it and writes
+ * resume.generated.json, which replaces the hand-written lists below.
+ * To edit by hand instead: change the lists below (newest first), commit, push.
  * Keep it plain language, and don't add numbers you can't show a source for.
  * Mirrors supabase/migrations up to 20261110190000.
  */
@@ -130,3 +135,47 @@ export const resumeAchievements: Achievement[] = [
   { id: "resume-ach-0", title: "2nd Place, Hacktoberfest Hack Day Kigali 2026 (DukaAI)", issuer: "Hacktoberfest · Major League Hacking", achievedDate: "2026" },
   { id: "resume-ach-1", title: "4th Place, Innovate With Google Cloud Hackathon", issuer: "Google Cloud" },
 ];
+
+// ─── Automatic CV sync ─────────────────────────────────────────────────────
+// When scripts/cv-sync.ts has written resume.generated.json, it wins over the
+// hand-written lists above.
+
+type Generated = { generatedAt: string; source: string; cvUrl: string; data: CvData } | null;
+const generated = generatedJson as unknown as Generated;
+
+const DEFAULT_CV_URL = "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf";
+/** The CV the "Download CV" button serves when no CV link is saved in /admin. */
+export const RESUME_CV_URL = generated?.cvUrl || DEFAULT_CV_URL;
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const day = (d?: string | null) => (d ? (d.length === 4 ? `${d}-01-01` : `${d}-01`) : undefined);
+
+function fromGenerated(d: CvData) {
+  const o = (name: string) => org(slug(name), name);
+  return {
+    experiences: d.experiences.map((e, i): Experience => ({
+      id: `cv-exp-${i}`, title: e.title, employmentType: e.employmentType, location: e.location,
+      locationType: "ON_SITE", startDate: day(e.startDate)!, endDate: day(e.endDate),
+      description: e.description, skillsUsed: [], companyId: slug(e.organization), company: o(e.organization),
+    })),
+    educations: d.educations.map((e, i): Education => ({
+      id: `cv-edu-${i}`, institutionId: slug(e.institution), institution: o(e.institution), degree: e.degree,
+      fieldOfStudy: e.fieldOfStudy, startDate: day(e.startDate), endDate: day(e.endDate), grade: e.grade, description: e.description,
+    })),
+    certificates: d.certificates.map((c, i): Certificate => ({
+      id: `cv-cert-${i}`, name: c.name, provider: c.provider, issuer: o(c.provider), issueDate: c.issueDate,
+      expiryDate: day(c.expiryDate), description: c.description,
+    })),
+    achievements: d.achievements.map((a, i): Achievement => ({
+      id: `cv-ach-${i}`, title: a.title, issuer: a.issuer, achievedDate: a.date,
+    })),
+  };
+}
+
+const fromCv = generated?.data ? fromGenerated(generated.data) : null;
+export const RESUME = {
+  experiences: fromCv?.experiences ?? resumeExperiences,
+  educations: fromCv?.educations ?? resumeEducations,
+  certificates: fromCv?.certificates ?? resumeCertificates,
+  achievements: fromCv?.achievements ?? resumeAchievements,
+};

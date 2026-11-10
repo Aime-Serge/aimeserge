@@ -2,7 +2,8 @@ import { createPublicSupabaseClient } from "@/infrastructure/database/server";
 import { unstable_cache } from 'next/cache';
 import { CONTENT_TTL, contentFallback } from "@/infrastructure/cache/content";
 import { getAssetUrl } from "@/infrastructure/utils/storage";
-import { resumeExperiences, resumeEducations, resumeCertificates as fallbackCertificates, resumeAchievements } from "@/config/resume";
+import { RESUME, RESUME_CV_URL } from "@/config/resume";
+const { experiences: resumeExperiences, educations: resumeEducations, certificates: fallbackCertificates, achievements: resumeAchievements } = RESUME;
 import { fallbackProjects } from "./fallbackProjects";
 import {
   Certificate, Post, Article, MediaType, Visibility,
@@ -366,7 +367,7 @@ export const DEFAULT_PROFILE: Profile = {
   location: SITE.location,
   openToWork: false,
   availabilityNote: "",
-  cvUrl: "/uploads/Aime_Serge_Ukobizaba_CV_01-3.pdf",
+  cvUrl: RESUME_CV_URL,
 };
 
 export async function getProfile(): Promise<Profile> {
