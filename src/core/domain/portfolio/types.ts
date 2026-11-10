@@ -76,7 +76,7 @@ export interface Project {
   description: string; 
   tools: string[]; 
   features: string[];
-  category: "AI" | "Security" | "Cloud" | "Full-Stack" | "Software Engineering";
+  category: "AI" | "Security" | "Cloud" | "Full-Stack" | "Software Engineering" | (string & {});
   views?: number;
   likes?: number;
   createdAt: string;
