@@ -12,10 +12,10 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const paper = await getPaperBySlug(slug);
-  if (!paper) return { title: "Research Not Found" };
+  if (!paper) return { title: "Paper not found" };
 
   return {
-    title: `${paper.title} | Technical Research`,
+    title: paper.title,
     description: paper.abstract,
   };
 }
@@ -44,7 +44,7 @@ export default async function ResearchDetailPage({ params }: Props) {
           className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-400 transition-colors mb-12 font-mono text-sm"
         >
           <ChevronLeft className="h-4 w-4" />
-          BACK_TO_ARCHIVE
+          Back to all research
         </Link>
 
         <div className="grid gap-12 lg:grid-cols-[1fr_350px]">
@@ -55,11 +55,11 @@ export default async function ResearchDetailPage({ params }: Props) {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
                     <Microscope className="h-3 w-3" />
-                    STATUS: PEER_REVIEWED
+                    {paper.doi ? "Published paper" : "Independent research"}
                   </div>
                   <div className="inline-flex items-center gap-2 text-[10px] font-mono text-slate-500">
                     <Calendar className="h-3 w-3" />
-                    PUBLISHED: {paper.publicationDate}
+                    Published {paper.publicationDate}
                   </div>
                   {paper.doi && (
                     <div className="inline-flex items-center gap-2 text-[10px] font-mono text-emerald-500/60">
@@ -112,13 +112,15 @@ export default async function ResearchDetailPage({ params }: Props) {
                     <span className="text-xl font-bold text-white font-mono">{paper.downloads}</span>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-500 uppercase font-mono">Citations</span>
-                  <div className="flex items-center gap-2">
-                    <Quote className="h-4 w-4 text-emerald-500" />
-                    <span className="text-xl font-bold text-white font-mono">{paper.citations}</span>
+                {paper.citations > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 uppercase font-mono">Citations</span>
+                    <div className="flex items-center gap-2">
+                      <Quote className="h-4 w-4 text-emerald-500" />
+                      <span className="text-xl font-bold text-white font-mono">{paper.citations}</span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="space-y-1">
                   <span className="text-[10px] text-slate-500 uppercase font-mono">Format</span>
                   <div className="flex items-center gap-2">
@@ -132,7 +134,7 @@ export default async function ResearchDetailPage({ params }: Props) {
             {/* Abstract Layer */}
             <section className="space-y-6">
               <h3 className="text-emerald-400 font-mono uppercase tracking-widest text-xs flex items-center gap-2">
-                <Bookmark className="h-4 w-4" /> 01_Executive_Abstract
+                <Bookmark className="h-4 w-4" /> Summary: what this study found and why it matters
               </h3>
               <div className="prose prose-invert max-w-none">
                 <p className="text-xl text-slate-300 leading-relaxed font-light italic border-l-2 border-emerald-500/30 pl-8 py-4 bg-slate-900/20 rounded-r-3xl">
@@ -146,7 +148,7 @@ export default async function ResearchDetailPage({ params }: Props) {
               {paper.content.map((section, idx) => (
                 <div key={section.id} id={section.id} className="space-y-6 scroll-mt-24">
                   <h3 className="text-emerald-400 font-mono uppercase tracking-widest text-xs flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" /> 0{idx + 2}_{section.title}
+                    <BookOpen className="h-4 w-4" /> {idx + 1}. {section.title}
                   </h3>
                   <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl">
                     <div className="prose prose-invert max-w-none text-slate-400 leading-relaxed text-lg whitespace-pre-wrap font-sans">
@@ -160,8 +162,8 @@ export default async function ResearchDetailPage({ params }: Props) {
             {/* Artifact Access */}
             <div className="flex items-center justify-between p-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
               <div className="space-y-1">
-                <p className="text-white font-bold">Access Full Research Data</p>
-                <p className="text-[10px] text-slate-500 uppercase font-mono">Secured via Supabase Artifact Storage</p>
+                <p className="text-white font-bold">Read the full paper</p>
+                <p className="text-xs text-slate-500">Download the PDF, with the data sources and method.</p>
               </div>
               <ResearchActionButtons 
                 id={paper.id} 
@@ -175,7 +177,7 @@ export default async function ResearchDetailPage({ params }: Props) {
             <div className="sticky top-12 space-y-8">
               {/* Table of Contents */}
               <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
-                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">Back to all research</h4>
+                <h4 className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest font-mono mb-6">On this page</h4>
                 <nav className="space-y-3">
                   {paper.content.map((section) => (
                     <a 
@@ -183,7 +185,7 @@ export default async function ResearchDetailPage({ params }: Props) {
                       href={`#${section.id}`}
                       className="block text-xs text-slate-500 hover:text-emerald-400 transition-colors border-l border-slate-800 pl-4 py-1 hover:border-emerald-500"
                     >
-                      {section.title.toUpperCase()}
+                      {section.title}
                     </a>
                   ))}
                 </nav>
@@ -195,7 +197,7 @@ export default async function ResearchDetailPage({ params }: Props) {
                 <div className="space-y-6">
                   <div>
                     <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Category</span>
-                    <span className="text-xs text-white bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{paper.category || "General Research"}</span>
+                    <span className="text-xs text-white bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{paper.category || "Research"}</span>
                   </div>
                   <div>
                     <span className="text-[9px] text-slate-500 uppercase font-mono block mb-2">Language</span>
@@ -206,7 +208,7 @@ export default async function ResearchDetailPage({ params }: Props) {
                     <div className="flex flex-wrap gap-2">
                       {paper.tags.map(tag => (
                         <span key={tag} className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[9px] font-mono text-emerald-500/80">
-                          #{tag.replace(/\s+/g, '_')}
+                          {tag}
                         </span>
                       ))}
                     </div>

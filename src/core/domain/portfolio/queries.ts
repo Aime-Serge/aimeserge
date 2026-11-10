@@ -357,8 +357,8 @@ export const getLatestResume = async () => null; // Fallback
 // ─── Profile & featured work (homepage) ──────────────────────────────────
 
 export const DEFAULT_PROFILE: Profile = {
-  headline: "I build secure, reliable software, and add AI where it actually helps.",
-  bio: "I'm Aime Serge. I design and build web apps and APIs, keep them safe from common attacks, and add AI features like smart search and chat assistants.",
+  headline: SITE.positioning,
+  bio: "I'm Aime Serge, a software engineer and founder in Kigali. I study real problems in health, small business, climate and online safety, and turn what I learn into safe, simple tools for communities, people and organisations.",
   location: SITE.location,
   openToWork: false,
   availabilityNote: "",

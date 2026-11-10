@@ -60,7 +60,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 Associated with <span className="text-white">{project.association}</span>
               </p>
             )}
-            <p className="mt-4 text-xl text-cyan-500/90 font-mono">
+            <p className="mt-4 text-xl text-cyan-300/90">
               {project.tagline}
             </p>
           </header>
@@ -69,11 +69,11 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             {/* Contributors Section */}
             {project.contributors && project.contributors.length > 0 && (
               <section aria-label="Project Contributors">
-                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Built by</h2>
+                <h2 className="text-sm font-semibold text-slate-400 mb-4">Built by</h2>
                 <div className="flex flex-wrap gap-3">
                   {project.contributors.map((person: string) => (
                     <div key={person} className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-1.5 text-sm font-medium text-slate-300">
-                      <div className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+                      <div className="h-2 w-2 rounded-full bg-cyan-500" aria-hidden="true" />
                       {person}
                     </div>
                   ))}
@@ -106,7 +106,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             )}
 
             <section aria-labelledby="mission-title">
-              <h2 id="mission-title" className="mb-4 text-2xl font-bold text-white uppercase tracking-wider font-mono">The story</h2>
+              <h2 id="mission-title" className="mb-4 text-2xl font-bold text-white">The story</h2>
               <div className="leading-relaxed text-lg text-slate-400 whitespace-pre-wrap">
                 {project.description}
               </div>
@@ -131,8 +131,9 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               </section>
             )}
 
+            {project.features.length > 0 && (
             <section aria-labelledby="features-title">
-              <h2 id="features-title" className="mb-6 text-2xl font-bold text-white">Key Features</h2>
+              <h2 id="features-title" className="mb-6 text-2xl font-bold text-white">What it does</h2>
               <ul className="grid gap-4 sm:grid-cols-2">
                 {project.features.map((feature: string) => (
                   <li key={feature} className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/30 p-4">
@@ -142,6 +143,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 ))}
               </ul>
             </section>
+            )}
 
             <section aria-labelledby="role-title">
               <h2 id="role-title" className="mb-4 text-2xl font-bold text-white">My role</h2>
@@ -155,8 +157,10 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
         {/* Sidebar */}
         <aside className="space-y-8">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm sticky top-24">
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
-              Tech Stack
+            {project.tools.length > 0 && (
+            <>
+            <h3 className="mb-4 text-sm font-semibold text-white">
+              Tools used
             </h3>
             <div className="flex flex-wrap gap-2" aria-label="Tools used">
               {project.tools.map((tool: string) => (
@@ -168,6 +172,8 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 </span>
               ))}
             </div>
+            </>
+            )}
 
             <nav className="mt-8 space-y-3" aria-label="Project Links">
               {project.url && (
@@ -177,7 +183,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
-                  Live Preview
+                  Visit the project
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
               )}
@@ -188,20 +194,18 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
-                  Case Study PDF
+                  Read the full write-up (PDF)
                   <FileText className="h-4 w-4" aria-hidden="true" />
                 </a>
               )}
             </nav>
           </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-emerald-500/5 p-6" aria-label="Project Meta Information">
-            <p className="text-xs font-mono text-emerald-500/70">
-              TIMESTAMP: {project.createdAt}
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              This project was validated through production deployment and peer review.
-            </p>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <h3 className="text-sm font-semibold text-white">Interested in this work?</h3>
+            <p className="mt-2 text-sm text-slate-400">I&apos;m open to pilots, partnerships and roles where I can build things like this.</p>
+            <Link href="/contact?topic=Partnership%20or%20investment" className="mt-4 inline-flex text-sm font-semibold text-cyan-400 hover:text-cyan-300">
+              Get in touch
+            </Link>
           </div>
         </aside>
       </div>

@@ -12,8 +12,8 @@ interface TestimonialSectionProps {
 
 export default function TestimonialSection({
   testimonials,
-  title = "What Teams Say",
-  subtitle = "Verification from collaborators and industry partners"
+  title = "What people say",
+  subtitle = "Quotes from people I've worked with, shared with their permission."
 }: TestimonialSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 

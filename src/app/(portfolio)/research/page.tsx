@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 export const metadata = {
   title: "Research",
-  description: "Independent research by Aime Serge Ukobizaba on climate data, urban transport, security and AI, with plain-language summaries and downloadable papers.",
+  description: "Research for impact by Aime Serge Ukobizaba: studies of the risks facing communities, people and organisations in climate, health, small business, transport and digital safety, with plain-language summaries.",
   alternates: { canonical: "/research" },
 };
 
@@ -46,25 +46,45 @@ export default async function ResearchPage() {
       <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
         <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Research
+          Research for impact
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Independent studies where I collect data, analyse it and share what I found. Each paper starts with a short summary anyone can read.
+          I study the risks that affect communities, individuals and organisations, measure how big they are, and look for practical ways to reduce them. Each paper starts with a short summary anyone can read.
         </p>
+
+        {/* From research to action: the workflow in four plain steps */}
+        <ol className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="How my research works">
+          {[
+            ["Spot the risk", "Who is affected, and what could go wrong for them?"],
+            ["Gather the data", "Public records, conversations with the people affected, and open datasets."],
+            ["Explain the findings", "Plain-language results that leaders and the public can use."],
+            ["Turn it into action", "A tool, a product or advice that lowers the risk."],
+          ].map(([title, body], i) => (
+            <li key={title} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+              <p className="text-sm font-semibold text-white"><span className="text-emerald-400">{i + 1}.</span> {title}</p>
+              <p className="mt-1 text-sm text-slate-400">{body}</p>
+            </li>
+          ))}
+        </ol>
         
         {/* Research Focus */}
-        <div className="mt-8 grid md:grid-cols-3 gap-4">
+        <h2 className="mt-12 text-xl font-semibold text-white">What I research</h2>
+        <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
-            <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest mb-2">Climate & environment</div>
-            <p className="text-sm text-slate-300">Using public climate data to show local trends that help planning in East Africa.</p>
+            <div className="text-sm font-semibold text-emerald-400 mb-2">Climate risk for communities</div>
+            <p className="text-sm text-slate-300">How rising heat and less predictable rain affect farming and water in East Africa, using 24 years of public data.</p>
           </div>
           <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
-            <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest mb-2">Security</div>
-            <p className="text-sm text-slate-300">How to spot and stop attacks early, and design systems that are safe by default.</p>
+            <div className="text-sm font-semibold text-emerald-400 mb-2">Health access</div>
+            <p className="text-sm text-slate-300">Where clinics lose time and information, and how one connected system with an assistant can help care teams (INEZA AI).</p>
           </div>
           <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
-            <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest mb-2">AI you can trust</div>
-            <p className="text-sm text-slate-300">Making AI assistants and agents accurate, grounded in real sources and safe to use.</p>
+            <div className="text-sm font-semibold text-emerald-400 mb-2">Small business and finance</div>
+            <p className="text-sm text-slate-300">How small shops keep records, and how clearer records can lower costs and make lending safer (DukaAI).</p>
+          </div>
+          <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
+            <div className="text-sm font-semibold text-emerald-400 mb-2">Digital safety and trustworthy AI</div>
+            <p className="text-sm text-slate-300">How people and organisations get attacked online, and how to build systems and AI assistants that are safe and accurate by default.</p>
           </div>
         </div>
       </div>

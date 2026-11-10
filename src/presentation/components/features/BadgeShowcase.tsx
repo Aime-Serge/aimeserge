@@ -28,14 +28,14 @@ const badgeCategories: BadgeCategory[] = [
         name: "Vertex AI: Getting Started", 
         provider: "Google Cloud", 
         issueDate: "Feb 2024", 
-        description: "Hands-on mastery of Vertex AI workflows and model deployment.",
+        description: "Hands-on practice building and deploying AI models with Vertex AI.",
         href: "#" 
       },
       { 
         name: "Generative AI Fundamentals", 
         provider: "Google Cloud", 
         issueDate: "Jan 2024", 
-        description: "Core concepts of GenAI, LLMs, and responsible AI implementation.",
+        description: "The basics of generative AI and how to use it responsibly.",
         href: "#" 
       }
     ]
@@ -48,7 +48,7 @@ const badgeCategories: BadgeCategory[] = [
         name: "MLOps Fundamentals", 
         provider: "Google Cloud", 
         issueDate: "Mar 2024", 
-        description: "Standardizing and automating machine learning system lifecycles.",
+        description: "How to run machine-learning systems reliably, from training to updates.",
         href: "#" 
       }
     ]
@@ -61,7 +61,7 @@ const badgeCategories: BadgeCategory[] = [
         name: "Protecting GCP with Model Armor", 
         provider: "Google Cloud", 
         issueDate: "Apr 2024", 
-        description: "Implementing advanced security guardrails for LLM applications.",
+        description: "Adding safety guardrails so AI chat apps resist misuse.",
         href: "#" 
       }
     ]
@@ -74,7 +74,7 @@ const badgeCategories: BadgeCategory[] = [
         name: "Gemini for Developers", 
         provider: "Google Cloud", 
         issueDate: "Feb 2024", 
-        description: "Accelerating software engineering with Gemini-powered AI assistants.",
+        description: "Using Gemini AI assistants to write and review code faster.",
         href: "#" 
       }
     ]

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Terminal, Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/infrastructure/security/headers";
 import GlobalSearch from "@/presentation/components/features/GlobalSearch";
@@ -72,13 +72,6 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
-          <Link
-            href="/terminal"
-            className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-1.5 text-xs font-mono text-slate-300 transition hover:bg-slate-700 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-          >
-            <Terminal className="h-3.5 w-3.5" />
-            Terminal
-          </Link>
         </nav>
 
         {/* Mobile Toggle */}
@@ -132,18 +125,6 @@ export default function Header() {
                 {item.name}
               </Link>
             ))}
-          </div>
-
-          {/* Terminal link */}
-          <div className="border-t border-slate-800/50 pt-4">
-            <Link
-              href="/terminal"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-mono text-cyan-400 hover:text-cyan-300 hover:bg-slate-900/50 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-            >
-              <Terminal className="h-4 w-4" />
-              Terminal
-            </Link>
           </div>
         </nav>
       )}

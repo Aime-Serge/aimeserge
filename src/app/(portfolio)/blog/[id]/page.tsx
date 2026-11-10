@@ -7,6 +7,7 @@ import { cn } from "@/infrastructure/security/headers";
 import ArticleRenderer from "@/presentation/components/shared/ArticleRenderer";
 import NewsletterSubscribe from "@/presentation/components/shared/NewsletterSubscribe";
 import type { Metadata } from 'next';
+import { SITE } from "@/config/site";
 
 interface ArticlePageProps {
   params: Promise<{ id: string }>; // This 'id' will be treated as the 'slug'
@@ -16,10 +17,10 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const { id: slug } = await params;
   const article = await getArticleBySlug(slug);
 
-  if (!article) return { title: "Article Not Found" };
+  if (!article) return { title: "Article not found" };
 
   return {
-    title: `${article.title} | Technical Article`,
+    title: article.title,
     description: article.excerpt,
     openGraph: {
       title: article.title,
@@ -89,8 +90,8 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
                 <span className="text-sm font-bold text-cyan-500">AS</span>
              </div>
              <div className="text-left">
-                <p className="text-sm font-bold text-white">Aime Serge UKOBIZABA</p>
-                <p className="text-xs text-slate-500">Senior Software Engineer | Cybersecurity Specialist</p>
+                <p className="text-sm font-bold text-white">{SITE.name}</p>
+                <p className="text-xs text-slate-500">{SITE.headline}</p>
              </div>
           </div>
 
@@ -116,14 +117,11 @@ export default async function ArticleDetailPage({ params }: ArticlePageProps) {
 
         <footer className="mt-20 border-t border-slate-800 pt-16">
           <div className="rounded-3xl bg-slate-900/40 p-8 md:p-12 border border-slate-800 backdrop-blur-sm text-center">
-             <h3 className="text-2xl font-bold text-white mb-4">Did you find this architectural insight useful?</h3>
+             <h3 className="text-2xl font-bold text-white mb-4">Found this useful?</h3>
              <p className="text-slate-400 mb-8 max-w-xl mx-auto">
-                Join 1,200+ engineers receiving my weekly broadcasts on secure cloud deployments and AI systems.
+                Get new articles by email when I publish: what I learn building ventures, doing research and keeping software safe.
              </p>
              <NewsletterSubscribe />
-          </div>
-          <div className="mt-12 text-center text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em]">
-             End of Transmission // Node Verified
           </div>
         </footer>
       </article>

@@ -48,7 +48,7 @@ export default function TerminalUI() {
         );
         break;
       case "about":
-        output = "Senior Software Engineer specialized in Cybersecurity and Cloud Engineering. Building production-ready, AI-driven solutions.";
+        output = "Software engineer, innovator and researcher in Kigali, Rwanda. Founder of INEZA AI (health) and co-founder of DukaAI (small business). I research real-world risks and build safe technology that reduces them.";
         break;
       case "projects":
         output = "Navigating to projects repository...";
@@ -57,10 +57,11 @@ export default function TerminalUI() {
       case "skills":
         output = (
           <div className="grid grid-cols-2 gap-2 text-slate-300 max-w-md mt-2">
-            <div>- Next.js / React Server Components</div>
+            <div>- Product: research, roadmaps, UX</div>
+            <div>- Next.js / React</div>
             <div>- Supabase / PostgreSQL / Vector DB</div>
-            <div>- Cloud Infra (AWS / Vercel Edge)</div>
-            <div>- Zero-Trust Security / Pen Testing</div>
+            <div>- Cloud: Google Cloud / AWS / Vercel</div>
+            <div>- Security: safe logins, access control, security reviews</div>
             <div>- AI / LLM / RAG Integration</div>
             <div>- TypeScript / Node.js / Python</div>
           </div>

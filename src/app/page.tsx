@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, Code2, ShieldCheck, Sparkles, FileDown } from "lucide-react";
+import {
+  ArrowRight, FileDown, Lightbulb, Microscope, ShieldCheck, Sprout, User, Store,
+  Ear, Hammer, TrendingUp, Trophy, Briefcase, Handshake, FlaskConical,
+} from "lucide-react";
 import { SITE, jsonLd } from "@/config/site";
 import { getExperiences, getProfile, getFeaturedProjects } from "@/core/domain/portfolio/queries";
 
@@ -8,30 +11,80 @@ export const revalidate = 86400;
 
 /*
  * Homepage copy rules (see docs/CONTENT_GUIDE.md):
- *  - Every claim must be checkable on the CV or a linked project.
- *  - Lead with what the visitor gets, then the technology.
+ *  - Positioning: innovator and founder, researcher for impact, safe builder.
+ *  - Every claim must be checkable on the CV, a linked project or a public post.
+ *  - Lead with the risk a person faces and what changes for them, then the technology.
  *  - No numbers we can't prove.
  */
 
-const SERVICES = [
+// Facts only. Each one is on the CV, a project page or a public LinkedIn post.
+const RECOGNITION = [
+  { text: "2nd place, Hacktoberfest Hack Day Kigali 2026", detail: "with DukaAI" },
+  { text: "4th place, Innovate With Google Cloud Hackathon", detail: "Google Cloud" },
+  { text: "Building INEZA AI with ALU's CHII", detail: "Africa Health Collaborative" },
+  { text: "ALX Ventures Rwanda Ambassador", detail: "since 2026" },
+];
+
+const PILLARS = [
   {
-    icon: Code2,
-    title: "Web apps & APIs",
-    body: "Fast, responsive websites and the back-end services behind them, built with Next.js, React, Node.js, Python and PostgreSQL.",
-    outcome: "You get a product that works on every screen and is easy to extend.",
+    icon: Lightbulb,
+    title: "Innovate: from idea to venture",
+    body: "I look for problems people live with every day and turn them into products. I founded INEZA AI, a health system for clinics, and co-founded DukaAI, which helps small shops keep clear records.",
+    outcome: "A real product, tested with the people it is for.",
+  },
+  {
+    icon: Microscope,
+    title: "Research for impact",
+    body: "Before I build, I study the problem: who is at risk, how big the risk is, and why. That ranges from 24 years of East African climate data to how shop owners keep their books. I share what I find in plain language.",
+    outcome: "Decisions based on evidence, not guesses.",
   },
   {
     icon: ShieldCheck,
-    title: "Security built in",
-    body: "Safe logins, protected data, input checks and security reviews from the first line of code, not as an afterthought.",
-    outcome: "Fewer surprises, and less risk for your users and your business.",
+    title: "Build it safe and smart",
+    body: "Web apps, APIs and AI assistants with security built in from day one: safe logins, protected data and checks on everything people type in. Built with Next.js, Python and PostgreSQL.",
+    outcome: "Technology people can trust with their data.",
+  },
+];
+
+// Who the work protects: the risk, then what I do about it.
+const AUDIENCES = [
+  {
+    icon: Sprout,
+    who: "Communities",
+    risk: "Changing rain and rising heat put harvests, water and health at risk.",
+    action: "My climate research turns 24 years of East African data into local trends that planners can use. INEZA AI helps clinics follow disease trends by district.",
+    href: "/research",
+    linkText: "See the research",
   },
   {
-    icon: Sparkles,
-    title: "Practical AI features",
-    body: "Smart search, chat assistants and automations that answer from your own content, like the assistant on this site.",
-    outcome: "Your users find answers faster; your team saves time.",
+    icon: User,
+    who: "Individuals",
+    risk: "People lose time, money and privacy to services that are slow, hard to use or unsafe.",
+    action: "I design simple tools that work in the languages people speak (Kinyarwanda, French and English) and keep personal data private by default.",
+    href: "/projects",
+    linkText: "See the projects",
   },
+  {
+    icon: Store,
+    who: "Organisations",
+    risk: "Small businesses, clinics and lenders often decide without clear records.",
+    action: "DukaAI turns handwritten sales books into records owners and lenders can rely on. For teams, I build secure web apps and AI assistants that answer from their own documents.",
+    href: "/projects/dukaai",
+    linkText: "See DukaAI",
+  },
+];
+
+const STEPS = [
+  { icon: Ear, title: "Listen", body: "Talk to the people who face the problem: health workers, shop owners, users." },
+  { icon: Microscope, title: "Research", body: "Gather the data and find the real risk: how big it is and who it affects." },
+  { icon: Hammer, title: "Build", body: "Make the simplest safe tool that solves it, and test it with real users." },
+  { icon: TrendingUp, title: "Measure and improve", body: "Check what changed, share what I learned, and make it better." },
+];
+
+const WAYS_TO_WORK = [
+  { icon: Briefcase, title: "Hire me", body: "Full-time roles, product work or a freelance project.", topic: "Hiring" },
+  { icon: Handshake, title: "Partner or invest", body: "Co-build, pilot or support INEZA AI, DukaAI or a new idea.", topic: "Partnership or investment" },
+  { icon: FlaskConical, title: "Research together", body: "Studies on climate, health, small business or digital safety.", topic: "Research collaboration" },
 ];
 
 // Shown only if the database is unreachable or empty.
@@ -76,12 +129,19 @@ export default async function Home() {
     "@context": "https://schema.org",
     "@type": "Person",
     name: SITE.name,
-    jobTitle: "Software Engineer",
+    jobTitle: "Software Engineer and Founder",
     url: SITE.url,
     email: `mailto:${SITE.email}`,
     address: { "@type": "PostalAddress", addressLocality: "Kigali", addressCountry: "RW" },
     sameAs: Object.values(SITE.social),
-    knowsAbout: ["Software engineering", "Web development", "Cybersecurity", "Artificial intelligence"],
+    founder: [
+      { "@type": "Organization", name: "INEZA AI" },
+      { "@type": "Organization", name: "DukaAI" },
+    ],
+    knowsAbout: [
+      "Software engineering", "Product innovation", "Entrepreneurship", "Cybersecurity",
+      "Artificial intelligence", "Climate data research", "Digital health", "Risk analysis",
+    ],
   };
 
   return (
@@ -93,7 +153,7 @@ export default async function Home() {
         <div className="container mx-auto px-6 text-center">
           <div className="mb-6 flex flex-wrap justify-center gap-2">
             <p className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-sm text-cyan-300">
-              Software Engineer · {profile.location}
+              Founder · Software Engineer · Researcher · {profile.location}
             </p>
             {profile.openToWork && (
               <p className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm text-emerald-300">
@@ -119,7 +179,7 @@ export default async function Home() {
               href="/projects"
               className="group inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-7 py-3.5 font-semibold text-white transition hover:bg-cyan-500"
             >
-              See my projects
+              See my ventures and projects
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </Link>
             <Link
@@ -137,16 +197,46 @@ export default async function Home() {
               Download CV
             </a>
           </div>
+
+          {/* Recognition: quick, checkable proof */}
+          <ul aria-label="Recognition" className="mx-auto mt-14 grid max-w-5xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
+            {RECOGNITION.map((r) => (
+              <li key={r.text} className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3">
+                <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+                <span>
+                  <span className="block text-sm font-medium text-slate-200">{r.text}</span>
+                  <span className="block text-xs text-slate-500">{r.detail}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* Featured work: projects marked "featured" in the admin */}
+      {/* Three pillars: innovator, researcher, safe builder */}
+      <section aria-labelledby="pillars-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+        <h2 id="pillars-heading" className="text-3xl font-bold text-white">Three ways I create impact</h2>
+        <p className="mt-3 max-w-2xl text-slate-400">I start new things, I study problems before I solve them, and I build so people stay safe.</p>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {PILLARS.map(({ icon: Icon, title, body, outcome }) => (
+            <article key={title} className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
+              <Icon className="h-7 w-7 text-cyan-400" aria-hidden="true" />
+              <h3 className="mt-5 text-xl font-semibold text-white">{title}</h3>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">{body}</p>
+              <p className="mt-4 border-t border-slate-800 pt-4 text-sm font-medium text-emerald-300">{outcome}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured ventures and projects: marked "featured" in the admin */}
       {featured.length > 0 && (
         <section aria-labelledby="featured-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="featured-heading" className="text-3xl font-bold text-white">Featured work</h2>
-              <p className="mt-3 max-w-2xl text-slate-400">A few projects that show how I work, from problem to result.</p>
+              <h2 id="featured-heading" className="text-3xl font-bold text-white">Ventures and featured work</h2>
+              <p className="mt-3 max-w-2xl text-slate-400">What I&apos;m building now, and the problem each one solves.</p>
             </div>
             <Link href="/projects" className="inline-flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300">
               All projects <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -167,7 +257,7 @@ export default async function Home() {
                   <h3 className="mt-2 text-lg font-semibold text-white group-hover:text-cyan-300">{p.title}</h3>
                   {p.tagline && <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{p.tagline}</p>}
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-300">
-                    Read case study <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                    Read the story <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                   </span>
                 </Link>
               </li>
@@ -176,28 +266,58 @@ export default async function Home() {
         </section>
       )}
 
-      {/* What I do: services in outcome language */}
-      <section aria-labelledby="services-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
-        <h2 id="services-heading" className="text-3xl font-bold text-white">What I can do for you</h2>
-        <p className="mt-3 max-w-2xl text-slate-400">Three things I focus on, and what each means for your project.</p>
+      {/* Who the work protects: risk first, then action */}
+      <section aria-labelledby="audiences-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+        <h2 id="audiences-heading" className="text-3xl font-bold text-white">Who my work protects</h2>
+        <p className="mt-3 max-w-2xl text-slate-400">
+          Every project starts with a risk that someone faces. Here is who I work for, and what I do about it.
+        </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {SERVICES.map(({ icon: Icon, title, body, outcome }) => (
-            <article key={title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
-              <Icon className="h-7 w-7 text-cyan-400" aria-hidden="true" />
-              <h3 className="mt-5 text-xl font-semibold text-white">{title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{body}</p>
-              <p className="mt-4 border-t border-slate-800 pt-4 text-sm font-medium text-emerald-300">{outcome}</p>
+          {AUDIENCES.map(({ icon: Icon, who, risk, action, href, linkText }) => (
+            <article key={who} className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
+              <div className="flex items-center gap-3">
+                <Icon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+                <h3 className="text-xl font-semibold text-white">{who}</h3>
+              </div>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">The risk</p>
+              <p className="mt-1 text-sm leading-relaxed text-slate-300">{risk}</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500">What I do</p>
+              <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-400">{action}</p>
+              <Link href={href} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300">
+                {linkText} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </article>
           ))}
         </div>
+      </section>
+
+      {/* How I work: a workflow any stakeholder can follow */}
+      <section aria-labelledby="process-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
+        <h2 id="process-heading" className="text-3xl font-bold text-white">How I work</h2>
+        <p className="mt-3 max-w-2xl text-slate-400">The same four steps, whether it&apos;s a research study, a new venture or a client project.</p>
+
+        <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map(({ icon: Icon, title, body }, i) => (
+            <li key={title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-600/20 text-sm font-bold text-cyan-300" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <Icon className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {/* Proof: real roles and learning, straight from the CV */}
       <section aria-labelledby="experience-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
-            <h2 id="experience-heading" className="text-3xl font-bold text-white">Where I&apos;ve worked</h2>
+            <h2 id="experience-heading" className="text-3xl font-bold text-white">Where I&apos;ve worked and led</h2>
             <ul className="mt-8 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/40">
               {EXPERIENCE.map((e) => (
                 <li key={`${e.org}-${e.role}`} className="flex flex-wrap items-baseline justify-between gap-2 px-6 py-4">
@@ -228,19 +348,30 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Closing call to action */}
-      <section className="container mx-auto px-6 pb-24">
-        <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 p-10 text-center md:p-14">
-          <h2 className="text-3xl font-bold text-white">Have a role or a project in mind?</h2>
-          <p className="mx-auto mt-4 max-w-xl text-slate-400">
-            Tell me what you&apos;re working on. {SITE.responseTime}
+      {/* Closing call to action: three clear paths */}
+      <section aria-labelledby="cta-heading" className="container mx-auto px-6 pb-24">
+        <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 p-8 md:p-14">
+          <h2 id="cta-heading" className="text-center text-3xl font-bold text-white">Let&apos;s build something that matters</h2>
+          <p className="mx-auto mt-4 max-w-xl text-center text-slate-400">
+            Pick what fits, and tell me a little about it. {SITE.responseTime}
           </p>
-          <Link
-            href="/contact"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-8 py-4 font-semibold text-white transition hover:bg-cyan-500"
-          >
-            Start a conversation <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
+          <ul className="mt-10 grid gap-4 md:grid-cols-3">
+            {WAYS_TO_WORK.map(({ icon: Icon, title, body, topic }) => (
+              <li key={title}>
+                <Link
+                  href={`/contact?topic=${encodeURIComponent(topic)}`}
+                  className="group flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-950/60 p-6 transition hover:border-cyan-500/50"
+                >
+                  <Icon className="h-6 w-6 text-cyan-400" aria-hidden="true" />
+                  <span className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300">{title}</span>
+                  <span className="mt-2 flex-1 text-sm text-slate-400">{body}</span>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-cyan-400">
+                    Start here <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </div>

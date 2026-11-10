@@ -9,7 +9,7 @@ export const revalidate = 86400;
 
 export const metadata = {
   title: "Projects",
-  description: "Projects by Aime Serge Ukobizaba: web apps, APIs, AI tools and research. Each page explains the problem, what was built and the result.",
+  description: "Ventures, products and research by Aime Serge Ukobizaba, including INEZA AI (health) and DukaAI (small business). Each page explains the problem, who it helps, what was built and the result.",
   alternates: { canonical: "/projects" },
 };
 
@@ -48,22 +48,13 @@ export default async function ProjectsPage() {
           Projects
         </h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Things I&apos;ve built and studied. Each case study explains the problem, what I did, the tools I used and the result.
+          Ventures I&apos;ve founded, products I&apos;ve built and problems I&apos;ve studied. Each story explains the problem, who it helps, what I did and the result.
         </p>
       </div>
 
       <div className="grid gap-12 lg:grid-cols-[1fr_400px]">
         {/* Left Column: Projects Feed */}
         <div className="space-y-8">
-          {/* Category Labels */}
-          <div className="flex flex-wrap gap-3 pb-4 border-b border-slate-800">
-            <div className="text-xs font-mono text-slate-500 uppercase tracking-widest self-center">Featured categories:</div>
-            {['AI', 'Cloud', 'Full-Stack'].map((cat) => (
-              <span key={cat} className="px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-400 transition-colors cursor-pointer">
-                {cat}
-              </span>
-            ))}
-          </div>
 
           {projects.length === 0 && (
             <p className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-slate-400">
@@ -104,7 +95,7 @@ export default async function ProjectsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full p-2 text-slate-400 transition hover:bg-slate-800 hover:text-cyan-400"
-                          title="Live Demo"
+                          title="Visit the project" aria-label={`Visit ${project.title} (opens in a new tab)`}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -115,7 +106,7 @@ export default async function ProjectsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-full p-2 text-slate-400 transition hover:bg-slate-800 hover:text-emerald-400"
-                          title="Documentation"
+                          title="Read the document (PDF)" aria-label={`Read the ${project.title} document (PDF, opens in a new tab)`}
                         >
                           <FileText className="h-4 w-4" />
                         </a>
@@ -153,8 +144,8 @@ export default async function ProjectsPage() {
 
                     <div className="flex flex-wrap gap-2 pt-2">
                       {project.tools.map((tool: string) => (
-                        <span key={tool} className="text-xs font-mono text-cyan-500/60">
-                          #{tool.replace(/\s+/g, '')}
+                        <span key={tool} className="rounded-md border border-slate-800 px-2 py-0.5 text-xs text-slate-500">
+                          {tool}
                         </span>
                       ))}
                     </div>
@@ -175,7 +166,7 @@ export default async function ProjectsPage() {
                       href={`/projects/${project.slug}`}
                       className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white hover:text-cyan-400 transition-colors"
                     >
-                      Read case study
+                      Read the story
                       <ChevronRight className="h-3 w-3" />
                     </Link>
                   </div>
@@ -198,7 +189,7 @@ export default async function ProjectsPage() {
                   "TypeScript", "React", "Next.js", "Node.js", "Python",
                   "Django", "PostgreSQL", "GraphQL", "Google Cloud", "Supabase"
                 ].map((tech: string) => (
-                  <span key={tech} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[10px] font-mono text-slate-400 hover:border-cyan-500/50 hover:text-cyan-400 transition-all cursor-pointer">
+                  <span key={tech} className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-400">
                     {tech}
                   </span>
                 ))}
@@ -206,8 +197,9 @@ export default async function ProjectsPage() {
 
              
              <div className="mt-8 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
-                <p className="text-[10px] font-mono text-cyan-500 leading-relaxed uppercase">
-                  Code for most projects is public on GitHub. Ask me for a walkthrough of any of them.
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Code for most projects is public on GitHub. Want a walkthrough, a pilot or a partnership on any of them?{" "}
+                  <Link href="/contact?topic=Partnership%20or%20investment" className="font-semibold text-cyan-400 hover:underline">Get in touch</Link>.
                 </p>
              </div>
           </div>
