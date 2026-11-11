@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, Terminal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/infrastructure/security/headers";
 import GlobalSearch from "@/presentation/components/features/GlobalSearch";
@@ -72,6 +72,21 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
+          {/* Utility slot, after the main links: an icon for keyboard users, out of the visitor's main path */}
+          <Link
+            href="/terminal"
+            title="Terminal mode: browse the site by typing commands"
+            aria-label="Terminal mode: browse the site by typing commands"
+            aria-current={pathname === "/terminal" ? "page" : undefined}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+              pathname === "/terminal"
+                ? "border-cyan-600/40 bg-cyan-600/20 text-cyan-400"
+                : "border-slate-800 text-slate-400 hover:border-cyan-600/40 hover:text-cyan-400"
+            )}
+          >
+            <Terminal className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </nav>
 
         {/* Mobile Toggle */}
