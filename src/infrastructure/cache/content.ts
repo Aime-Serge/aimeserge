@@ -27,6 +27,9 @@ const EFFECTS: Record<string, Effect> = {
 };
 
 /** Purge every cached page and query that shows rows from `table`. */
+/** Every table whose changes show on public pages. */
+export const CONTENT_TABLES = Object.keys(EFFECTS);
+
 export function revalidateContent(table: string) {
   const effect = EFFECTS[table];
   if (!effect) return;

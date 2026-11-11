@@ -37,7 +37,7 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
     if (result.success) {
       setItems((result.data as AdminContentItem[]) || []);
     } else {
-      toast.error(`Fetch Failed: ${result.error}`);
+      toast.error(`Couldn't load this list: ${result.error}`);
     }
     setIsLoading(false);
   }, [table]);
@@ -47,18 +47,19 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
   }, [fetchData]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to purge this record? This action is irreversible.")) return;
+    const name = items.find((i) => i.id === id);
+    if (!confirm(`Delete “${name?.title || name?.name || "this item"}”? It will disappear from the public site. This can't be undone.`)) return;
 
-    toast.loading("Purging from cloud...");
+    toast.loading("Deleting…");
     const result = await deleteContent({ table, id, path: '/admin' });
     
     if (result.success) {
       toast.dismiss();
-      toast.success("Record purged successfully.");
+      toast.success("Deleted.");
       setItems(items.filter(i => i.id !== id));
     } else {
       toast.dismiss();
-      toast.error("Purge Failed.");
+      toast.error("Couldn't delete. Try again.");
     }
   };
 
@@ -75,12 +76,15 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
           <input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={`Search ${table} vault...`}
+            placeholder="Search this list…"
+            aria-label="Search this list"
             className="w-full bg-slate-900/50 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:border-cyan-500 outline-none transition-all"
           />
         </div>
         <button 
           onClick={fetchData}
+          aria-label="Reload list"
+          title="Reload list"
           className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-cyan-400 transition-colors border border-slate-700"
         >
           <RefreshCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
@@ -93,10 +97,10 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-800/30">
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Artifact_Identity</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Title</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Metadata</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] text-right">Operations</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Details</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] text-right"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -128,7 +132,7 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
                             <Database className="h-4 w-4 text-slate-400" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-white leading-none">{item.title || item.name || 'Untitled_Artifact'}</p>
+                            <p className="text-sm font-bold text-white leading-none">{item.title || item.name || 'Untitled'}</p>
                             <p className="text-[10px] text-slate-500 font-mono mt-1">{item.slug || item.id.substring(0, 8)}</p>
                           </div>
                         </div>
@@ -156,15 +160,17 @@ export default function AdminContentManager({ table, onEdit }: AdminContentManag
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => onEdit(item)}
+                            aria-label={`Edit ${item.title || item.name || "item"}`}
                             className="p-2 rounded-lg bg-slate-800 hover:bg-cyan-600 text-slate-400 hover:text-white transition-all border border-slate-700"
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
                           <button 
                             onClick={() => handleDelete(item.id)}
+                            aria-label={`Delete ${item.title || item.name || "item"}`}
                             className="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white transition-all border border-slate-700"
                           >
                             <Trash2 className="h-4 w-4" />
