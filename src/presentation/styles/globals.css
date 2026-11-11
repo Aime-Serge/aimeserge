@@ -111,6 +111,35 @@
   }
 }
 
+/*
+ * Terminal icon in the header: a soft cyan light that breathes continuously.
+ * Only opacity animates (on a blurred layer behind the icon), so it stays
+ * smooth and cheap. Reduced-motion users get a steady glow instead.
+ */
+.terminal-glow::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 0.6rem;
+  background: rgb(34 211 238 / 0.45);
+  filter: blur(8px);
+  z-index: -1;
+  animation: terminal-glow 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes terminal-glow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-glow::before {
+    animation: none !important;
+    opacity: 0.5;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
