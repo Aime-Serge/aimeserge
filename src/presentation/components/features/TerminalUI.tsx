@@ -64,14 +64,29 @@ export default function TerminalUI({ data }: { data: TerminalData }) {
   /** Go back where the visitor came from on this site, otherwise to the homepage. */
   const quit = useCallback(() => {
     setTimeout(() => {
+      // In-site link clicks don't update document.referrer, so ask the browser's
+      // history first (Navigation API lists only this site's entries), then fall back.
+      let previous: string | undefined;
+      try {
+        const nav = (window as unknown as {
+          navigation?: { canGoBack: boolean; currentEntry: { index: number } | null; entries: () => Array<{ url: string | null }> };
+        }).navigation;
+        if (nav?.currentEntry) {
+          previous = nav.canGoBack ? nav.entries()[nav.currentEntry.index - 1]?.url ?? undefined : undefined;
+        } else if (document.referrer && window.history.length > 1) {
+          previous = document.referrer;
+        }
+      } catch {
+        /* unreadable history: fall back to the homepage */
+      }
       let fromThisSite = false;
       try {
-        const ref = document.referrer ? new URL(document.referrer) : null;
-        fromThisSite = !!ref && ref.origin === window.location.origin && ref.pathname !== "/terminal";
+        const prev = previous ? new URL(previous) : null;
+        fromThisSite = !!prev && prev.origin === window.location.origin && prev.pathname !== "/terminal";
       } catch {
-        /* unreadable referrer: fall back to the homepage */
+        /* malformed URL: fall back to the homepage */
       }
-      if (fromThisSite && window.history.length > 1) router.back();
+      if (fromThisSite) router.back();
       else router.push("/");
     }, 400);
   }, [router]);
