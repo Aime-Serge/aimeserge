@@ -1,15 +1,13 @@
 "use client";
 
 // Prevent prerendering of this client page
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { type ComponentProps, type FormEvent, useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Shield, LayoutDashboard, Database, FileText, 
-  MessageSquare, Plus, 
-  TrendingUp, Users, Download, Bot, Send, 
-  Mic, Activity, Zap, Cpu, Award, Brain, Globe, User
+import {
+  type LucideIcon, LayoutDashboard, FolderKanban, FlaskConical, Newspaper, User, FileText,
+  Briefcase, GraduationCap, Award, Trophy, MessageSquare, Brain, Bot, Send, Plus, Download, X,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/infrastructure/security/headers";
 import { isTextUIPart, type UIMessage } from "ai";
@@ -24,475 +22,335 @@ import InquiryVault from "@/presentation/components/features/InquiryVault";
 import ResumeManager from "@/presentation/components/features/ResumeManager";
 import AdminContentManager from "@/presentation/components/features/AdminContentManager";
 import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
-type EditableAdminItem = Record<string, unknown>;
+import SiteHealthPanel from "@/presentation/components/features/SiteHealthPanel";
+import ResumeSectionManager from "@/presentation/components/features/ResumeSectionManager";
 
-type AdminChatMessage = UIMessage & {
-  content?: string;
+type EditableAdminItem = Record<string, unknown>;
+type AdminChatMessage = UIMessage & { content?: string };
+
+type Tab = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  /** One line under the page title. */
+  intro: string;
+  /** Label for the header's "New" button; omitted when the tab can't create. */
+  create?: string;
+  /** Public page to preview this content on. */
+  preview?: string;
 };
 
-function getAdminMessageText(message: AdminChatMessage): string {
-  if (typeof message.content === "string") {
-    return message.content;
-  }
+const GROUPS: Array<{ title: string; tabs: Tab[] }> = [
+  {
+    title: "Start",
+    tabs: [{ id: "overview", label: "Overview", icon: LayoutDashboard, intro: "Is the site healthy, and where does each section get its content?" }],
+  },
+  {
+    title: "Website",
+    tabs: [
+      { id: "profile", label: "Homepage intro", icon: User, intro: "Headline, short intro, location and the open-to-work badge.", preview: "/" },
+      { id: "projects", label: "Projects & ventures", icon: FolderKanban, intro: "Ventures and projects. Featured ones appear on the homepage.", create: "New project", preview: "/projects" },
+      { id: "research", label: "Research", icon: FlaskConical, intro: "Studies and papers on the research page.", create: "New research", preview: "/research" },
+      { id: "articles", label: "Blog", icon: Newspaper, intro: "Write, save drafts and publish articles.", create: "New article", preview: "/blog" },
+    ],
+  },
+  {
+    title: "Resume",
+    tabs: [
+      { id: "cv", label: "CV import & file", icon: FileText, intro: "Upload your CV: the AI reads it and fills every resume section for you to review.", preview: "/resume" },
+      { id: "experiences", label: "Experience", icon: Briefcase, intro: "Roles, ventures and volunteering on the resume page and homepage. Leave the end date empty for a current role.", create: "Add role", preview: "/resume" },
+      { id: "educations", label: "Education", icon: GraduationCap, intro: "Schools and programmes.", create: "Add education", preview: "/resume" },
+      { id: "certificates", label: "Certificates", icon: Award, intro: "Certificates with proof links or PDFs.", create: "Add certificate", preview: "/resume" },
+      { id: "achievements", label: "Awards", icon: Trophy, intro: "Prizes and recognition.", create: "Add award", preview: "/resume" },
+    ],
+  },
+  {
+    title: "People & AI",
+    tabs: [
+      { id: "inquiries", label: "Messages", icon: MessageSquare, intro: "Messages sent through the contact form." },
+      { id: "training", label: "Assistant knowledge", icon: Brain, intro: "What the site's AI assistant knows when visitors ask about you." },
+    ],
+  },
+];
 
-  return message.parts
-    .filter(isTextUIPart)
-    .map((part) => part.text)
-    .join("");
+const TABS = GROUPS.flatMap((g) => g.tabs);
+const RESUME_TABS = ["experiences", "educations", "achievements"] as const;
+type ResumeTab = (typeof RESUME_TABS)[number];
+const isResumeTab = (t: string): t is ResumeTab => (RESUME_TABS as readonly string[]).includes(t);
+
+function getAdminMessageText(message: AdminChatMessage): string {
+  if (typeof message.content === "string") return message.content;
+  return message.parts.filter(isTextUIPart).map((part) => part.text).join("");
 }
 
 function createAdminChatMessage(role: UIMessage["role"], content: string, id = `${role}-${Date.now()}`): AdminChatMessage {
-  return {
-    id,
-    role,
-    content,
-    parts: [{ type: "text", text: content }],
-  };
+  return { id, role, content, parts: [{ type: "text", text: content }] };
 }
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [stats, setStats] = useState({ totalViews: 0, totalInquiries: 0, researchImpact: 0 });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAiActive, setIsAiActive] = useState(false);
-  
-  // Modal States
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [createSignal, setCreateSignal] = useState(0);
+
+  // Keep the open tab in the address bar, so refresh and the back button work.
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("tab");
+    if (fromUrl && TABS.some((t) => t.id === fromUrl)) setActiveTab(fromUrl);
+  }, []);
+
+  const openTab = useCallback((id: string) => {
+    setActiveTab(id);
+    setCreateSignal(0);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", id);
+    window.history.replaceState(null, "", url);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+
+  // Editor modals for the content types that have their own editors.
   const [showProjectEditor, setShowProjectEditor] = useState(false);
   const [showCredentialEditor, setShowCredentialEditor] = useState(false);
   const [showResearchEditor, setShowResearchEditor] = useState(false);
   const [showArticleEditor, setShowArticleEditor] = useState(false);
-
-  // Edit States
   const [editingItem, setEditingItem] = useState<EditableAdminItem | undefined>(undefined);
-  
-  const handleEdit = (item: EditableAdminItem) => {
+  const [listVersion, setListVersion] = useState(0);
+
+  const openEditor = (item?: EditableAdminItem) => {
     setEditingItem(item);
-    if (activeTab === 'projects') setShowProjectEditor(true);
-    else if (activeTab === 'research') setShowResearchEditor(true);
-    else if (activeTab === 'articles') setShowArticleEditor(true);
-    else setShowCredentialEditor(true);
+    if (activeTab === "projects") setShowProjectEditor(true);
+    else if (activeTab === "research") setShowResearchEditor(true);
+    else if (activeTab === "articles") setShowArticleEditor(true);
+    else if (activeTab === "certificates") setShowCredentialEditor(true);
+    else if (isResumeTab(activeTab)) setCreateSignal((n) => n + 1);
   };
 
+  const closeEditors = () => {
+    setShowProjectEditor(false);
+    setShowCredentialEditor(false);
+    setShowResearchEditor(false);
+    setShowArticleEditor(false);
+    setListVersion((v) => v + 1); // reload the list so saved changes show
+  };
+
+  const anyEditorOpen = showProjectEditor || showCredentialEditor || showResearchEditor || showArticleEditor;
+
+  // Esc closes an open editor.
+  useEffect(() => {
+    if (!anyEditorOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeEditors();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [anyEditorOpen]);
+
+  // ─── AI assistant ──────────────────────────────────────────────────────
   const [aiInput, setAiInput] = useState("");
   const [messages, setMessages] = useState<AdminChatMessage[]>([
-    createAdminChatMessage(
-      "assistant",
-      'Admin Session Established. I am ready to help you manage your portfolio artifacts. You can ask me to "List recent inquiries" or "Prepare a new project entry".',
-      "welcome"
-    ),
+    createAdminChatMessage("assistant", "Hi! Ask me to draft a project description, summarise recent messages, or rewrite text in plain language.", "welcome"),
   ]);
-  const [chatStatus, setChatStatus] = useState<"ready" | "submitted">("ready");
-
-  const handleExportLogs = async () => {
-    toast.loading("Fetching audit trail...");
-    try {
-      const response = await fetch('/api/v1/admin/security-logs');
-      if (!response.ok) throw new Error('Failed to fetch logs');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `security_audit_${new Date().toISOString()}.json`;
-        a.click();
-        toast.dismiss();
-        toast.success("Audit Logs Exported.");
-      } else {
-        toast.dismiss();
-        toast.error("Export Failed.");
-      }
-    } catch (error) {
-      console.error('Failed to export logs:', error);
-      toast.dismiss();
-      toast.error("Export Failed.");
-    }
-  };
+  const [aiBusy, setAiBusy] = useState(false);
 
   const sendAdminMessage = useCallback(async (text: string) => {
-    const userMessage = createAdminChatMessage("user", text, `user-${Date.now()}`);
-
-    const nextMessages = [...messages, userMessage];
-    setMessages(nextMessages);
-    setChatStatus("submitted");
-
+    const next = [...messages, createAdminChatMessage("user", text, `user-${Date.now()}`)];
+    setMessages(next);
+    setAiBusy(true);
     try {
       const response = await fetch("/api/v1/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: nextMessages.map((message) => ({
-            role: message.role,
-            content: getAdminMessageText(message),
-          })),
-        }),
+        body: JSON.stringify({ messages: next.map((m) => ({ role: m.role, content: getAdminMessageText(m) })) }),
       });
-
       const data = (await response.json()) as { id?: string; role?: string; content?: string; error?: string };
-
-      if (!response.ok || !data.content) {
-        throw new Error(data.error || "AI response failed");
-      }
-
-      const assistantContent = data.content;
-      setMessages((prev) => [...prev, createAdminChatMessage((data.role as UIMessage["role"]) || "assistant", assistantContent, data.id || `assistant-${Date.now()}`)]);
+      if (!response.ok || !data.content) throw new Error(data.error || "The assistant didn't answer. Try again.");
+      setMessages((prev) => [...prev, createAdminChatMessage((data.role as UIMessage["role"]) || "assistant", data.content!, data.id || `assistant-${Date.now()}`)]);
     } catch (error) {
-      const fallback = error instanceof Error ? error.message : "AI response failed";
-      setMessages((prev) => [...prev, createAdminChatMessage("assistant", fallback, `assistant-error-${Date.now()}`)]);
+      setMessages((prev) => [...prev, createAdminChatMessage("assistant", error instanceof Error ? error.message : "The assistant didn't answer.", `assistant-error-${Date.now()}`)]);
     } finally {
-      setChatStatus("ready");
+      setAiBusy(false);
     }
   }, [messages]);
 
-  const isAiThinking = chatStatus === "submitted";
-
-  const handleAiSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
+  const handleAiSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!isAiActive || isAiThinking) {
-      return;
-    }
-
-    const trimmedInput = aiInput.trim();
-    if (!trimmedInput) {
-      return;
-    }
-
-    void sendAdminMessage(trimmedInput);
+    const text = aiInput.trim();
+    if (!text || aiBusy) return;
+    void sendAdminMessage(text);
     setAiInput("");
-  }, [aiInput, isAiActive, isAiThinking, sendAdminMessage]);
+  };
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        // Fetch analytics from server endpoint instead of direct function
-        const response = await fetch('/api/v1/admin/analytics');
-        if (!response.ok) throw new Error('Failed to fetch analytics');
-        const data = await response.json();
-        setStats(data);
-      } catch (error) {
-        console.error('Failed to load analytics:', error);
-        // Set default stats on error
-        setStats({ totalViews: 0, totalInquiries: 0, researchImpact: 0 });
-      } finally {
-        setIsLoading(false);
-      }
+  const handleExportLogs = async () => {
+    const id = toast.loading("Preparing the security log…");
+    try {
+      const response = await fetch("/api/v1/admin/security-logs");
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error();
+      const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `security-log-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      toast.success("Security log downloaded.", { id });
+    } catch {
+      toast.error("Couldn't download the security log.", { id });
     }
-    loadStats();
-  }, []);
-
-  const tabs = [
-    { id: "overview", label: "Overview", icon: LayoutDashboard },
-    { id: "resume", label: "Resume/CV", icon: FileText },
-    { id: "projects", label: "Projects", icon: Database },
-    { id: "research", label: "Research", icon: FileText },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "articles", label: "Blog", icon: TrendingUp },
-    { id: "training", label: "AI Training", icon: Brain },
-    { id: "certificates", label: "Certificates", icon: Award },
-    { id: "inquiries", label: "Inquiries", icon: MessageSquare },
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-cyan-500/30">
-      {/* Admin Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl hidden lg:block z-30">
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-cyan-600 flex items-center justify-center shadow-[0_0_15px_rgba(8,145,178,0.4)]">
-              <Shield className="h-5 w-5 text-white" />
+      {/* Sidebar (desktop) */}
+      <aside className="fixed left-0 top-16 z-30 hidden h-[calc(100vh-4rem)] w-64 flex-col border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl lg:flex">
+        <nav aria-label="Admin sections" className="flex-1 space-y-5 overflow-y-auto p-4">
+          {GROUPS.map((g) => (
+            <div key={g.title}>
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{g.title}</p>
+              <ul className="space-y-0.5">
+                {g.tabs.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      onClick={() => openTab(t.id)}
+                      aria-current={activeTab === t.id ? "page" : undefined}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                        activeTab === t.id ? "bg-cyan-600/15 font-medium text-cyan-300" : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+                      )}
+                    >
+                      <t.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      {t.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <span className="font-bold tracking-tight text-white uppercase text-xs">Admin_Control_Node</span>
-          </div>
-        </div>
-        
-        <nav className="p-4 space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
-                activeTab === tab.id 
-                  ? "bg-cyan-600/10 text-cyan-400 border border-cyan-600/20" 
-                  : "text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
-              )}
-            >
-              {activeTab === tab.id && (
-                <motion.div layoutId="tab-pill" className="absolute left-0 w-1 h-6 bg-cyan-500 rounded-r-full" />
-              )}
-              <tab.icon className={cn("h-5 w-5", activeTab === tab.id ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300")} />
-              <span className="font-bold text-xs uppercase tracking-wider">{tab.label}</span>
-            </button>
           ))}
         </nav>
-
-        {/* AI Status in Sidebar */}
-        <div className="absolute bottom-8 left-4 right-4">
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Digital Twin</span>
-              <div className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
-            <p className="text-[10px] text-slate-400 leading-relaxed italic">&quot;Always active, optimizing your cloud presence.&quot;</p>
-          </div>
+        <div className="space-y-1 border-t border-slate-800 p-4">
+          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <ExternalLink className="h-4 w-4" aria-hidden="true" /> View live site
+          </a>
+          <button onClick={handleExportLogs} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 hover:bg-slate-800/60 hover:text-white">
+            <Download className="h-4 w-4" aria-hidden="true" /> Download security log
+          </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="lg:ml-64 p-8 min-h-screen relative">
-        {/* Header */}
-        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <main className="min-h-screen p-4 sm:p-8 lg:ml-64">
+        {/* Section picker (phones and tablets) */}
+        <div className="mb-6 lg:hidden">
+          <label htmlFor="admin-section" className="mb-1.5 block text-xs font-medium text-slate-500">Section</label>
+          <select
+            id="admin-section"
+            value={activeTab}
+            onChange={(e) => openTab(e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 text-sm text-white focus:border-cyan-500 focus:outline-none"
+          >
+            {GROUPS.map((g) => (
+              <optgroup key={g.title} label={g.title}>
+                {g.tabs.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+
+        {/* Page header */}
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tighter uppercase">Portfolio_Orchestrator</h1>
-            <p className="text-slate-500 text-xs mt-1 font-mono uppercase tracking-widest">Secure Admin Session // Auth: Verified</p>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">{tab.label}</h1>
+            <p className="mt-1 text-sm text-slate-400">{tab.intro}</p>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsAiActive(!isAiActive)}
+          <div className="flex flex-wrap items-center gap-2">
+            {tab.preview && (
+              <a href={tab.preview} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-cyan-500/50 hover:text-white">
+                <ExternalLink className="h-4 w-4" aria-hidden="true" /> Preview
+              </a>
+            )}
+            <button
+              onClick={() => setIsAiOpen((v) => !v)}
+              aria-pressed={isAiOpen}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border",
-                isAiActive 
-                  ? "bg-cyan-600 border-cyan-500 text-white shadow-[0_0_20px_rgba(8,145,178,0.3)]" 
-                  : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700"
+                "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-colors",
+                isAiOpen ? "border-cyan-500 bg-cyan-600 text-white" : "border-slate-700 text-slate-300 hover:border-cyan-500/50 hover:text-white"
               )}
             >
-              <Bot className="h-4 w-4" />
-              {isAiActive ? "AI_CONSOLE_ON" : "AI_CONSOLE_OFF"}
+              <Bot className="h-4 w-4" aria-hidden="true" /> Writing assistant
             </button>
-            <button 
-              onClick={() => { 
-                setEditingItem(undefined);
-                if (activeTab === 'projects') setShowProjectEditor(true);
-                else if (activeTab === 'research') setShowResearchEditor(true);
-                else if (activeTab === 'articles') setShowArticleEditor(true);
-                else if (activeTab === 'certificates') setShowCredentialEditor(true);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2 text-xs"
-            >
-              <Plus className="h-4 w-4" />
-              CREATE_ARTIFACT
-            </button>
+            {tab.create && (
+              <button onClick={() => openEditor(undefined)} className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500">
+                <Plus className="h-4 w-4" aria-hidden="true" /> {tab.create}
+              </button>
+            )}
           </div>
         </header>
 
-        <AnimatePresence>
-          {showProjectEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-              <div className="max-w-4xl w-full my-auto">
-                <ProjectEditor initialData={editingItem as ComponentProps<typeof ProjectEditor>["initialData"]} onClose={() => setShowProjectEditor(false)} />
-              </div>
+        {/* Editor modals */}
+        {anyEditorOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
+            <div className="mx-auto my-auto w-full max-w-4xl">
+              {showProjectEditor && <ProjectEditor initialData={editingItem as ComponentProps<typeof ProjectEditor>["initialData"]} onClose={closeEditors} />}
+              {showCredentialEditor && <CredentialEditor initialData={editingItem as ComponentProps<typeof CredentialEditor>["initialData"]} onClose={closeEditors} />}
+              {showResearchEditor && <ResearchEditor initialData={editingItem as ComponentProps<typeof ResearchEditor>["initialData"]} onClose={closeEditors} />}
+              {showArticleEditor && <ArticleEditor initialData={editingItem as ComponentProps<typeof ArticleEditor>["initialData"]} onClose={closeEditors} />}
             </div>
-          )}
-          {showCredentialEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-              <div className="max-w-4xl w-full my-auto">
-                <CredentialEditor initialData={editingItem as ComponentProps<typeof CredentialEditor>["initialData"]} onClose={() => setShowCredentialEditor(false)} />
-              </div>
-            </div>
-          )}
-          {showResearchEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-              <div className="max-w-4xl w-full my-auto">
-                <ResearchEditor initialData={editingItem as ComponentProps<typeof ResearchEditor>["initialData"]} onClose={() => setShowResearchEditor(false)} />
-              </div>
-            </div>
-          )}
-          {showArticleEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-              <div className="max-w-4xl w-full my-auto">
-                <ArticleEditor initialData={editingItem as ComponentProps<typeof ArticleEditor>["initialData"]} onClose={() => setShowArticleEditor(false)} />
-              </div>
-            </div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_350px]">
-          {/* Left Grid: Tab Content */}
-          <div className="space-y-10">
-            {activeTab === "overview" && (
-              <>
-                {/* Stats Grid */}
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { label: "Aggregate Traffic", val: stats.totalViews, icon: Users, color: "text-blue-400", bg: "bg-blue-400/10" },
-                    { label: "Active Inquiries", val: stats.totalInquiries, icon: MessageSquare, color: "text-purple-400", bg: "bg-purple-400/10" },
-                    { label: "Research Impact", val: stats.researchImpact, icon: Download, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                  ].map((stat, i) => (
-                    <motion.div 
-                      key={i} 
-                      whileHover={{ y: -5 }}
-                      className="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl backdrop-blur-md relative overflow-hidden group"
-                    >
-                      <div className="absolute top-0 right-0 h-24 w-24 bg-white/5 blur-3xl rounded-full -mr-12 -mt-12 group-hover:bg-white/10 transition-colors" />
-                      <div className="flex items-center justify-between mb-4 relative z-10">
-                        <div className={cn("p-3 rounded-2xl", stat.bg)}>
-                          <stat.icon className={cn("h-6 w-6", stat.color)} />
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Global_Node</span>
-                      </div>
-                      <p className="text-slate-500 text-xs font-bold uppercase tracking-widest relative z-10">{stat.label}</p>
-                      <h2 className="text-4xl font-bold text-white mt-2 tracking-tighter relative z-10">
-                        {isLoading ? "..." : stat.val.toLocaleString()}
-                      </h2>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* System Monitoring Section */}
-                <section className="bg-slate-900/40 border border-slate-800 rounded-3xl p-8 backdrop-blur-md">
-                  <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-3 uppercase tracking-tighter">
-                      <Cpu className="h-5 w-5 text-cyan-500" />
-                      Cloud_Node_Telemetry
-                    </h3>
-                    <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-500 bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/20">
-                      <Activity className="h-3 w-3 animate-pulse" />
-                      HEALTH_STABLE
-                    </div>
-                  </div>
-                  
-                  <div className="h-48 flex items-end gap-2 px-2">
-                    {[40, 60, 45, 90, 100, 80, 50, 70, 85, 60, 40, 95, 70, 50, 80].map((h, i) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${h}%` }}
-                        className="flex-1 bg-gradient-to-t from-cyan-600/20 to-cyan-500/40 border-t border-cyan-500/50 rounded-t-sm"
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-4 flex justify-between text-[9px] font-mono text-slate-600 uppercase tracking-[0.2em]">
-                    <span>00:00 UTC</span>
-                    <span>SESSION_START</span>
-                    <span>LIVE_SYNC</span>
-                  </div>
-                </section>
-                </>
-                )}
-
-                {/* Resume Asset Management */}
-                {activeTab === "resume" && (
+        <div className={cn("grid gap-8", isAiOpen && "xl:grid-cols-[1fr_360px]")}>
+          <div className="min-w-0 space-y-8">
+            {activeTab === "overview" && <SiteHealthPanel onOpenTab={openTab} />}
+            {activeTab === "profile" && <ProfileEditor />}
+            {activeTab === "cv" && (
+              <div className="space-y-8">
+                <CvImporter />
                 <ResumeManager />
-                )}
-
-                {/* Inquiry Vault View */}
-                {activeTab === "inquiries" && (
-                <InquiryVault />
-                )}
-
-                {/* AI Training Module */}
-                {activeTab === "training" && (
-                <ManualSyncTool />
-                )}
-
-                {/* Content Management Modules */}
-                {/* Homepage hero, availability badge, CV link */}
-                {activeTab === "profile" && <div className="space-y-8"><CvImporter /><ProfileEditor /></div>}
-
-                {["projects", "research", "articles", "certificates"].includes(activeTab) && (
-                  <AdminContentManager table={activeTab} onEdit={handleEdit} />
-                )}
-                </div>
-
-          {/* Right Grid: AI Control Console */}
-          <aside className="space-y-6">
-            <div className={cn(
-              "flex flex-col h-[600px] rounded-3xl border transition-all duration-500 overflow-hidden",
-              isAiActive 
-                ? "bg-slate-950 border-cyan-500/30 shadow-[0_0_30px_rgba(8,145,178,0.1)]" 
-                : "bg-slate-900/20 border-slate-800 opacity-50 grayscale"
-            )}>
-              {/* AI Console Header */}
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
-                <div className="flex items-center gap-3">
-                  <Bot className="h-5 w-5 text-cyan-400" />
-                  <span className="text-xs font-bold text-white uppercase tracking-widest">AI_Admin_Core</span>
-                </div>
-                <div className="flex gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-500/50" />
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                </div>
               </div>
+            )}
+            {isResumeTab(activeTab) && <ResumeSectionManager key={activeTab} table={activeTab} createSignal={createSignal} />}
+            {["projects", "research", "articles", "certificates"].includes(activeTab) && (
+              <AdminContentManager key={`${activeTab}-${listVersion}`} table={activeTab} onEdit={(item) => openEditor(item)} />
+            )}
+            {activeTab === "inquiries" && <InquiryVault />}
+            {activeTab === "training" && <ManualSyncTool />}
+          </div>
 
-              {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-800">
-                {messages.map((m) => {
-                  const messageText = getAdminMessageText(m as AdminChatMessage);
-
-                  return (
-                  <div key={m.id} className={cn(
-                    "flex flex-col max-w-[90%]",
-                    m.role === 'user' ? "ml-auto items-end" : "items-start"
-                  )}>
+          {/* Writing assistant */}
+          {isAiOpen && (
+            <aside aria-label="Writing assistant" className="flex h-[560px] flex-col overflow-hidden rounded-3xl border border-cyan-500/30 bg-slate-950 xl:sticky xl:top-8">
+              <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/50 px-5 py-3">
+                <span className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <Bot className="h-4 w-4 text-cyan-400" aria-hidden="true" /> Writing assistant
+                </span>
+                <button onClick={() => setIsAiOpen(false)} aria-label="Close assistant" className="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
+                {messages.map((m) => (
+                  <div key={m.id} className={cn("flex max-w-[90%] flex-col", m.role === "user" ? "ml-auto items-end" : "items-start")}>
                     <div className={cn(
-                      "px-4 py-2.5 rounded-2xl text-[11px] leading-relaxed",
-                      m.role === 'user' 
-                        ? "bg-cyan-600 text-white rounded-br-sm shadow-lg" 
-                        : "bg-slate-800 text-slate-300 rounded-bl-sm border border-slate-700"
+                      "whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      m.role === "user" ? "rounded-br-sm bg-cyan-600 text-white" : "rounded-bl-sm border border-slate-700 bg-slate-800 text-slate-200"
                     )}>
-                      {messageText}
+                      {getAdminMessageText(m)}
                     </div>
                   </div>
-                );
-                })}
-                {isAiThinking && (
-                  <div className="flex items-center gap-1.5 p-2 bg-slate-800/50 rounded-xl w-fit">
-                    <span className="h-1 w-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="h-1 w-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="h-1 w-1 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                )}
+                ))}
+                {aiBusy && <p className="text-xs text-slate-500">Thinking…</p>}
               </div>
-
-              {/* AI Input Area */}
-              <form onSubmit={handleAiSubmit} className="p-4 bg-slate-900/80 border-t border-slate-800">
-                <div className="relative flex items-center gap-2">
-                  <button
-                    disabled={!isAiActive}
-                    type="button"
-                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-800 text-slate-500 hover:text-cyan-400 transition-colors"
-                  >
-                    <Mic className="h-4 w-4" />
-                  </button>
-                  <input
-                    disabled={!isAiActive}
-                    value={aiInput}
-                    onChange={(event) => setAiInput(event.target.value)}
-                    placeholder="Enter AI Admin Command..."
-                    className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 transition-all"
-                  />
-                  <button
-                    disabled={!isAiActive || isAiThinking || !aiInput.trim()}
-                    type="submit"
-                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/20"
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
-                </div>
+              <form onSubmit={handleAiSubmit} className="flex gap-2 border-t border-slate-800 bg-slate-900/80 p-3">
+                <label htmlFor="admin-ai-input" className="sr-only">Message the writing assistant</label>
+                <input
+                  id="admin-ai-input"
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  placeholder="Ask for a draft or a rewrite…"
+                  className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+                <button type="submit" disabled={aiBusy || !aiInput.trim()} aria-label="Send" className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-600 text-white disabled:opacity-50">
+                  <Send className="h-4 w-4" />
+                </button>
               </form>
-            </div>
-
-            {/* Quick Actions Card */}
-            <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Security_Protocols</h4>
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/30 transition-all group">
-                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-cyan-400 transition-colors">PURGE_CDN_CACHE</span>
-                  <Zap className="h-3 w-3 text-slate-600 group-hover:text-cyan-500" />
-                </button>
-                <button 
-                  onClick={handleExportLogs}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/30 transition-all group"
-                >
-                  <span className="text-[10px] font-bold text-slate-400 group-hover:text-cyan-400 transition-colors">EXPORT_LOGS</span>
-                  <Activity className="h-3 w-3 text-slate-600 group-hover:text-cyan-500" />
-                </button>
-              </div>
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       </main>
     </div>
