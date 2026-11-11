@@ -120,7 +120,7 @@ Status: a working, tested prototype (14 automated tests). It runs on a rule-base
   },
   {
     id: "climate-modeling-east-africa", slug: "climate-modeling-east-africa",
-    title: "Climate Change Data Analysis for East Africa (2000–2024)",
+    title: "Climate Change Data Analysis for East Africa (2000–2026)",
     tagline: "Local climate evidence so farmers and planners can prepare for heat and unreliable rain.",
     role: "Lead Researcher & Developer",
     summary: "A self-designed study of 26 years of East African climate data, to show how fast the region is warming and how rainfall is changing.",
