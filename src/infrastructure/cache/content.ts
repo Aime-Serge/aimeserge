@@ -12,16 +12,16 @@ export const CONTENT_TTL = 60 * 60 * 24;
 type Effect = { tags: string[]; paths: Array<[string, ("page" | "layout")?]> };
 
 const EFFECTS: Record<string, Effect> = {
-  projects: { tags: ["projects"], paths: [["/projects"], ["/projects/[slug]", "page"], ["/"]] },
-  research: { tags: ["research"], paths: [["/research"], ["/research/[slug]", "page"]] },
-  certificates: { tags: ["certificates"], paths: [["/resume"]] },
-  experiences: { tags: ["experiences"], paths: [["/resume"], ["/"]] },
-  educations: { tags: ["educations"], paths: [["/resume"]] },
-  achievements: { tags: ["achievements"], paths: [["/resume"]] },
-  organizations: { tags: ["experiences"], paths: [["/resume"]] },
-  broadcasts: { tags: ["posts", "articles"], paths: [["/blog"], ["/blog/[id]", "page"], ["/feed.xml"]] },
-  articles: { tags: ["posts", "articles"], paths: [["/blog"], ["/blog/[id]", "page"], ["/feed.xml"]] },
-  profile: { tags: ["profile"], paths: [["/"], ["/resume"]] },
+  projects: { tags: ["projects"], paths: [["/projects"], ["/projects/[slug]", "page"], ["/"], ["/terminal"]] },
+  research: { tags: ["research"], paths: [["/research"], ["/research/[slug]", "page"], ["/terminal"]] },
+  certificates: { tags: ["certificates"], paths: [["/resume"], ["/terminal"]] },
+  experiences: { tags: ["experiences"], paths: [["/resume"], ["/"], ["/terminal"]] },
+  educations: { tags: ["educations"], paths: [["/resume"], ["/terminal"]] },
+  achievements: { tags: ["achievements"], paths: [["/resume"], ["/terminal"]] },
+  organizations: { tags: ["experiences"], paths: [["/resume"], ["/terminal"]] },
+  broadcasts: { tags: ["posts", "articles"], paths: [["/blog"], ["/blog/[id]", "page"], ["/feed.xml"], ["/terminal"]] },
+  articles: { tags: ["posts", "articles"], paths: [["/blog"], ["/blog/[id]", "page"], ["/feed.xml"], ["/terminal"]] },
+  profile: { tags: ["profile"], paths: [["/"], ["/resume"], ["/terminal"]] },
   posts: { tags: ["posts"], paths: [["/blog"]] },
   contacts: { tags: [], paths: [] },
 };
