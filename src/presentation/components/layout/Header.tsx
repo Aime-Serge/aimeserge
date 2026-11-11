@@ -79,13 +79,11 @@ export default function Header() {
             aria-label="Terminal mode: browse the site by typing commands"
             aria-current={pathname === "/terminal" ? "page" : undefined}
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-lg border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-              pathname === "/terminal"
-                ? "border-cyan-600/40 bg-cyan-600/20 text-cyan-400"
-                : "border-slate-800 text-slate-400 hover:border-cyan-600/40 hover:text-cyan-400"
+              "terminal-glow relative flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-600/20 text-cyan-400 transition-colors hover:bg-cyan-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+              pathname === "/terminal" && "bg-cyan-600 text-white"
             )}
           >
-            <Terminal className="h-4 w-4" aria-hidden="true" />
+            <Terminal className="relative h-5 w-5" aria-hidden="true" />
           </Link>
         </nav>
 
