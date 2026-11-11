@@ -8,7 +8,7 @@ interface ResearchSidebarProps {
 
 // Studies published as project case studies, so visitors always have something to read.
 const STUDIES = [
-  { title: "Climate change in East Africa, 2000–2024", href: "/projects/climate-modeling-east-africa" },
+  { title: "Climate change in East Africa, 2000–2026", href: "/projects/climate-modeling-east-africa" },
   { title: "Real-time data for urban transit in Kigali", href: "/projects/urban-mobility-iot" },
   { title: "INEZA AI: connected care for clinics", href: "/projects/ineza-ai" },
   { title: "DukaAI: clear records for small shops", href: "/projects/dukaai" },
