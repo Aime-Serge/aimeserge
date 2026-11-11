@@ -35,7 +35,7 @@ const PILLARS = [
   {
     icon: Microscope,
     title: "Research for impact",
-    body: "Before I build, I study the problem: who is at risk, how big the risk is, and why. That ranges from 24 years of East African climate data to how shop owners keep their books. I share what I find in plain language.",
+    body: "Before I build, I study the problem: who is at risk, how big the risk is, and why. That ranges from 26 years of East African climate data to how shop owners keep their books. I share what I find in plain language.",
     outcome: "Decisions based on evidence, not guesses.",
   },
   {
@@ -52,7 +52,7 @@ const AUDIENCES = [
     icon: Sprout,
     who: "Communities",
     risk: "Changing rain and rising heat put harvests, water and health at risk.",
-    action: "My climate research turns 24 years of East African data into local trends that planners can use. INEZA AI helps clinics follow disease trends by district.",
+    action: "My climate research turns 26 years of East African data into local trends that planners can use. INEZA AI helps clinics follow disease trends by district.",
     href: "/research",
     linkText: "See the research",
   },
