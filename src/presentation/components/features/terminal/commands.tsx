@@ -240,7 +240,7 @@ export const COMMANDS: CommandDef[] = [
         <Title>Risk → who it affects → what I do</Title>
         <div>
           <div className="text-white">Communities</div>
-          <div className="text-slate-400">Changing rain and rising heat put harvests, water and health at risk. My climate research turns 24 years of East African data into local trends planners can use, and INEZA AI helps clinics follow disease trends by district.</div>
+          <div className="text-slate-400">Changing rain and rising heat put harvests, water and health at risk. My climate research turns 26 years of East African data into local trends planners can use, and INEZA AI helps clinics follow disease trends by district.</div>
         </div>
         <div>
           <div className="text-white">Individuals</div>

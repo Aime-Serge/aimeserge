@@ -72,7 +72,7 @@ export default async function ResearchPage() {
         <div className="mt-4 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
             <div className="text-sm font-semibold text-emerald-400 mb-2">Climate risk for communities</div>
-            <p className="text-sm text-slate-300">How rising heat and less predictable rain affect farming and water in East Africa, using 24 years of public data.</p>
+            <p className="text-sm text-slate-300">How rising heat and less predictable rain affect farming and water in East Africa, using 26 years of public data.</p>
           </div>
           <div className="p-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
             <div className="text-sm font-semibold text-emerald-400 mb-2">Health access</div>
