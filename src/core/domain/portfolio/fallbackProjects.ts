@@ -76,7 +76,35 @@ export const fallbackProjects: Project[] = [
     contributors: [ME], association: "Ongoing venture · Rwanda → East Africa → global",
   },
   {
-    id: "second-look", slug: "second-look", featured: true, sortOrder: 4,
+    id: "sentinel", slug: "sentinel", featured: true, sortOrder: 4,
+    title: "Sentinel",
+    tagline: "Warns venue staff early about smoke and overcrowding, and keeps proof the venue stayed safe between inspections.",
+    role: "Founder & Lead Engineer",
+    summary: "An offline, privacy-first safety monitor for hotels, bars and churches in Rwanda: it watches for smoke, counts people against the venue's safe limit, and records a safety history for inspectors and insurers.",
+    description: `The problem: hotels, bars and churches in Rwanda are checked for fire safety about once a year. Between inspections, nothing checks everyday risks such as a crowd above the venue's safe limit, or smoke in a room no one is watching. When something goes wrong, there is also no record showing what happened.
+
+What I built: a small box installed at the venue that works even when the internet is down. It looks at each camera picture for smoke and warns staff only when it sees smoke twice in a row, to avoid false alarms. If a camera is covered or too dark, it says so instead of showing "all clear". Sensors at each door count people in and out and compare the total with the safe limit on the venue's certificate: "nearly full" at 90%, "over capacity" above 100%. Alerts appear on a dashboard that works on a phone, and go out by SMS and email; messages that can't be sent wait in a queue until the connection comes back. Every alert and staff action is saved, so the venue can show inspectors and insurers it stayed safe over time.
+
+Built responsibly: Sentinel is not a fire alarm. It runs alongside the venue's certified alarm and never replaces it. Pictures never leave the building, and ordinary pictures are deleted within seconds. When an alert picture is kept, every person in it is blurred first; if blurring fails, the whole picture is blurred. There is no face recognition. Each staff member has their own login and role, saved records are deleted automatically on a schedule, and the venue owner can show or delete a guest's data on request, as Rwanda's data protection law (N°058/2021) requires.
+
+Status: the full system works end to end in the lab, with simulated cameras and door sensors, and 293 automated tests run on every change. Before a first pilot venue (planned for early 2027), the smoke detector still needs training on real venue pictures collected with consent, the door sensors need testing on real hardware, and the privacy and security reviews need to be signed off.`,
+    tools: ["Python", "PyTorch", "OpenCV", "Streamlit", "SQLite", "Raspberry Pi", "IoT sensors", "pytest", "GitHub Actions"],
+    features: [
+      "Early smoke warning that checks twice before raising an alert",
+      "Live people count against the venue's safe limit",
+      "Works offline; alerts wait in a queue until the internet is back",
+      "People blurred in every saved picture; no face recognition",
+      "Phone-friendly dashboard with a login and role for each staff member",
+      "Safety history for inspections and insurance",
+    ],
+    category: "Safety · AI · IoT",
+    images: ["/uploads/sentinel-thumbnail.svg"],
+    createdAt: "2026-09-04", isVisible: true, isCurrent: true,
+    startDate: { month: "September", year: "2026" },
+    contributors: [ME], association: "Independent Venture · Public safety",
+  },
+  {
+    id: "second-look", slug: "second-look", featured: true, sortOrder: 5,
     title: "Second Look",
     tagline: "Paste a suspicious email and get a plain-language verdict on whether it's phishing, and why.",
     role: "Designer & Developer",
@@ -103,7 +131,7 @@ Status: a working, tested prototype (14 automated tests). It runs on a rule-base
     contributors: [ME], association: "Independent Project · Online safety",
   },
   {
-    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 5,
+    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 6,
     title: "Professional Portfolio & AI-Powered Content Platform",
     tagline: "This website: portfolio, blog and research, with AI search and chat.",
     role: "Full-Stack Engineer & Architect",
