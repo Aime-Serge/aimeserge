@@ -36,6 +36,7 @@ export async function getResearch(): Promise<ResearchPaper[]> {
           category: r.category,
           language: r.language || 'en',
           citations: r.citations || 0,
+          status: r.status || 'published',
         }));
       } catch (err) {
         throw err;
@@ -47,7 +48,11 @@ export async function getResearch(): Promise<ResearchPaper[]> {
 }
 
 export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null> {
-  return unstable_cache(() => fetchPaperBySlug(slug), ['paper', slug], { tags: ['research'], revalidate: CONTENT_TTL })().catch(contentFallback(null));
+  const paper = await unstable_cache(() => fetchPaperBySlug(slug), ['paper', slug], { tags: ['research'], revalidate: CONTENT_TTL })().catch(contentFallback(null));
+  if (paper) return paper;
+  // Built-in papers are shown only while the database has none (same rule as the list),
+  // so a paper deleted in the admin stays gone.
+  return (await getResearch()) === fallbackResearch ? fallbackResearch.find((p) => p.slug === slug) ?? null : null;
 }
 
 async function fetchPaperBySlug(slug: string): Promise<ResearchPaper | null> {
@@ -81,6 +86,7 @@ async function fetchPaperBySlug(slug: string): Promise<ResearchPaper | null> {
       category: data.category,
       language: data.language || 'en',
       citations: data.citations || 0,
+      status: data.status || 'published',
     };
   } catch (err) {
     throw err;

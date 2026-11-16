@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Microscope, Calendar, Download, Eye, FileText, Share2, User, ExternalLink, Hash, Bookmark, BookOpen, Quote } from "lucide-react";
 import Link from "next/link";
+import { SITE, jsonLd } from "@/config/site";
+import { RESEARCH_STATUS_LABEL } from "@/core/domain/research/types";
 import { getPaperBySlug, getResearch } from "@/core/domain/research/queries";
 import ResearchActionButtons from "@/presentation/components/shared/ResearchActionButtons";
 
@@ -14,10 +16,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const paper = await getPaperBySlug(slug);
   if (!paper) return { title: "Paper not found" };
 
+  // Long academic titles get cut off in Google: use the part before the colon.
+  const short = paper.title.length > 60 && paper.title.includes(":") ? paper.title.split(":")[0].trim() : paper.title;
+  const description = paper.abstract.length > 300 ? `${paper.abstract.slice(0, 297).trimEnd()}…` : paper.abstract;
   return {
-    title: paper.title,
+    title: short,
     alternates: { canonical: `/research/${paper.slug}` },
-    description: paper.abstract,
+    description,
+    openGraph: { type: "article", title: short, description, url: `/research/${paper.slug}` },
   };
 }
 
@@ -36,9 +42,27 @@ export default async function ResearchDetailPage({ params }: Props) {
   const paper = await getPaperBySlug(slug);
 
   if (!paper) notFound();
+  const isPublished = !paper.status || paper.status === "published";
+
+  const paperLd = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    headline: paper.title.slice(0, 110),
+    name: paper.title,
+    abstract: paper.abstract,
+    url: `${SITE.url}/research/${paper.slug}`,
+    author: paper.authors.map((a) => ({ "@type": "Person", name: a.name, affiliation: a.affiliation || undefined })),
+    datePublished: isPublished ? paper.publicationDate : undefined,
+    dateModified: paper.publicationDate,
+    creativeWorkStatus: isPublished ? "Published" : "Draft",
+    keywords: paper.tags.join(", "),
+    inLanguage: paper.language,
+    identifier: paper.doi ? `https://doi.org/${paper.doi}` : undefined,
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(paperLd) }} />
       <div className="container mx-auto px-6 py-12 lg:py-20">
         <Link 
           href="/research"
@@ -55,12 +79,12 @@ export default async function ResearchDetailPage({ params }: Props) {
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
-                    <Microscope className="h-3 w-3" />
-                    {paper.doi ? "Published paper" : "Independent research"}
+                    <Microscope className="h-3 w-3" aria-hidden="true" />
+                    {isPublished ? (paper.doi ? "Published paper" : "Independent research") : RESEARCH_STATUS_LABEL[paper.status!]}
                   </div>
                   <div className="inline-flex items-center gap-2 text-[10px] font-mono text-slate-500">
-                    <Calendar className="h-3 w-3" />
-                    Published {paper.publicationDate}
+                    <Calendar className="h-3 w-3" aria-hidden="true" />
+                    {isPublished ? "Published" : "Last updated"} {paper.publicationDate}
                   </div>
                   {paper.doi && (
                     <div className="inline-flex items-center gap-2 text-[10px] font-mono text-emerald-500/60">
@@ -70,7 +94,9 @@ export default async function ResearchDetailPage({ params }: Props) {
                   )}
                 </div>
 
-                <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-7xl leading-tight">
+                <h1 className={paper.title.length > 80
+                  ? "text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight"
+                  : "text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-7xl leading-tight"}>
                   {paper.title}
                 </h1>
 
@@ -97,7 +123,8 @@ export default async function ResearchDetailPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Interaction Bar */}
+              {/* Interaction Bar: only once there is something to count */}
+              {(paper.views > 0 || paper.downloads > 0 || paper.citations > 0) && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm">
                 <div className="space-y-1">
                   <span className="text-[10px] text-slate-500 uppercase font-mono">Views</span>
@@ -126,10 +153,11 @@ export default async function ResearchDetailPage({ params }: Props) {
                   <span className="text-[10px] text-slate-500 uppercase font-mono">Format</span>
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-emerald-500" />
-                    <span className="text-xs font-bold text-white font-mono">PDF</span>
+                    <span className="text-xs font-bold text-white font-mono">{paper.pdfUrl ? "PDF" : "Summary"}</span>
                   </div>
                 </div>
               </div>
+              )}
             </section>
 
             {/* Abstract Layer */}
@@ -163,8 +191,10 @@ export default async function ResearchDetailPage({ params }: Props) {
             {/* Artifact Access */}
             <div className="flex items-center justify-between p-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
               <div className="space-y-1">
-                <p className="text-white font-bold">Read the full paper</p>
-                <p className="text-xs text-slate-500">Download the PDF, with the data sources and method.</p>
+                <p className="text-white font-bold">{paper.pdfUrl ? "Read the full paper" : "Want the full manuscript?"}</p>
+                <p className="text-xs text-slate-500">{paper.pdfUrl
+                  ? "Download the PDF, with the data sources and method."
+                  : "It isn't public yet. Ask me for a copy, or get in touch to collaborate on the next phase."}</p>
               </div>
               <ResearchActionButtons 
                 id={paper.id} 

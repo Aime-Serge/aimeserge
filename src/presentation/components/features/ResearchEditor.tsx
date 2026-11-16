@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Microscope, Save, X, Upload, Database, Plus, Trash2, Link as LinkIcon } from "lucide-react";
 import { upsertContent, uploadArtifact } from "@/core/domain/admin/mutations";
 import { syncResearchToKnowledge } from "@/core/domain/research/mutations";
-import { type ResearchPaper, type ResearchAuthor, type ResearchSection } from "@/core/domain/research/types";
+import { RESEARCH_STATUS_LABEL, type ResearchPaper, type ResearchAuthor, type ResearchSection, type ResearchStatus } from "@/core/domain/research/types";
 import { toast } from "react-hot-toast";
 
 interface ResearchFormData {
@@ -21,10 +21,12 @@ interface ResearchFormData {
   content: ResearchSection[];
   category?: string;
   language: string;
+  status: ResearchStatus;
 }
 
 interface ResearchEditorProps {
-  initialData?: Partial<ResearchPaper>;
+  // Rows from the admin list use database names (pdf_url); papers use pdfUrl. Accept both.
+  initialData?: Partial<ResearchPaper> & { pdf_url?: string | null; publication_date?: string | null };
   onClose: () => void;
 }
 
@@ -38,12 +40,12 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
     title: initialData?.title || "",
     slug: initialData?.slug || "",
     abstract: initialData?.abstract || "",
-    pdf_url: initialData?.pdfUrl || "",
+    pdf_url: initialData?.pdfUrl || initialData?.pdf_url || "",
     tags: initialData?.tags || [],
     doi: initialData?.doi || "",
     authors: initialData?.authors || [{ name: "", affiliation: "" }],
     funding: initialData?.funding || "",
-    publication_date: initialData?.publicationDate || new Date().toISOString().split('T')[0],
+    publication_date: (initialData?.publicationDate || initialData?.publication_date || new Date().toISOString()).slice(0, 10),
     content: initialData?.content || [
       { id: 'intro', title: 'Introduction', content: '', order: 1 },
       { id: 'methods', title: 'Methods', content: '', order: 2 },
@@ -52,6 +54,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
     ],
     category: initialData?.category || "",
     language: initialData?.language || "en",
+    status: (initialData?.status as ResearchStatus) || "published",
   });
 
   // Raw text so commas can be typed; parsed into tags on every change.
@@ -81,11 +84,15 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
     setFormData({ ...formData, authors: newAuthors });
   };
 
-  const updateSection = (index: number, content: string) => {
+  const updateSection = (index: number, patch: Partial<ResearchSection>) => {
     const newContent = [...formData.content];
-    newContent[index] = { ...newContent[index], content };
+    newContent[index] = { ...newContent[index], ...patch };
     setFormData({ ...formData, content: newContent });
   };
+  const addSection = () =>
+    setFormData({ ...formData, content: [...formData.content, { id: `section-${Date.now()}`, title: "New section", content: "", order: formData.content.length + 1 }] });
+  const removeSection = (index: number) =>
+    setFormData({ ...formData, content: formData.content.filter((_, i) => i !== index) });
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +101,11 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
     // Convert to DB payload
     const payload = {
       ...formData,
+      pdf_url: formData.pdf_url.trim() || null,
       tags: Array.isArray(formData.tags) ? formData.tags : [],
-      authors: formData.authors,
-      content: formData.content,
+      authors: formData.authors.filter((a) => a.name.trim()),
+      // Empty sections are left out, so they don't show as blank boxes.
+      content: formData.content.filter((c) => c.content.trim()).map((c, i) => ({ ...c, order: i + 1 })),
     };
 
     const result = await upsertContent({ table: 'research', payload, path: '/research' });
@@ -214,16 +223,28 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
               <p className="text-[10px] text-emerald-400 font-mono">Write each section in plain language. Leave a section empty to hide it. Markdown is supported.</p>
             </div>
             {formData.content.map((section, index) => (
-              <div key={section.id} className="space-y-2">
-                <label className="text-sm font-medium text-slate-300 ml-1">{section.title}</label>
-                <textarea 
-                  value={section.content} 
-                  onChange={e => updateSection(index, e.target.value)} 
-                  placeholder={`Detailed ${section.title.toLowerCase()}...`}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none min-h-[150px] font-mono" 
+              <div key={section.id} className="space-y-2 rounded-2xl border border-slate-800 p-4">
+                <div className="flex gap-2">
+                  <input
+                    aria-label="Section title"
+                    value={section.title}
+                    onChange={e => updateSection(index, { title: e.target.value })}
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-semibold text-white focus:border-emerald-500 outline-none"
+                  />
+                  <button type="button" onClick={() => removeSection(index)} aria-label={`Remove section ${section.title}`} className="rounded-lg p-2 text-slate-500 hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+                </div>
+                <textarea
+                  aria-label={`${section.title} text`}
+                  value={section.content}
+                  onChange={e => updateSection(index, { content: e.target.value })}
+                  placeholder={`Write the ${section.title.toLowerCase()} in plain language…`}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none min-h-[150px]"
                 />
               </div>
             ))}
+            <button type="button" onClick={addSection} className="flex items-center gap-2 rounded-xl border border-dashed border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500/50 hover:text-white">
+              <Plus className="h-4 w-4" /> Add section
+            </button>
           </div>
         )}
 
@@ -247,6 +268,12 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
                 <datalist id="research-category-suggestions">
                   {["Climate", "Health", "Small business", "Security", "AI", "Cloud", "Engineering"].map((c) => <option key={c} value={c} />)}
                 </datalist>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="r-status" className="text-sm font-medium text-slate-300 ml-1">Status</label>
+                <select id="r-status" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as ResearchStatus})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none">
+                  {(Object.keys(RESEARCH_STATUS_LABEL) as ResearchStatus[]).map((k) => <option key={k} value={k}>{RESEARCH_STATUS_LABEL[k]}</option>)}
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-300 ml-1">Language</label>
