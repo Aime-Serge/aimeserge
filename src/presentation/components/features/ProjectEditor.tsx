@@ -5,7 +5,13 @@ import { Plus, Trash2, Save, X, Database, Cpu } from "lucide-react";
 import { upsertContent } from "@/core/domain/admin/mutations";
 import { toast } from "react-hot-toast";
 
-type ProjectCategory = "AI" | "Security" | "Cloud" | "Software Engineering" | "Full-Stack";
+type ProjectCategory = string;
+
+/** Suggestions only: any short label works (e.g. "Safety · AI · IoT"). */
+const CATEGORY_SUGGESTIONS = [
+  "AI", "Security", "Cloud", "Full-Stack", "Software Engineering",
+  "Health · AI", "Fintech · AI", "Security · AI", "Safety · AI · IoT", "E-commerce · Logistics",
+];
 
 interface ProjectFormData {
   id?: string;
@@ -65,14 +71,21 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
     e.preventDefault();
     setIsPending(true);
     
-    const result = await upsertContent({ table: 'projects', payload: formData, path: '/projects' });
+    if (!formData.category.trim()) {
+      toast.error("Add a category, e.g. Health · AI.");
+      setIsPending(false);
+      return;
+    }
+    // A current project has no end date; never save the placeholder one.
+    const payload = { ...formData, category: formData.category.trim(), end_date: formData.is_current ? null : formData.end_date };
+    const result = await upsertContent({ table: 'projects', payload, path: '/projects' });
     
     if (result.success) {
-      toast.success("Project artifact synchronized successfully.");
+      toast.success("Project saved. The public pages update within seconds.");
       onClose();
     } else {
       const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
-      toast.error(`Sync Failure: ${errorMsg}`);
+      toast.error(`Couldn't save: ${errorMsg}`);
     }
     setIsPending(false);
   };
@@ -161,18 +174,20 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
 
           {/* Category Select */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Primary_Cluster</label>
-            <select 
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Category</label>
+            <input
+              list="project-category-suggestions"
               value={formData.category}
-              onChange={e => setFormData({...formData, category: e.target.value as ProjectCategory})}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 outline-none appearance-none"
-            >
-              <option value="AI">Artificial Intelligence</option>
-              <option value="Security">Cybersecurity</option>
-              <option value="Cloud">Cloud Engineering</option>
-              <option value="Software Engineering">Software Engineering</option>
-              <option value="Full-Stack">Full-Stack Development</option>
-            </select>
+              onChange={e => setFormData({...formData, category: e.target.value})}
+              maxLength={60}
+              required
+              aria-label="Category"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-cyan-500 outline-none"
+              placeholder="e.g. Health · AI"
+            />
+            <datalist id="project-category-suggestions">
+              {CATEGORY_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
+            </datalist>
           </div>
 
           {/* URLs */}
