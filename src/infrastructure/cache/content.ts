@@ -23,6 +23,8 @@ const EFFECTS: Record<string, Effect> = {
   articles: { tags: ["posts", "articles"], paths: [["/blog"], ["/blog/[id]", "page"], ["/feed.xml"], ["/terminal"]] },
   profile: { tags: ["profile"], paths: [["/"], ["/resume"], ["/terminal"]] },
   posts: { tags: ["posts"], paths: [["/blog"]] },
+  // Homepage sections and site settings (footer, page text, Google verification): every page.
+  site_content: { tags: ["homepage", "settings"], paths: [["/", "layout"]] },
   contacts: { tags: [], paths: [] },
 };
 

@@ -50,9 +50,12 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
       { id: 'results', title: 'Results', content: '', order: 3 },
       { id: 'discussion', title: 'Discussion', content: '', order: 4 },
     ],
-    category: initialData?.category || "Security",
+    category: initialData?.category || "",
     language: initialData?.language || "en",
   });
+
+  // Raw text so commas can be typed; parsed into tags on every change.
+  const [tagsText, setTagsText] = useState(() => (initialData?.tags || []).join(", "));
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +102,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
     const result = await upsertContent({ table: 'research', payload, path: '/research' });
     
     if (result.success) {
-      toast.success("Research artifact published.");
+      toast.success("Research saved. The research page updates within seconds.");
       
       // Background Sync
       syncResearchToKnowledge({
@@ -118,7 +121,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
       onClose();
     } else {
       const errorMsg = "error" in result ? (result.error as string) : (result as { message?: string }).message;
-      toast.error("Sync Failure: " + errorMsg);
+      toast.error("Couldn't save: " + errorMsg);
     }
     setIsPending(false);
   };
@@ -130,7 +133,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
           <div className="h-10 w-10 rounded-xl bg-emerald-600/20 flex items-center justify-center border border-emerald-500/30">
             <Microscope className="h-5 w-5 text-emerald-400" />
           </div>
-          <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Research_Protocol_v2</h2>
+          <h2 className="text-xl font-bold text-white uppercase tracking-tighter">{formData.id ? "Edit research" : "New research"}</h2>
         </div>
         <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><X className="h-5 w-5 text-slate-500" /></button>
       </div>
@@ -142,7 +145,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
           >
-            {tab}_Layer
+            {({ identity: "1. About", structure: "2. Sections", discovery: "3. File & keywords" } as const)[tab]}
           </button>
         ))}
       </div>
@@ -152,11 +155,11 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
           <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Project_Title</label>
-                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" />
+                <label className="text-sm font-medium text-slate-300 ml-1">Title *</label>
+                <input required value={formData.title} onChange={e => { const title = e.target.value; setFormData({...formData, title, slug: formData.id ? formData.slug : title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)}); }} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">DOI_Identifier</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">DOI <span className="font-normal text-slate-500">(if published)</span></label>
                 <div className="relative">
                   <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
                   <input placeholder="10.1000/xyz123" value={formData.doi} onChange={e => setFormData({...formData, doi: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-4 py-3 text-sm text-white focus:border-emerald-500 outline-none font-mono" />
@@ -166,16 +169,16 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
 
             <div className="space-y-2">
               <div className="flex justify-between items-center mb-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Authors_Registry</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">Authors</label>
                 <button type="button" onClick={addAuthor} className="text-[10px] font-bold text-emerald-500 flex items-center gap-1 hover:text-emerald-400">
-                  <Plus className="h-3 w-3" /> ADD_CONTRIBUTOR
+                  <Plus className="h-3 w-3" /> Add author
                 </button>
               </div>
               <div className="space-y-3">
                 {formData.authors.map((author, index) => (
                   <div key={index} className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl bg-slate-950 border border-slate-800">
                     <input placeholder="Name" value={author.name} onChange={e => updateAuthor(index, 'name', e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-emerald-500" />
-                    <input placeholder="ORCID" value={author.orcid} onChange={e => updateAuthor(index, 'orcid', e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-emerald-500 font-mono" />
+                    <input placeholder="ORCID (optional)" value={author.orcid} onChange={e => updateAuthor(index, 'orcid', e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-emerald-500 font-mono" />
                     <div className="flex gap-2">
                       <input placeholder="Affiliation" value={author.affiliation} onChange={e => updateAuthor(index, 'affiliation', e.target.value)} className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-emerald-500" />
                       {formData.authors.length > 1 && (
@@ -188,17 +191,17 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Executive_Abstract</label>
+              <label className="text-sm font-medium text-slate-300 ml-1">Summary (abstract) *</label>
               <textarea required value={formData.abstract} onChange={e => setFormData({...formData, abstract: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none min-h-[120px]" />
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Funding_&_Grants</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">Funding <span className="font-normal text-slate-500">(optional)</span></label>
                 <input value={formData.funding} onChange={e => setFormData({...formData, funding: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Publication_Date</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">Date</label>
                 <input type="date" value={formData.publication_date} onChange={e => setFormData({...formData, publication_date: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" />
               </div>
             </div>
@@ -208,11 +211,11 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
         {activeTab === 'structure' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
             <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 mb-6">
-              <p className="text-[10px] text-emerald-400 font-mono">SYSTEM_NOTE: Following IMRaD standards. Markdown & LaTeX supported.</p>
+              <p className="text-[10px] text-emerald-400 font-mono">Write each section in plain language. Leave a section empty to hide it. Markdown is supported.</p>
             </div>
             {formData.content.map((section, index) => (
               <div key={section.id} className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{section.title}</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">{section.title}</label>
                 <textarea 
                   value={section.content} 
                   onChange={e => updateSection(index, e.target.value)} 
@@ -227,7 +230,7 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
         {activeTab === 'discovery' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-2 duration-300">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Research_Artifact (PDF)</label>
+              <label className="text-sm font-medium text-slate-300 ml-1">Paper or report (PDF)</label>
               <div className="flex gap-4">
                 <input readOnly value={formData.pdf_url} className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-500 font-mono" />
                 <label className="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl cursor-pointer border border-slate-700">
@@ -239,25 +242,24 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Taxonomy_Category</label>
-                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none">
-                  <option value="Security">Cyber Security</option>
-                  <option value="AI">Artificial Intelligence</option>
-                  <option value="Cloud">Cloud Architecture</option>
-                  <option value="Engineering">Software Engineering</option>
-                </select>
+                <label className="text-sm font-medium text-slate-300 ml-1">Category</label>
+                <input list="research-category-suggestions" maxLength={60} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="e.g. Climate" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" />
+                <datalist id="research-category-suggestions">
+                  {["Climate", "Health", "Small business", "Security", "AI", "Cloud", "Engineering"].map((c) => <option key={c} value={c} />)}
+                </datalist>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Language_ISO</label>
-                <input value={formData.language} onChange={e => setFormData({...formData, language: e.target.value})} placeholder="en, fr, etc." className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none font-mono" />
+                <label className="text-sm font-medium text-slate-300 ml-1">Language</label>
+                <input value={formData.language} onChange={e => setFormData({...formData, language: e.target.value})} placeholder="en, fr or rw" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none font-mono" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Keywords (Comma Separated)</label>
+              <label className="text-sm font-medium text-slate-300 ml-1">Keywords <span className="font-normal text-slate-500">(separate with commas)</span></label>
               <input 
-                value={formData.tags.join(', ')} 
-                onChange={e => setFormData({...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== "")})} 
+                value={tagsText}
+                onChange={e => { setTagsText(e.target.value); setFormData({...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t !== "")}); }}
+                placeholder="e.g. climate, East Africa, rainfall"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-500 outline-none" 
               />
             </div>
@@ -265,10 +267,10 @@ export default function ResearchEditor({ initialData, onClose }: ResearchEditorP
         )}
 
         <div className="flex justify-end gap-4 pt-6 border-t border-slate-800 sticky bottom-0 bg-slate-900 z-10">
-          <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-white transition-colors">ABORT_MISSION</button>
+          <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:text-white transition-colors">Cancel</button>
           <button type="submit" disabled={isPending || isUploading} className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-900/20 flex items-center gap-3 text-xs">
             {isPending ? <Database className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            COMMIT_TO_LEDGER
+            Save research
           </button>
         </div>
       </form>

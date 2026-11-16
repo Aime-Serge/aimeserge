@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { type ComponentProps, type FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  type LucideIcon, LayoutDashboard, FolderKanban, FlaskConical, Newspaper, User, FileText,
+  type LucideIcon, LayoutDashboard, LayoutTemplate, Settings, FolderKanban, FlaskConical, Newspaper, User, FileText,
   Briefcase, GraduationCap, Award, Trophy, MessageSquare, Brain, Bot, Send, Plus, Download, X,
   ExternalLink,
 } from "lucide-react";
@@ -24,6 +24,8 @@ import AdminContentManager from "@/presentation/components/features/AdminContent
 import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
 import SiteHealthPanel from "@/presentation/components/features/SiteHealthPanel";
 import ResumeSectionManager from "@/presentation/components/features/ResumeSectionManager";
+import HomepageEditor from "@/presentation/components/features/HomepageEditor";
+import SettingsEditor from "@/presentation/components/features/SettingsEditor";
 
 type EditableAdminItem = Record<string, unknown>;
 type AdminChatMessage = UIMessage & { content?: string };
@@ -49,9 +51,11 @@ const GROUPS: Array<{ title: string; tabs: Tab[] }> = [
     title: "Website",
     tabs: [
       { id: "profile", label: "Homepage intro", icon: User, intro: "Headline, short intro, location and the open-to-work badge.", preview: "/" },
+      { id: "homepage", label: "Homepage sections", icon: LayoutTemplate, intro: "Recognition, pillars, who your work protects, how you work, learning and the closing call to action. Edit text, add or reorder cards, pick icons, or hide a section.", preview: "/" },
       { id: "projects", label: "Projects & ventures", icon: FolderKanban, intro: "Ventures and projects. Featured ones appear on the homepage.", create: "New project", preview: "/projects" },
       { id: "research", label: "Research", icon: FlaskConical, intro: "Studies and papers on the research page.", create: "New research", preview: "/research" },
       { id: "articles", label: "Blog", icon: Newspaper, intro: "Write, save drafts and publish articles.", create: "New article", preview: "/blog" },
+      { id: "settings", label: "Site settings", icon: Settings, intro: "Contact details, social links, every page's heading and intro, research areas, resume skills, Google descriptions and Search Console verification." },
     ],
   },
   {
@@ -234,7 +238,7 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      <main className="min-h-screen p-4 sm:p-8 lg:ml-64">
+      <div className="min-h-screen p-4 sm:p-8 lg:ml-64">
         {/* Section picker (phones and tablets) */}
         <div className="mb-6 lg:hidden">
           <label htmlFor="admin-section" className="mb-1.5 block text-xs font-medium text-slate-500">Section</label>
@@ -298,6 +302,8 @@ export default function AdminDashboard() {
           <div className="min-w-0 space-y-8">
             {activeTab === "overview" && <SiteHealthPanel onOpenTab={openTab} />}
             {activeTab === "profile" && <ProfileEditor />}
+            {activeTab === "homepage" && <HomepageEditor />}
+            {activeTab === "settings" && <SettingsEditor />}
             {activeTab === "cv" && (
               <div className="space-y-8">
                 <CvImporter />
@@ -352,7 +358,7 @@ export default function AdminDashboard() {
             </aside>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

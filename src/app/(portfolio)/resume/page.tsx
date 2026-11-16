@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/core/domain/portfolio/queries";
 import { Download, ExternalLink, FileText, CheckCircle, GraduationCap, Briefcase, Cloud, Calendar, Building2, MapPin, Award, Trophy } from "lucide-react";
 import BadgeShowcase from "@/presentation/components/features/BadgeShowcase";
 import TestimonialSection from "@/presentation/components/features/TestimonialSection";
@@ -12,23 +13,17 @@ import { Experience } from "@/core/domain/portfolio/types";
 // Static page, refreshed on admin save (on-demand) or at most daily.
 export const revalidate = 86400;
 
-export const metadata = {
-  title: "Resume",
-  description: "Experience, research, education and certificates of Aime Serge Ukobizaba, software engineer, innovator and researcher in Kigali, Rwanda. Download the CV as a PDF.",
-  alternates: { canonical: "/resume" },
-};
+export async function generateMetadata() {
+  const page = (await getSiteSettings()).pages.resume;
+  return {
+    title: "Resume",
+    description: page.seoDescription,
+    alternates: { canonical: "/resume" },
+    openGraph: { title: page.title, description: page.seoDescription, url: "/resume" },
+  };
+}
 
-// Tools listed plainly. Self-rated percentages were removed: readers can't verify them.
-const skillMatrix = [
-  { name: "Back end", tools: "Node.js, Python (Django, DRF), REST and GraphQL APIs, PostgreSQL" },
-  { name: "Front end", tools: "React, Next.js, TypeScript, Tailwind CSS" },
-  { name: "Security", tools: "Authentication, access control, input validation, security reviews" },
-  { name: "Cloud & delivery", tools: "Google Cloud, Vercel, Supabase, Git and CI/CD" },
-  { name: "AI", tools: "LLM apps, retrieval-augmented search (RAG), prompt design, agentic and responsible AI" },
-  { name: "Research for impact", tools: "Collecting and analysing public data (climate, transport), spotting risks and trends, writing up findings in plain language" },
-  { name: "Innovation & product", tools: "Turning a problem into a working product: user research, product and project management, UI/UX and human-centred design" },
-  { name: "Languages", tools: "English and Kinyarwanda (native), French and Kiswahili (proficient)" }
-];
+// Skills are edited in Admin → Site settings (listed plainly: no self-rated percentages).
 
 /**
  * Group a certificate by subject. Matches on whole words in the name or the
@@ -50,6 +45,8 @@ function humanize(value?: string | null): string {
 }
 
 export default async function ResumePage() {
+  const settings = await getSiteSettings();
+  const page = settings.pages.resume;
   const [certificates, experiences, educations, achievements, latestResumeUrl] = await Promise.all([
     getCertificates(),
     getExperiences(),
@@ -75,11 +72,9 @@ export default async function ResumePage() {
     <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between mb-20">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Resume
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">{page.title}</h1>
           <p className="mt-6 text-slate-400 text-lg md:text-xl max-w-2xl leading-relaxed">
-            Where I&apos;ve worked, what I&apos;ve studied, and the roles where I&apos;ve led, taught and built for my community. Every certificate links to the issuer so you can check it.
+            {page.intro}
           </p>
           
           {/* Counts come from the database, so they stay true as content changes. */}
@@ -458,7 +453,7 @@ export default async function ResumePage() {
             </div>
             
             <div className="space-y-8">
-              {skillMatrix.map(skill => (
+              {settings.resume.skills.map(skill => (
                 <div key={skill.name} className="space-y-3">
                   <p className="text-sm font-semibold text-slate-200">{skill.name}</p>
                   <p className="text-sm text-slate-400 leading-relaxed">{skill.tools}</p>

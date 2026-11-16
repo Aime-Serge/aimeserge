@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from "@/infrastructure/database/server";
 import { type ContactSubmission } from "./types";
 import { withShield } from "@/infrastructure/security/shield";
 import { contactSubmissionSchema, newsletterSubscriptionSchema } from "./schemas";
-import { notifyAdmin } from "@/infrastructure/utils/notifications";
+import { sendInquiryEmails } from "@/infrastructure/utils/notifications";
 import { SITE } from "@/config/site";
 
 async function submitContactFormBase(formData: ContactSubmission) {
@@ -19,57 +19,50 @@ async function submitContactFormBase(formData: ContactSubmission) {
     return { success: true, message: "Thanks! Your message has been sent." };
   }
 
-  const supabase = createServerSupabaseClient();
   const data = validatedFields.data;
 
+  // 1. Save to the database (Admin → Messages). A failure here must not lose the message.
+  let saved = false;
   try {
-    const { error } = await supabase
-      .from('contacts')
-      .insert([
-        {
-          name: data.name,
-          email: data.email,
-          contact_type: data.contactType,
-          company_name: data.companyName,
-          job_title: data.jobTitle,
-          interest: data.interest,
-          budget: data.budget,
-          timeline: data.timeline,
-          location: data.location,
-          linkedin_url: data.linkedinUrl,
-          whatsapp: data.whatsapp,
-          message: data.message,
-          newsletter_opt_in: data.newsletterOptIn,
-        }
-      ]);
-
-    if (error) {
-      console.error("Supabase submission error:", error);
-      return { success: false, message: `Your message couldn't be sent. Please email me at ${SITE.email}.` };
-    }
-
-    // Trigger Enhanced Notification Pipeline
-    await notifyAdmin({
-      title: "New Inquiry Received",
-      message: `New message from ${data.name}.`,
-      type: 'INQUIRY',
-      data: {
-        Name: data.name,
-        Email: data.email,
-        Type: data.contactType,
-        Interest: data.interest,
-        Message: data.message.substring(0, 500) // Truncate for notification safety
-      }
-    });
-
-    return { success: true, message: "Thanks! Your message has been sent. I'll reply within 1–2 working days." };
+    const supabase = createServerSupabaseClient();
+    const { error } = await supabase.from("contacts").insert([{
+      name: data.name,
+      email: data.email,
+      contact_type: data.contactType,
+      company_name: data.companyName,
+      job_title: data.jobTitle,
+      interest: data.interest,
+      budget: data.budget,
+      timeline: data.timeline,
+      location: data.location,
+      linkedin_url: data.linkedinUrl,
+      whatsapp: data.whatsapp,
+      message: data.message,
+      newsletter_opt_in: data.newsletterOptIn,
+    }]);
+    if (error) console.error("Contact not saved to the database:", error.message);
+    else saved = true;
   } catch (err) {
-    console.error("Fatal contact submission error:", err);
-    return { success: false, message: `Your message couldn't be sent. Please email me at ${SITE.email}.` };
+    console.error("Contact not saved to the database:", err instanceof Error ? err.message : err);
   }
+
+  // 2. Email it to the owner (and confirm to the visitor), whether or not it was saved.
+  let emailed = false;
+  try {
+    emailed = (await sendInquiryEmails(data, saved)).ownerEmailed;
+  } catch (err) {
+    console.error("Contact email failed:", err instanceof Error ? err.message : err);
+  }
+
+  // The message is safe if at least one copy exists.
+  if (saved || emailed) {
+    return { success: true, message: `Thanks! Your message has been sent. ${SITE.responseTime}` };
+  }
+  return { success: false, message: `Sorry, your message couldn't be sent. Please email me at ${SITE.email}.` };
 }
 
-export const submitContactForm = withShield("contact_submission", submitContactFormBase);
+// At most 3 messages per minute per visitor: each one sends emails.
+export const submitContactForm = withShield("contact_submission", submitContactFormBase, { limit: 3 });
 
 /**
  * High-speed Newsletter Subscription

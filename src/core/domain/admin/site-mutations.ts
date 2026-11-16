@@ -10,6 +10,8 @@ import { validateAdminSession } from "./queries";
 import { withShield } from "@/infrastructure/security/shield";
 import { CONTENT_TABLES, revalidateContent } from "@/infrastructure/cache/content";
 import type { ActionResult } from "./content-mutations";
+import { homepageSchema, mergeHomepage, type HomepageContent } from "@/config/homepage";
+import { settingsSchema, mergeSettings, type SiteSettings } from "@/config/settings";
 
 // ─── Site health ─────────────────────────────────────────────────────────
 
@@ -31,6 +33,7 @@ export type SiteHealth = {
 };
 
 const SECTIONS: Array<{ key: string; label: string; tab: string; filter?: [string, string] }> = [
+  { key: "site_content", label: "Homepage sections & site settings", tab: "settings" },
   { key: "projects", label: "Projects & ventures", tab: "projects" },
   { key: "research", label: "Research", tab: "research" },
   { key: "articles", label: "Blog (published)", tab: "articles", filter: ["status", "PUBLISHED"] },
@@ -84,7 +87,8 @@ async function getSiteHealthBase(): Promise<ActionResult<SiteHealth>> {
         { label: "Profile row", ok: Boolean(profile.data?.length), help: "Homepage intro and CV link. Save the Profile tab once to create it." },
         { label: "AI (Gemini) key", ok: has("GEMINI_API_KEY") || has("GOOGLE_GENERATIVE_AI_API_KEY"), help: "Needed for CV import and the site assistant. Add GEMINI_API_KEY in Vercel." },
         { label: "Automatic refresh secret", ok: has("CRON_SECRET"), help: "Lets the CV automation refresh pages. Add CRON_SECRET in Vercel and GitHub." },
-        { label: "Email notifications", ok: has("RESEND_API_KEY"), help: "Optional: email when someone sends a message. Add RESEND_API_KEY in Vercel." },
+        { label: "Contact messages emailed to you", ok: has("RESEND_API_KEY"), help: "Messages are saved here but not emailed until you add RESEND_API_KEY in Vercel (free at resend.com)." },
+        { label: "Visitors get a confirmation email", ok: has("RESEND_FROM_EMAIL") && !/resend\.dev/i.test(process.env.RESEND_FROM_EMAIL ?? ""), help: "Optional: verify your own domain in Resend, then set RESEND_FROM_EMAIL." },
       ],
     },
   };
@@ -350,5 +354,118 @@ export async function saveResumeEntry(input: SaveInput): Promise<ActionResult> {
     return await shieldedSave(input);
   } catch (e) {
     return { success: false, message: e instanceof Error ? e.message : "Couldn't save." };
+  }
+}
+
+// ─── Homepage sections ───────────────────────────────────────────────────
+
+async function getHomepageForAdminBase(): Promise<ActionResult<{ content: HomepageContent; saved: boolean }>> {
+  const db = await validateAdminSession();
+  const { data, error } = await db.from("site_content").select("value").eq("key", "homepage").maybeSingle();
+  if (error) return { success: false, message: `Couldn't load the homepage: ${error.message}` };
+  return { success: true, message: "ok", data: { content: mergeHomepage(data?.value), saved: Boolean(data) } };
+}
+
+const shieldedGetHomepage = withShield("homepage_get", getHomepageForAdminBase, { limit: 30 });
+export async function getHomepageForAdmin(): Promise<ActionResult<{ content: HomepageContent; saved: boolean }>> {
+  try {
+    return await shieldedGetHomepage(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't load the homepage." };
+  }
+}
+
+async function saveHomepageBase(input: HomepageContent): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const parsed = homepageSchema.safeParse(input);
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message || "Check the form." };
+
+  const { error } = await db
+    .from("site_content")
+    .upsert({ key: "homepage", value: parsed.data, updated_at: new Date().toISOString() });
+  if (error) return { success: false, message: `Couldn't save: ${error.message}` };
+
+  revalidateContent("site_content");
+  return { success: true, message: "Homepage saved. It updates within seconds." };
+}
+
+const shieldedSaveHomepage = withShield("homepage_save", saveHomepageBase, { limit: 20, auditLog: true });
+export async function saveHomepage(input: HomepageContent): Promise<ActionResult> {
+  try {
+    return await shieldedSaveHomepage(input);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't save." };
+  }
+}
+
+/** Remove saved homepage content so the site shows the built-in version again. */
+async function resetHomepageBase(): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const { error } = await db.from("site_content").delete().eq("key", "homepage");
+  if (error) return { success: false, message: `Couldn't reset: ${error.message}` };
+  revalidateContent("site_content");
+  return { success: true, message: "Homepage reset to the built-in version." };
+}
+
+const shieldedResetHomepage = withShield("homepage_reset", resetHomepageBase, { limit: 5, auditLog: true });
+export async function resetHomepage(): Promise<ActionResult> {
+  try {
+    return await shieldedResetHomepage(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't reset." };
+  }
+}
+
+// ─── Site settings ───────────────────────────────────────────────────────
+
+async function getSettingsForAdminBase(): Promise<ActionResult<{ settings: SiteSettings; saved: boolean }>> {
+  const db = await validateAdminSession();
+  const { data, error } = await db.from("site_content").select("value").eq("key", "settings").maybeSingle();
+  if (error) return { success: false, message: `Couldn't load the settings: ${error.message}` };
+  return { success: true, message: "ok", data: { settings: mergeSettings(data?.value), saved: Boolean(data) } };
+}
+
+const shieldedGetSettings = withShield("settings_get", getSettingsForAdminBase, { limit: 30 });
+export async function getSettingsForAdmin(): Promise<ActionResult<{ settings: SiteSettings; saved: boolean }>> {
+  try {
+    return await shieldedGetSettings(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't load the settings." };
+  }
+}
+
+async function saveSettingsBase(input: SiteSettings): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const parsed = settingsSchema.safeParse(input);
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message || "Check the form." };
+  const { error } = await db.from("site_content").upsert({ key: "settings", value: parsed.data, updated_at: new Date().toISOString() });
+  if (error) return { success: false, message: `Couldn't save: ${error.message}` };
+  revalidateContent("site_content");
+  return { success: true, message: "Settings saved. Every page updates within seconds." };
+}
+
+const shieldedSaveSettings = withShield("settings_save", saveSettingsBase, { limit: 20, auditLog: true });
+export async function saveSettings(input: SiteSettings): Promise<ActionResult> {
+  try {
+    return await shieldedSaveSettings(input);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't save." };
+  }
+}
+
+async function resetSettingsBase(): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const { error } = await db.from("site_content").delete().eq("key", "settings");
+  if (error) return { success: false, message: `Couldn't reset: ${error.message}` };
+  revalidateContent("site_content");
+  return { success: true, message: "Settings reset to the built-in version." };
+}
+
+const shieldedResetSettings = withShield("settings_reset", resetSettingsBase, { limit: 5, auditLog: true });
+export async function resetSettings(): Promise<ActionResult> {
+  try {
+    return await shieldedResetSettings(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't reset." };
   }
 }

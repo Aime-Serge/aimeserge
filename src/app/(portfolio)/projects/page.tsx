@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/core/domain/portfolio/queries";
 import { getProjects } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { ExternalLink, FileText, ChevronRight } from "lucide-react";
@@ -7,20 +8,26 @@ import { SITE, jsonLd as toJsonLd } from "@/config/site";
 // Static page, refreshed on admin save (on-demand) or at most daily.
 export const revalidate = 86400;
 
-export const metadata = {
-  title: "Projects",
-  description: "Ventures, products and research by Aime Serge Ukobizaba, including INEZA AI (health) and DukaAI (small business). Each page explains the problem, who it helps, what was built and the result.",
-  alternates: { canonical: "/projects" },
-};
+export async function generateMetadata() {
+  const page = (await getSiteSettings()).pages.projects;
+  return {
+    title: "Projects",
+    description: page.seoDescription,
+    alternates: { canonical: "/projects" },
+    openGraph: { title: page.title, description: page.seoDescription, url: "/projects" },
+  };
+}
 
 export default async function ProjectsPage() {
+  const settings = await getSiteSettings();
+  const page = settings.pages.projects;
   const projects = await getProjects();
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": `Projects by ${SITE.name}`,
-    "description": metadata.description,
+    "description": page.seoDescription,
     "url": `${SITE.url}/projects`,
     "mainEntity": {
       "@type": "Person",
@@ -44,11 +51,9 @@ export default async function ProjectsPage() {
       />
       <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Projects
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">{page.title}</h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          Ventures I&apos;ve founded, products I&apos;ve built and problems I&apos;ve studied. Each story explains the problem, who it helps, what I did and the result.
+          {page.intro}
         </p>
       </div>
 
@@ -59,7 +64,7 @@ export default async function ProjectsPage() {
           {projects.length === 0 && (
             <p className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-slate-400">
               Projects are being updated. Please check back soon, or see my code on{" "}
-              <a href={SITE.social.github} className="text-cyan-400 hover:text-cyan-300">GitHub</a>.
+              <a href={settings.social.github || SITE.social.github} className="text-cyan-400 hover:text-cyan-300">GitHub</a>.
             </p>
           )}
           {projects.map((project) => (

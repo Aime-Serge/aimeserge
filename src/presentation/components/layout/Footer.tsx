@@ -1,6 +1,7 @@
 import { Github, Linkedin, Twitter, Instagram, Mail, MapPin, Terminal, Rss, ArrowUp, Clock } from "lucide-react";
 import Link from "next/link";
 import { SITE } from "@/config/site";
+import { getSiteSettings } from "@/core/domain/portfolio/queries";
 
 /**
  * Site-wide footer. A server component: no client JavaScript, renders as plain
@@ -31,18 +32,19 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-const SOCIAL = [
-  { label: "LinkedIn", href: SITE.social.linkedin, Icon: Linkedin },
-  { label: "GitHub", href: SITE.social.github, Icon: Github },
-  { label: "X (Twitter)", href: SITE.social.x, Icon: Twitter },
-  { label: "Instagram", href: SITE.social.instagram, Icon: Instagram },
-];
+// Links and contact details come from Admin → Site settings.
+const SOCIAL_ICONS = { linkedin: Linkedin, github: Github, x: Twitter, instagram: Instagram } as const;
+const SOCIAL_LABELS = { linkedin: "LinkedIn", github: "GitHub", x: "X (Twitter)", instagram: "Instagram" } as const;
 
 const link =
   "rounded text-sm text-slate-400 transition-colors hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500";
 
-export default function Footer() {
+export default async function Footer() {
   const year = new Date().getFullYear();
+  const settings = await getSiteSettings();
+  const SOCIAL = (Object.keys(SOCIAL_ICONS) as Array<keyof typeof SOCIAL_ICONS>)
+    .filter((k) => settings.social[k])
+    .map((k) => ({ label: SOCIAL_LABELS[k], href: settings.social[k], Icon: SOCIAL_ICONS[k] }));
 
   return (
     <footer className="border-t border-slate-800 bg-[#010409] pb-8 pt-14" aria-labelledby="footer-title">
@@ -51,15 +53,15 @@ export default function Footer() {
           {/* Who and how to reach */}
           <div className="space-y-4 sm:col-span-2 lg:col-span-1">
             <h2 id="footer-title" className="text-lg font-bold text-white">{SITE.name}</h2>
-            <p className="max-w-sm text-sm leading-relaxed text-slate-400">{SITE.positioning}</p>
+            <p className="max-w-sm text-sm leading-relaxed text-slate-400">{settings.identity.positioning}</p>
             <ul className="space-y-2 text-sm text-slate-400">
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                {SITE.location}
+                {settings.contact.location}
               </li>
               <li className="flex items-center gap-2">
                 <Clock className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                {SITE.responseTime}
+                {settings.contact.responseTime}
               </li>
             </ul>
           </div>
@@ -82,9 +84,9 @@ export default function Footer() {
             <h2 className="mb-4 text-sm font-semibold text-white">Get in touch</h2>
             <ul className="space-y-3">
               <li>
-                <a href={`mailto:${SITE.email}`} className={`${link} inline-flex items-center gap-2 break-all`}>
+                <a href={`mailto:${settings.contact.email}`} className={`${link} inline-flex items-center gap-2 break-all`}>
                   <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {SITE.email}
+                  {settings.contact.email}
                 </a>
               </li>
               <li>

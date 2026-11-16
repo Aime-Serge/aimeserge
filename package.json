@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "echo 'Please use Supabase CLI: supabase db push' && exit 1"
+    "db:migrate": "bash scripts/apply-db-migrations.sh",
+    "check:setup": "node scripts/check-setup.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.67",

@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/core/domain/portfolio/queries";
 import { getPosts } from "@/core/domain/portfolio/queries";
 import Link from "next/link";
 import { Clock, Globe, Heart } from "lucide-react";
@@ -10,20 +11,26 @@ import { SITE, jsonLd as toJsonLd } from "@/config/site";
 // Static page, refreshed on admin save (on-demand) or at most daily.
 export const revalidate = 86400;
 
-export const metadata = {
-  title: "Blog",
-  description: "Articles and short posts by Aime Serge Ukobizaba on building software, security and AI, written in plain language.",
-  alternates: { canonical: "/blog" },
-};
+export async function generateMetadata() {
+  const page = (await getSiteSettings()).pages.blog;
+  return {
+    title: "Blog",
+    description: page.seoDescription,
+    alternates: { canonical: "/blog" },
+    openGraph: { title: page.title, description: page.seoDescription, url: "/blog" },
+  };
+}
 
 export default async function BlogPage() {
+  const settings = await getSiteSettings();
+  const page = settings.pages.blog;
   const posts = await getPosts();
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
     "name": `${SITE.name}: Blog`,
-    "description": metadata.description,
+    "description": page.seoDescription,
     "url": `${SITE.url}/blog`,
     "creator": {
       "@type": "Person",
@@ -52,11 +59,9 @@ export default async function BlogPage() {
       />
       <div className="container mx-auto px-6 py-12 lg:py-20">
       <div className="mb-16">
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-          Blog
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">{page.title}</h1>
         <p className="mt-4 max-w-2xl text-slate-400 text-lg">
-          What I&apos;m building, researching and learning: ventures, health and business tech, security and AI, explained without the jargon.
+          {page.intro}
         </p>
       </div>
 

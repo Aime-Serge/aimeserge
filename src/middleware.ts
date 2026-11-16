@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+
 import { getEnvVar } from '@/infrastructure/utils/env';
+
+const CANONICAL_HOST = new URL((process.env.NEXT_PUBLIC_SITE_URL || 'https://aimeserge.vercel.app').replace(/\/$/, '')).hostname;
 
 /**
  * Edge middleware for page routes.
@@ -54,6 +57,13 @@ export async function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
   response.headers.set('Content-Security-Policy', CSP);
+
+  // Google should list only the main address. Preview copies and per-deployment
+  // *.vercel.app addresses serve the same pages, so tell search engines to skip them.
+  const host = request.headers.get('host')?.split(':')[0] ?? '';
+  if (host && host !== CANONICAL_HOST && host !== 'localhost' && host !== '127.0.0.1') {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
 
   // Never let browsers or proxies keep a copy of private pages.
   if (isProtectedPath || pathname.startsWith('/login')) {

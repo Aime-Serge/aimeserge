@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { getProjectBySlug, getProjects } from "@/core/domain/portfolio/queries";
+import { SITE, jsonLd } from "@/config/site";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, FileText, CheckCircle2 } from "lucide-react";
@@ -19,6 +21,27 @@ interface ProjectPageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Title, description, canonical address and preview picture for Google and link previews. */
+export async function generateMetadata({ params }: ProjectPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await getProjectBySlug(slug);
+  if (!project) return { title: "Project not found", robots: { index: false } };
+  const description = (project.tagline || project.summary || project.description || "").slice(0, 300);
+  return {
+    title: project.title,
+    description,
+    alternates: { canonical: `/projects/${project.slug}` },
+    openGraph: {
+      type: "article",
+      title: project.title,
+      description,
+      url: `/projects/${project.slug}`,
+      // Preview picture: ./opengraph-image.tsx (generated per project).
+    },
+    twitter: { card: "summary_large_image", title: project.title, description },
+  };
+}
+
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
@@ -27,8 +50,23 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
     notFound();
   }
 
+  const projectLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: project.title,
+    headline: project.tagline || project.title,
+    description: project.summary || project.tagline,
+    url: `${SITE.url}/projects/${project.slug}`,
+    image: project.images?.[0] ? new URL(project.images[0], SITE.url).toString() : undefined,
+    genre: project.category,
+    keywords: project.tools?.join(", "),
+    creator: { "@type": "Person", name: SITE.name, url: SITE.url },
+    dateCreated: project.createdAt,
+  };
+
   return (
     <div className="container mx-auto px-6 py-12 lg:py-20">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(projectLd) }} />
       <Link
         href="/projects"
         className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 rounded px-1"

@@ -1,103 +1,123 @@
-import { sendEmail } from '@/infrastructure/email/mailer';
+import { sendEmail, CAN_EMAIL_VISITORS, type SendResult } from "@/infrastructure/email/mailer";
+import { SITE } from "@/config/site";
 
 export type AlertPayload = {
   title: string;
   message: string;
-  type: 'INQUIRY' | 'SECURITY' | 'SYSTEM';
+  type: "INQUIRY" | "SECURITY" | "SYSTEM";
   data?: Record<string, unknown>;
 };
 
-/**
- * Enhanced Notification System
- * Handles Admin alerts and User "Double Handshake" confirmations.
- */
-export async function notifyAdmin(payload: AlertPayload) {
-  const { title, message, type, data } = payload;
-  
-  // 1. Discord Webhook (Instant Mobile Push)
-  const DISCORD_URL = process.env.DISCORD_WEBHOOK_URL;
-  
-  if (DISCORD_URL) {
-    try {
-      await fetch(DISCORD_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          embeds: [{
-            title: `[${type}] ${title}`,
-            description: message,
-            color: type === 'SECURITY' ? 15158332 : (type === 'INQUIRY' ? 3066993 : 3447003),
-            fields: data ? Object.entries(data).map(([key, val]) => ({
-              name: key,
-              value: String(val),
-              inline: true
-            })) : [],
-            footer: { text: "Portfolio System Node" },
-            timestamp: new Date().toISOString(),
-          }]
-        }),
-      });
-    } catch (err) {
-      console.error("Discord notification failed", err);
-    }
-  }
+/** Where new messages and alerts go. */
+export const notifyAddress = () =>
+  process.env.INQUIRY_NOTIFY_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim() || SITE.email;
 
-  // 2. Admin Email Alert
-  const adminEmail = process.env.ADMIN_EMAIL || 'aimeserge51260@gmail.com';
-  
+/** Escape text before putting it in an email: visitors must not be able to inject links or markup. */
+export const esc = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+const oneLine = (v: unknown, max = 120) => String(v ?? "").replace(/[\r\n]+/g, " ").trim().slice(0, max);
+
+async function discord(title: string, message: string, type: AlertPayload["type"], data?: Record<string, unknown>) {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return;
   try {
-    await sendEmail({
-      to: adminEmail,
-      subject: `[${type}] ${title}`,
-      html: `
-        <div style="font-family: 'Courier New', Courier, monospace; background-color: #020617; color: #f8fafc; padding: 40px; border-radius: 20px; border: 1px solid #1e293b;">
-          <h2 style="color: ${type === 'SECURITY' ? '#ef4444' : '#06b6d4'}; margin-top: 0;">&gt; SYSTEM_ALERT: ${title}</h2>
-          <div style="background-color: #0f172a; padding: 20px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 20px;">
-            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">${message}</p>
-            ${data ? `<pre style="color: #22d3ee; font-size: 12px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>` : ''}
-          </div>
-          <hr style="border: 0; border-top: 1px solid #1e293b; margin: 30px 0;" />
-          <p style="font-size: 10px; color: #475569; text-transform: uppercase; letter-spacing: 2px;">Portfolio System Node // Handshake Protocol 1.0</p>
-        </div>
-      `,
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        // Plain text only: Discord mentions like @everyone are disabled.
+        allowed_mentions: { parse: [] },
+        embeds: [{
+          title: oneLine(`[${type}] ${title}`, 250),
+          description: oneLine(message, 1000),
+          color: type === "SECURITY" ? 15158332 : type === "INQUIRY" ? 3066993 : 3447003,
+          fields: Object.entries(data ?? {}).slice(0, 10).map(([name, value]) => ({ name, value: oneLine(value, 1000) || "-", inline: false })),
+          timestamp: new Date().toISOString(),
+        }],
+      }),
     });
   } catch (err) {
-    console.error("Admin email notification failed", err);
+    console.error("Discord notification failed", err);
+  }
+}
+
+const table = (rows: Array<[string, unknown]>) =>
+  rows
+    .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
+    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#64748b;vertical-align:top;white-space:nowrap">${esc(k)}</td><td style="padding:6px 0;color:#0f172a">${esc(v)}</td></tr>`)
+    .join("");
+
+/** Security and system alerts to the site owner (email and optional Discord). */
+export async function notifyAdmin(payload: AlertPayload): Promise<SendResult> {
+  const { title, message, type, data } = payload;
+  await discord(title, message, type, data);
+  return sendEmail({
+    to: notifyAddress(),
+    subject: oneLine(`[${type === "SECURITY" ? "Security" : "Website"}] ${title}`, 150),
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#0f172a">
+      <h2 style="margin:0 0 12px">${esc(title)}</h2>
+      <p>${esc(message)}</p>
+      ${data ? `<table style="border-collapse:collapse;font-size:14px">${table(Object.entries(data))}</table>` : ""}
+    </div>`,
+    text: `${title}\n\n${message}\n\n${Object.entries(data ?? {}).map(([k, v]) => `${k}: ${String(v ?? "")}`).join("\n")}`,
+  });
+}
+
+export type Inquiry = {
+  name: string; email: string; contactType: string; interest: string; message: string;
+  companyName?: string; jobTitle?: string; budget?: string; timeline?: string; location?: string;
+  linkedinUrl?: string; whatsapp?: string; newsletterOptIn?: boolean;
+};
+
+/**
+ * A new contact-form message: email the owner (Reply goes straight to the visitor),
+ * then send the visitor a short confirmation when a verified sender domain is set.
+ * Returns whether the owner's email was sent.
+ */
+export async function sendInquiryEmails(q: Inquiry, savedToDatabase: boolean): Promise<{ ownerEmailed: boolean }> {
+  const rows: Array<[string, unknown]> = [
+    ["Name", q.name], ["Email", q.email], ["Topic", q.interest], ["From", q.contactType],
+    ["Organisation", q.companyName], ["Role", q.jobTitle], ["Budget", q.budget], ["Timeline", q.timeline],
+    ["Location", q.location], ["LinkedIn", q.linkedinUrl], ["WhatsApp", q.whatsapp],
+    ["Newsletter", q.newsletterOptIn ? "Yes, wants updates" : undefined],
+  ];
+
+  await discord("New message", `${q.name} (${q.interest})`, "INQUIRY", { Email: q.email, Message: q.message.slice(0, 900) });
+
+  const owner = await sendEmail({
+    to: notifyAddress(),
+    replyTo: q.email,
+    subject: oneLine(`New message from ${q.name}: ${q.interest}`, 150),
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#0f172a;max-width:640px">
+      <h2 style="margin:0 0 4px">New message from your website</h2>
+      <p style="margin:0 0 16px;color:#64748b">Press Reply to answer ${esc(q.name)} directly.</p>
+      <div style="white-space:pre-wrap;background:#f1f5f9;border-left:4px solid #0891b2;padding:16px;border-radius:6px">${esc(q.message)}</div>
+      <table style="border-collapse:collapse;font-size:14px;margin-top:16px">${table(rows)}</table>
+      <p style="margin-top:20px;font-size:13px;color:#64748b">${savedToDatabase
+        ? `Also saved in Admin → Messages: <a href="${SITE.url}/admin?tab=inquiries">${SITE.url}/admin</a>`
+        : "This message could not be saved to the database, so this email is the only copy."}</p>
+    </div>`,
+    text: `New message from your website (reply to answer ${q.name} directly)\n\n${q.message}\n\n${rows
+      .filter(([, v]) => v).map(([k, v]) => `${k}: ${String(v)}`).join("\n")}\n\n${savedToDatabase ? "Also saved in Admin → Messages." : "Not saved to the database: this email is the only copy."}`,
+  });
+
+  // Visitor confirmation: only from a verified domain, otherwise Resend rejects it.
+  if (CAN_EMAIL_VISITORS) {
+    await sendEmail({
+      to: q.email,
+      replyTo: notifyAddress(),
+      subject: `Thanks for your message, ${oneLine(q.name, 60)}`,
+      html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#0f172a;max-width:600px">
+        <p>Hi ${esc(q.name)},</p>
+        <p>Thanks for getting in touch about <strong>${esc(q.interest)}</strong>. I've received your message and ${esc(SITE.responseTime.replace(/^I /, "will ").replace(/\.$/, ""))}.</p>
+        <p>If it's urgent, just reply to this email.</p>
+        <p>Best regards,<br/>${esc(SITE.name)}<br/><a href="${SITE.url}">${SITE.url.replace(/^https:\/\//, "")}</a></p>
+        <p style="font-size:12px;color:#64748b">You're receiving this because this address was entered in the contact form on ${SITE.url.replace(/^https:\/\//, "")}. If that wasn't you, you can ignore this email.</p>
+      </div>`,
+      text: `Hi ${q.name},\n\nThanks for getting in touch about ${q.interest}. I've received your message and ${SITE.responseTime.replace(/^I /, "will ").replace(/\.$/, "")}.\n\nIf it's urgent, just reply to this email.\n\nBest regards,\n${SITE.name}\n${SITE.url}`,
+    });
   }
 
-  // 3. User Confirmation (Double Handshake)
-  if (type === 'INQUIRY' && data?.Email) {
-    const userEmail = data.Email as string;
-    const userName = (data.Name as string) || 'User';
-
-    try {
-      await sendEmail({
-        to: userEmail,
-        subject: "Handshake Established | Aime Serge Portfolio",
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; color: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
-            <div style="background-color: #0891b2; padding: 30px; text-align: center; color: #ffffff;">
-              <h1 style="margin: 0; font-size: 24px;">Connection Synchronized</h1>
-            </div>
-            <div style="padding: 40px;">
-              <p style="font-size: 16px; line-height: 1.6;">Hello ${userName},</p>
-              <p style="font-size: 16px; line-height: 1.6;">Your inquiry has been successfully transmitted to my digital node. I have received your message regarding <strong>${data.Interest || 'Collaboration'}</strong>.</p>
-              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #0891b2;">
-                <p style="margin: 0; font-size: 14px; color: #64748b;">Current Status:</p>
-                <p style="margin: 5px 0 0 0; font-weight: bold; color: #0891b2;">QUEUED_FOR_REVIEW (ETA: 24-48h)</p>
-              </div>
-              <p style="font-size: 16px; line-height: 1.6;">While I process your request, you can explore my latest architectural broadcasts or query my Digital Twin directly on the platform.</p>
-              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #94a3b8;">
-                <p style="margin: 0;">Best regards,</p>
-                <p style="margin: 5px 0 0 0; font-weight: bold; color: #1e293b;">Aime Serge UKOBIZABA</p>
-                <p style="margin: 2px 0 0 0;">Senior Software Engineer</p>
-              </div>
-            </div>
-          </div>
-        `,
-      });
-    } catch (err) {
-      console.error("User confirmation email failed", err);
-    }
-  }
+  return { ownerEmailed: owner.success };
 }
