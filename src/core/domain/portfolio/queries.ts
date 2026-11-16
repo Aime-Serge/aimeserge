@@ -11,6 +11,7 @@ import {
   Experience, Education, Organization, Achievement, Profile, Project
 } from "./types";
 import { SITE } from "@/config/site";
+import { HOMEPAGE_DEFAULT, mergeHomepage, type HomepageContent } from "@/config/homepage";
 
 /**
  * Fetch Professional Experiences (Relational)
@@ -389,6 +390,20 @@ export async function getProfile(): Promise<Profile> {
     ['profile'],
     { tags: ['profile'], revalidate: CONTENT_TTL }
   )().catch(contentFallback(DEFAULT_PROFILE));
+}
+
+/** Editable homepage sections (Admin → Homepage sections), merged over the built-in defaults. */
+export async function getHomepageContent(): Promise<HomepageContent> {
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicSupabaseClient();
+      const { data, error } = await supabase.from('site_content').select('value').eq('key', 'homepage').maybeSingle();
+      if (error) throw error;
+      return mergeHomepage(data?.value);
+    },
+    ['homepage'],
+    { tags: ['homepage'], revalidate: CONTENT_TTL }
+  )().catch(contentFallback(HOMEPAGE_DEFAULT));
 }
 
 /** Projects marked "featured" (by sort order); falls back to the newest three. */

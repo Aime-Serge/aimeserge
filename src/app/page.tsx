@@ -1,10 +1,8 @@
 import Link from "next/link";
-import {
-  ArrowRight, FileDown, Lightbulb, Microscope, ShieldCheck, Sprout, User, Store,
-  Ear, Hammer, TrendingUp, Trophy, Briefcase, Handshake, FlaskConical,
-} from "lucide-react";
+import { ArrowRight, FileDown, Trophy } from "lucide-react";
+import HomeIcon from "@/presentation/components/shared/HomeIcon";
 import { SITE, jsonLd } from "@/config/site";
-import { getExperiences, getProfile, getFeaturedProjects } from "@/core/domain/portfolio/queries";
+import { getExperiences, getProfile, getFeaturedProjects, getHomepageContent } from "@/core/domain/portfolio/queries";
 
 // Static HTML, refreshed when the profile, projects or experiences change in the admin (or daily).
 export const revalidate = 86400;
@@ -17,75 +15,7 @@ export const revalidate = 86400;
  *  - No numbers we can't prove.
  */
 
-// Facts only. Each one is on the CV, a project page or a public LinkedIn post.
-const RECOGNITION = [
-  { text: "2nd place, Hacktoberfest Hack Day Kigali 2026", detail: "with DukaAI" },
-  { text: "4th place, Innovate With Google Cloud Hackathon", detail: "Google Cloud" },
-  { text: "Building INEZA AI with ALU's CHII", detail: "Africa Health Collaborative" },
-  { text: "ALX Ventures Rwanda Ambassador", detail: "since 2026" },
-];
-
-const PILLARS = [
-  {
-    icon: Lightbulb,
-    title: "Innovate: from idea to venture",
-    body: "I look for problems people live with every day and turn them into products. I founded INEZA AI, a health system for clinics, and co-founded DukaAI, which helps small shops keep clear records.",
-    outcome: "A real product, tested with the people it is for.",
-  },
-  {
-    icon: Microscope,
-    title: "Research for impact",
-    body: "Before I build, I study the problem: who is at risk, how big the risk is, and why. That ranges from 26 years of East African climate data to how shop owners keep their books. I share what I find in plain language.",
-    outcome: "Decisions based on evidence, not guesses.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Build it safe and smart",
-    body: "Web apps, APIs and AI assistants with security built in from day one: safe logins, protected data and checks on everything people type in. Built with Next.js, Python and PostgreSQL.",
-    outcome: "Technology people can trust with their data.",
-  },
-];
-
-// Who the work protects: the risk, then what I do about it.
-const AUDIENCES = [
-  {
-    icon: Sprout,
-    who: "Communities",
-    risk: "Changing rain and rising heat put harvests, water and health at risk.",
-    action: "My climate research turns 26 years of East African data into local trends that planners can use. INEZA AI helps clinics follow disease trends by district.",
-    href: "/research",
-    linkText: "See the research",
-  },
-  {
-    icon: User,
-    who: "Individuals",
-    risk: "People lose time, money and privacy to services that are slow, hard to use or unsafe.",
-    action: "I design simple tools that work in the languages people speak (Kinyarwanda, French and English) and keep personal data private by default.",
-    href: "/projects",
-    linkText: "See the projects",
-  },
-  {
-    icon: Store,
-    who: "Organisations",
-    risk: "Small businesses, clinics and lenders often decide without clear records.",
-    action: "DukaAI turns handwritten sales books into records owners and lenders can rely on. For teams, I build secure web apps and AI assistants that answer from their own documents.",
-    href: "/projects/dukaai",
-    linkText: "See DukaAI",
-  },
-];
-
-const STEPS = [
-  { icon: Ear, title: "Listen", body: "Talk to the people who face the problem: health workers, shop owners, users." },
-  { icon: Microscope, title: "Research", body: "Gather the data and find the real risk: how big it is and who it affects." },
-  { icon: Hammer, title: "Build", body: "Make the simplest safe tool that solves it, and test it with real users." },
-  { icon: TrendingUp, title: "Measure and improve", body: "Check what changed, share what I learned, and make it better." },
-];
-
-const WAYS_TO_WORK = [
-  { icon: Briefcase, title: "Hire me", body: "Full-time roles, product work or a freelance project.", topic: "Hiring" },
-  { icon: Handshake, title: "Partner or invest", body: "Co-build, pilot or support INEZA AI, DukaAI or a new idea.", topic: "Partnership or investment" },
-  { icon: FlaskConical, title: "Research together", body: "Studies on climate, health, small business or digital safety.", topic: "Research collaboration" },
-];
+// Section text, cards and icons are edited in Admin → Homepage sections (src/config/homepage.ts).
 
 // Shown only if the database is unreachable or empty.
 const FALLBACK_EXPERIENCE = [
@@ -100,12 +30,6 @@ const FALLBACK_EXPERIENCE = [
   { org: "Rwanda Cancer Relief", role: "Technical Lead (volunteer)", when: "2025 – now" },
 ];
 
-const LEARNING = [
-  "ALX Software Engineering programme",
-  "ALX Cybersecurity programme",
-  "AWS AI/ML Scholars: Agentic AI engineering (graduate)",
-  "Google Cloud skill badges",
-];
 
 const year = (d?: string | null) => (d ? new Date(d).getFullYear() : null);
 
@@ -124,7 +48,7 @@ async function loadExperience() {
 }
 
 export default async function Home() {
-  const [EXPERIENCE, profile, featured] = await Promise.all([loadExperience(), getProfile(), getFeaturedProjects(3)]);
+  const [EXPERIENCE, profile, featured, home] = await Promise.all([loadExperience(), getProfile(), getFeaturedProjects(3), getHomepageContent()]);
   const personLd = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -199,44 +123,48 @@ export default async function Home() {
           </div>
 
           {/* Recognition: quick, checkable proof */}
+          {home.recognition.visible && home.recognition.items.length > 0 && (
           <ul aria-label="Recognition" className="mx-auto mt-14 grid max-w-5xl gap-3 text-left sm:grid-cols-2 lg:grid-cols-4">
-            {RECOGNITION.map((r) => (
+            {home.recognition.items.map((r) => (
               <li key={r.text} className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3">
                 <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
                 <span>
                   <span className="block text-sm font-medium text-slate-200">{r.text}</span>
-                  <span className="block text-xs text-slate-500">{r.detail}</span>
+                  {r.detail && <span className="block text-xs text-slate-500">{r.detail}</span>}
                 </span>
               </li>
             ))}
           </ul>
+          )}
         </div>
       </section>
 
       {/* Three pillars: innovator, researcher, safe builder */}
+      {home.pillars.visible && (
       <section aria-labelledby="pillars-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
-        <h2 id="pillars-heading" className="text-3xl font-bold text-white">Three ways I create impact</h2>
-        <p className="mt-3 max-w-2xl text-slate-400">I start new things, I study problems before I solve them, and I build so people stay safe.</p>
+        <h2 id="pillars-heading" className="text-3xl font-bold text-white">{home.pillars.title}</h2>
+        {home.pillars.intro && <p className="mt-3 max-w-2xl text-slate-400">{home.pillars.intro}</p>}
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {PILLARS.map(({ icon: Icon, title, body, outcome }) => (
+          {home.pillars.items.map(({ icon, title, body, outcome }) => (
             <article key={title} className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
-              <Icon className="h-7 w-7 text-cyan-400" aria-hidden="true" />
+              <HomeIcon name={icon} className="h-7 w-7 text-cyan-400" />
               <h3 className="mt-5 text-xl font-semibold text-white">{title}</h3>
               <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">{body}</p>
-              <p className="mt-4 border-t border-slate-800 pt-4 text-sm font-medium text-emerald-300">{outcome}</p>
+              {outcome && <p className="mt-4 border-t border-slate-800 pt-4 text-sm font-medium text-emerald-300">{outcome}</p>}
             </article>
           ))}
         </div>
       </section>
+      )}
 
       {/* Featured ventures and projects: marked "featured" in the admin */}
-      {featured.length > 0 && (
+      {home.featured.visible && featured.length > 0 && (
         <section aria-labelledby="featured-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 id="featured-heading" className="text-3xl font-bold text-white">Ventures and featured work</h2>
-              <p className="mt-3 max-w-2xl text-slate-400">What I&apos;m building now, and the problem each one solves.</p>
+              <h2 id="featured-heading" className="text-3xl font-bold text-white">{home.featured.title}</h2>
+              {home.featured.intro && <p className="mt-3 max-w-2xl text-slate-400">{home.featured.intro}</p>}
             </div>
             <Link href="/projects" className="inline-flex items-center gap-2 font-semibold text-cyan-400 hover:text-cyan-300">
               All projects <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -267,17 +195,16 @@ export default async function Home() {
       )}
 
       {/* Who the work protects: risk first, then action */}
+      {home.audiences.visible && (
       <section aria-labelledby="audiences-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
-        <h2 id="audiences-heading" className="text-3xl font-bold text-white">Who my work protects</h2>
-        <p className="mt-3 max-w-2xl text-slate-400">
-          Every project starts with a risk that someone faces. Here is who I work for, and what I do about it.
-        </p>
+        <h2 id="audiences-heading" className="text-3xl font-bold text-white">{home.audiences.title}</h2>
+        {home.audiences.intro && <p className="mt-3 max-w-2xl text-slate-400">{home.audiences.intro}</p>}
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {AUDIENCES.map(({ icon: Icon, who, risk, action, href, linkText }) => (
+          {home.audiences.items.map(({ icon, who, risk, action, href, linkText }) => (
             <article key={who} className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/40 p-7">
               <div className="flex items-center gap-3">
-                <Icon className="h-6 w-6 text-emerald-400" aria-hidden="true" />
+                <HomeIcon name={icon} className="h-6 w-6 text-emerald-400" />
                 <h3 className="text-xl font-semibold text-white">{who}</h3>
               </div>
               <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">The risk</p>
@@ -291,20 +218,22 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* How I work: a workflow any stakeholder can follow */}
+      {home.steps.visible && (
       <section aria-labelledby="process-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
-        <h2 id="process-heading" className="text-3xl font-bold text-white">How I work</h2>
-        <p className="mt-3 max-w-2xl text-slate-400">The same four steps, whether it&apos;s a research study, a new venture or a client project.</p>
+        <h2 id="process-heading" className="text-3xl font-bold text-white">{home.steps.title}</h2>
+        {home.steps.intro && <p className="mt-3 max-w-2xl text-slate-400">{home.steps.intro}</p>}
 
         <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map(({ icon: Icon, title, body }, i) => (
+          {home.steps.items.map(({ icon, title, body }, i) => (
             <li key={title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
               <div className="flex items-center gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-600/20 text-sm font-bold text-cyan-300" aria-hidden="true">
                   {i + 1}
                 </span>
-                <Icon className="h-5 w-5 text-cyan-400" aria-hidden="true" />
+                <HomeIcon name={icon} className="h-5 w-5 text-cyan-400" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
@@ -312,12 +241,15 @@ export default async function Home() {
           ))}
         </ol>
       </section>
+      )}
 
       {/* Proof: real roles and learning, straight from the CV */}
+      {home.experience.visible && (
       <section aria-labelledby="experience-heading" className="container mx-auto border-t border-slate-800/50 px-6 py-20">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
-            <h2 id="experience-heading" className="text-3xl font-bold text-white">Where I&apos;ve worked and led</h2>
+            <h2 id="experience-heading" className="text-3xl font-bold text-white">{home.experience.title}</h2>
+            {home.experience.intro && <p className="mt-3 text-slate-400">{home.experience.intro}</p>}
             <ul className="mt-8 divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900/40">
               {EXPERIENCE.map((e) => (
                 <li key={`${e.org}-${e.role}`} className="flex flex-wrap items-baseline justify-between gap-2 px-6 py-4">
@@ -332,9 +264,9 @@ export default async function Home() {
           </div>
 
           <div>
-            <h2 className="text-3xl font-bold text-white">What I&apos;m learning</h2>
+            <h2 className="text-3xl font-bold text-white">{home.experience.learningTitle}</h2>
             <ul className="mt-8 space-y-3">
-              {LEARNING.map((item) => (
+              {home.experience.learning.map((item) => (
                 <li key={item} className="flex gap-3 text-slate-300">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" aria-hidden="true" />
                   {item}
@@ -347,22 +279,24 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Closing call to action: three clear paths */}
+      {home.cta.visible && (
       <section aria-labelledby="cta-heading" className="container mx-auto px-6 pb-24">
         <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 p-8 md:p-14">
-          <h2 id="cta-heading" className="text-center text-3xl font-bold text-white">Let&apos;s build something that matters</h2>
+          <h2 id="cta-heading" className="text-center text-3xl font-bold text-white">{home.cta.title}</h2>
           <p className="mx-auto mt-4 max-w-xl text-center text-slate-400">
-            Pick what fits, and tell me a little about it. {SITE.responseTime}
+            {home.cta.intro} {SITE.responseTime}
           </p>
           <ul className="mt-10 grid gap-4 md:grid-cols-3">
-            {WAYS_TO_WORK.map(({ icon: Icon, title, body, topic }) => (
+            {home.cta.items.map(({ icon, title, body, topic }) => (
               <li key={title}>
                 <Link
                   href={`/contact?topic=${encodeURIComponent(topic)}`}
                   className="group flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-950/60 p-6 transition hover:border-cyan-500/50"
                 >
-                  <Icon className="h-6 w-6 text-cyan-400" aria-hidden="true" />
+                  <HomeIcon name={icon} className="h-6 w-6 text-cyan-400" />
                   <span className="mt-4 text-lg font-semibold text-white group-hover:text-cyan-300">{title}</span>
                   <span className="mt-2 flex-1 text-sm text-slate-400">{body}</span>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-cyan-400">
@@ -374,6 +308,7 @@ export default async function Home() {
           </ul>
         </div>
       </section>
+      )}
     </div>
   );
 }

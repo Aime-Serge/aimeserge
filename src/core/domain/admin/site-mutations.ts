@@ -10,6 +10,7 @@ import { validateAdminSession } from "./queries";
 import { withShield } from "@/infrastructure/security/shield";
 import { CONTENT_TABLES, revalidateContent } from "@/infrastructure/cache/content";
 import type { ActionResult } from "./content-mutations";
+import { homepageSchema, mergeHomepage, type HomepageContent } from "@/config/homepage";
 
 // ─── Site health ─────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ export type SiteHealth = {
 };
 
 const SECTIONS: Array<{ key: string; label: string; tab: string; filter?: [string, string] }> = [
+  { key: "site_content", label: "Homepage sections", tab: "homepage" },
   { key: "projects", label: "Projects & ventures", tab: "projects" },
   { key: "research", label: "Research", tab: "research" },
   { key: "articles", label: "Blog (published)", tab: "articles", filter: ["status", "PUBLISHED"] },
@@ -350,5 +352,64 @@ export async function saveResumeEntry(input: SaveInput): Promise<ActionResult> {
     return await shieldedSave(input);
   } catch (e) {
     return { success: false, message: e instanceof Error ? e.message : "Couldn't save." };
+  }
+}
+
+// ─── Homepage sections ───────────────────────────────────────────────────
+
+async function getHomepageForAdminBase(): Promise<ActionResult<{ content: HomepageContent; saved: boolean }>> {
+  const db = await validateAdminSession();
+  const { data, error } = await db.from("site_content").select("value").eq("key", "homepage").maybeSingle();
+  if (error) return { success: false, message: `Couldn't load the homepage: ${error.message}` };
+  return { success: true, message: "ok", data: { content: mergeHomepage(data?.value), saved: Boolean(data) } };
+}
+
+const shieldedGetHomepage = withShield("homepage_get", getHomepageForAdminBase, { limit: 30 });
+export async function getHomepageForAdmin(): Promise<ActionResult<{ content: HomepageContent; saved: boolean }>> {
+  try {
+    return await shieldedGetHomepage(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't load the homepage." };
+  }
+}
+
+async function saveHomepageBase(input: HomepageContent): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const parsed = homepageSchema.safeParse(input);
+  if (!parsed.success) return { success: false, message: parsed.error.issues[0]?.message || "Check the form." };
+
+  const { error } = await db
+    .from("site_content")
+    .upsert({ key: "homepage", value: parsed.data, updated_at: new Date().toISOString() });
+  if (error) return { success: false, message: `Couldn't save: ${error.message}` };
+
+  revalidateContent("site_content");
+  return { success: true, message: "Homepage saved. It updates within seconds." };
+}
+
+const shieldedSaveHomepage = withShield("homepage_save", saveHomepageBase, { limit: 20, auditLog: true });
+export async function saveHomepage(input: HomepageContent): Promise<ActionResult> {
+  try {
+    return await shieldedSaveHomepage(input);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't save." };
+  }
+}
+
+/** Remove saved homepage content so the site shows the built-in version again. */
+async function resetHomepageBase(): Promise<ActionResult> {
+  const db = await validateAdminSession();
+  const { error } = await db.from("site_content").delete().eq("key", "homepage");
+  if (error) return { success: false, message: `Couldn't reset: ${error.message}` };
+  revalidateContent("site_content");
+  return { success: true, message: "Homepage reset to the built-in version." };
+}
+
+const shieldedResetHomepage = withShield("homepage_reset", resetHomepageBase, { limit: 5, auditLog: true });
+export async function resetHomepage(): Promise<ActionResult> {
+  try {
+    return await shieldedResetHomepage(undefined as never);
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : "Couldn't reset." };
   }
 }

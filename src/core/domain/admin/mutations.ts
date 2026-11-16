@@ -8,7 +8,7 @@ import { SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
 import { withShield } from "@/infrastructure/security/shield";
 import { validateAdminSession } from "./queries";
-import { sanitizeContentBlocks, sanitizeHtmlContent } from '@/infrastructure/security/sanitizer';
+import { sanitizeContentBlocks } from '@/infrastructure/security/sanitizer';
 
 /**
  * Tables the admin dashboard may read, write or delete.
@@ -137,13 +137,9 @@ async function upsertContentBase(params: { table: string, payload: object, path:
       if (safePayload.content && Array.isArray(safePayload.content)) {
         safePayload.content = sanitizeContentBlocks(safePayload.content);
       }
-      // sanitize common text fields if present
-      if (typeof safePayload.description === 'string') {
-        safePayload.description = sanitizeHtmlContent(safePayload.description);
-      }
-      if (typeof safePayload.summary === 'string') {
-        safePayload.summary = sanitizeHtmlContent(safePayload.summary);
-      }
+      // description/summary are plain text: React escapes them when rendering, so
+      // HTML-sanitising here would only corrupt them ("&" saved as "&amp;").
+      // Rich article blocks are still sanitised above and again at render time.
     } catch (e) {
       // If sanitization fails, fallback to original payload and log
       console.error('Sanitization failed, proceeding with original payload:', e);
