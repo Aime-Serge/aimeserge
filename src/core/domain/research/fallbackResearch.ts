@@ -18,7 +18,7 @@ export const fallbackResearch: ResearchPaper[] = [
     views: 0,
     downloads: 0,
     createdAt: "2026-11-16",
-    authors: [{ name: "Aime Serge Ukobizaba", affiliation: "Z-Gate LTD" }],
+    authors: [{ name: "Aime Serge Ukobizaba" }],
     publicationDate: "2026-11-16",
     category: "Health · Scoping review",
     language: "en",
