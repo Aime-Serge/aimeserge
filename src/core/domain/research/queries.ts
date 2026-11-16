@@ -52,7 +52,9 @@ export async function getPaperBySlug(slug: string): Promise<ResearchPaper | null
   if (paper) return paper;
   // Built-in papers are shown only while the database has none (same rule as the list),
   // so a paper deleted in the admin stays gone.
-  return (await getResearch()) === fallbackResearch ? fallbackResearch.find((p) => p.slug === slug) ?? null : null;
+  // Look in the list the research page shows: it holds the built-in papers only while the
+  // database has none. (Comparing with fallbackResearch by identity fails: cached results are copies.)
+  return (await getResearch()).find((p) => p.slug === slug) ?? null;
 }
 
 async function fetchPaperBySlug(slug: string): Promise<ResearchPaper | null> {
