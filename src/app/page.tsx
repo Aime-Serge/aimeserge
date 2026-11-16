@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, FileDown, Trophy } from "lucide-react";
 import HomeIcon from "@/presentation/components/shared/HomeIcon";
 import { SITE, jsonLd } from "@/config/site";
-import { getExperiences, getProfile, getFeaturedProjects, getHomepageContent } from "@/core/domain/portfolio/queries";
+import { getExperiences, getProfile, getFeaturedProjects, getHomepageContent, getSiteSettings } from "@/core/domain/portfolio/queries";
 
 // Static HTML, refreshed when the profile, projects or experiences change in the admin (or daily).
 export const revalidate = 86400;
@@ -48,7 +48,7 @@ async function loadExperience() {
 }
 
 export default async function Home() {
-  const [EXPERIENCE, profile, featured, home] = await Promise.all([loadExperience(), getProfile(), getFeaturedProjects(3), getHomepageContent()]);
+  const [EXPERIENCE, profile, featured, home, settings] = await Promise.all([loadExperience(), getProfile(), getFeaturedProjects(3), getHomepageContent(), getSiteSettings()]);
   const personLd = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -287,7 +287,7 @@ export default async function Home() {
         <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-950/40 to-slate-900/40 p-8 md:p-14">
           <h2 id="cta-heading" className="text-center text-3xl font-bold text-white">{home.cta.title}</h2>
           <p className="mx-auto mt-4 max-w-xl text-center text-slate-400">
-            {home.cta.intro} {SITE.responseTime}
+            {home.cta.intro} {settings.contact.responseTime}
           </p>
           <ul className="mt-10 grid gap-4 md:grid-cols-3">
             {home.cta.items.map(({ icon, title, body, topic }) => (

@@ -1,102 +1,64 @@
-import { MetadataRoute } from 'next';
-import { SITE } from '@/config/site';
-import { getProjects, getPosts } from '@/core/domain/portfolio/queries';
-import type { Project, Post } from '@/core/domain/portfolio/types';
+import { MetadataRoute } from "next";
+import { SITE } from "@/config/site";
+import { getProjects, getPosts } from "@/core/domain/portfolio/queries";
+import { getResearch } from "@/core/domain/research/queries";
+
+/**
+ * Every public page, for Google and other search engines. Rebuilt whenever
+ * content changes in the admin (see revalidateContent), so new projects,
+ * papers and articles are listed straight away. Hidden projects are left out.
+ */
+const date = (v: unknown, fallback: Date) => {
+  const d = v ? new Date(String(v)) : fallback;
+  return Number.isNaN(d.getTime()) ? fallback : d;
+};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = SITE.url;
+  const base = SITE.url;
   const now = new Date();
 
-  // Base routes
-  const routes = [
-    '',
-    '/projects',
-    '/blog',
-    '/resume',
-    '/contact',
-    '/research',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: now,
-    changeFrequency: 'monthly' as const,
-    priority: route === '' ? 1 : 0.8,
-  }));
+  const [projects, research, posts] = await Promise.all([
+    getProjects().catch(() => []),
+    getResearch().catch(() => []),
+    getPosts().catch(() => []),
+  ]);
 
-  // Fetch dynamic content (with error handling for build-time limitations)
-  let projects: Project[] = [];
-  let posts: Post[] = [];
+  const pages: MetadataRoute.Sitemap = [
+    { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/projects`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${base}/research`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/resume`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
+    { url: `${base}/terminal`, lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+  ];
 
-  try {
-    projects = await getProjects();
-  } catch (err) {
-    console.warn('⚠️ Could not fetch projects for sitemap:', err);
-  }
+  const projectPages: MetadataRoute.Sitemap = projects
+    .filter((p) => p.slug && p.isVisible !== false)
+    .map((p) => ({
+      url: `${base}/projects/${p.slug}`,
+      lastModified: date(p.createdAt, now),
+      changeFrequency: "monthly",
+      priority: p.featured ? 0.8 : 0.6,
+    }));
 
-  try {
-    posts = await getPosts();
-  } catch (err) {
-    console.warn('⚠️ Could not fetch posts for sitemap:', err);
-  }
+  const researchPages: MetadataRoute.Sitemap = research
+    .filter((r) => r.slug)
+    .map((r) => ({
+      url: `${base}/research/${r.slug}`,
+      lastModified: date(r.publicationDate || r.createdAt, now),
+      changeFrequency: "yearly",
+      priority: 0.7,
+    }));
 
-  const projectRoutes = projects
-    .filter((project) => project.slug && project.createdAt) // Filter out invalid entries
-    .map((project) => {
-      try {
-        const lastMod = new Date(project.createdAt as any);
-        // Validate date is not invalid
-        if (isNaN(lastMod.getTime())) {
-          return {
-            url: `${baseUrl}/projects/${project.slug}`,
-            lastModified: now,
-            changeFrequency: 'monthly' as const,
-            priority: 0.6,
-          };
-        }
-        return {
-          url: `${baseUrl}/projects/${project.slug}`,
-          lastModified: lastMod,
-          changeFrequency: 'monthly' as const,
-          priority: 0.6,
-        };
-      } catch {
-        return {
-          url: `${baseUrl}/projects/${project.slug}`,
-          lastModified: now,
-          changeFrequency: 'monthly' as const,
-          priority: 0.6,
-        };
-      }
-    });
+  const postPages: MetadataRoute.Sitemap = posts
+    .filter((p) => p.article?.slug || p.id)
+    .map((p) => ({
+      url: `${base}/blog/${p.article?.slug || p.id}`,
+      lastModified: date(p.createdAt, now),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }));
 
-  const postRoutes = posts
-    .filter((post) => post.article?.slug || post.id) // Filter out invalid entries
-    .map((post) => {
-      try {
-        const lastMod = new Date(post.createdAt as any);
-        // Validate date is not invalid
-        if (isNaN(lastMod.getTime())) {
-          return {
-            url: `${baseUrl}/blog/${post.article?.slug || post.id}`,
-            lastModified: now,
-            changeFrequency: 'weekly' as const,
-            priority: 0.7,
-          };
-        }
-        return {
-          url: `${baseUrl}/blog/${post.article?.slug || post.id}`,
-          lastModified: lastMod,
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        };
-      } catch {
-        return {
-          url: `${baseUrl}/blog/${post.article?.slug || post.id}`,
-          lastModified: now,
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        };
-      }
-    });
-
-  return [...routes, ...projectRoutes, ...postRoutes];
+  return [...pages, ...projectPages, ...researchPages, ...postPages];
 }

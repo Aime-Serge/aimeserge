@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { type ComponentProps, type FormEvent, useCallback, useEffect, useState } from "react";
 import {
-  type LucideIcon, LayoutDashboard, LayoutTemplate, FolderKanban, FlaskConical, Newspaper, User, FileText,
+  type LucideIcon, LayoutDashboard, LayoutTemplate, Settings, FolderKanban, FlaskConical, Newspaper, User, FileText,
   Briefcase, GraduationCap, Award, Trophy, MessageSquare, Brain, Bot, Send, Plus, Download, X,
   ExternalLink,
 } from "lucide-react";
@@ -25,6 +25,7 @@ import ManualSyncTool from "@/presentation/components/features/ManualSyncTool";
 import SiteHealthPanel from "@/presentation/components/features/SiteHealthPanel";
 import ResumeSectionManager from "@/presentation/components/features/ResumeSectionManager";
 import HomepageEditor from "@/presentation/components/features/HomepageEditor";
+import SettingsEditor from "@/presentation/components/features/SettingsEditor";
 
 type EditableAdminItem = Record<string, unknown>;
 type AdminChatMessage = UIMessage & { content?: string };
@@ -54,6 +55,7 @@ const GROUPS: Array<{ title: string; tabs: Tab[] }> = [
       { id: "projects", label: "Projects & ventures", icon: FolderKanban, intro: "Ventures and projects. Featured ones appear on the homepage.", create: "New project", preview: "/projects" },
       { id: "research", label: "Research", icon: FlaskConical, intro: "Studies and papers on the research page.", create: "New research", preview: "/research" },
       { id: "articles", label: "Blog", icon: Newspaper, intro: "Write, save drafts and publish articles.", create: "New article", preview: "/blog" },
+      { id: "settings", label: "Site settings", icon: Settings, intro: "Contact details, social links, every page's heading and intro, research areas, resume skills, Google descriptions and Search Console verification." },
     ],
   },
   {
@@ -301,6 +303,7 @@ export default function AdminDashboard() {
             {activeTab === "overview" && <SiteHealthPanel onOpenTab={openTab} />}
             {activeTab === "profile" && <ProfileEditor />}
             {activeTab === "homepage" && <HomepageEditor />}
+            {activeTab === "settings" && <SettingsEditor />}
             {activeTab === "cv" && (
               <div className="space-y-8">
                 <CvImporter />

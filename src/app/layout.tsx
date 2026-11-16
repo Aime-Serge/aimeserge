@@ -7,7 +7,8 @@ import ClientWrapper from "@/presentation/components/layout/ClientWrapper";
 import ScrollToTop from "@/presentation/components/shared/ScrollToTop";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { SITE } from "@/config/site";
+import { SITE, jsonLd } from "@/config/site";
+import { getSiteSettings } from "@/core/domain/portfolio/queries";
 
 export const viewport: Viewport = {
   themeColor: "#020617",
@@ -16,38 +17,45 @@ export const viewport: Viewport = {
   // No maximumScale: people must be able to pinch-zoom (WCAG 1.4.4).
 };
 
-export const metadata: Metadata = {
-  title: {
-    default: `${SITE.name} | ${SITE.headline}`,
-    template: `%s | ${SITE.shortName}`,
-  },
-  description: SITE.description,
-  metadataBase: new URL(SITE.url),
-  alternates: {
-    canonical: "/",
-    types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE.name}: Blog` }] },
-  },
-  manifest: "/manifest.json",
-  icons: {
-    icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],
-    apple: "/icons/apple-touch-icon.png",
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: SITE.url,
-    siteName: SITE.name,
-    title: `${SITE.name} | ${SITE.headline}`,
-    description: SITE.description,
-    images: [{ url: "/icons/og.jpg", width: 1200, height: 630, alt: `${SITE.name}, ${SITE.headline}` }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${SITE.name} | ${SITE.headline}`,
-    description: SITE.description,
-    images: ["/icons/og.jpg"],
-  },
-};
+/** Only the real production site may be indexed; Vercel preview copies must not compete with it. */
+const INDEXABLE = (process.env.VERCEL_ENV ?? "production") === "production";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const description = settings.identity.description;
+  const title = `${SITE.name} | ${SITE.headline}`;
+  return {
+    title: { default: title, template: `%s | ${SITE.shortName}` },
+    description,
+    applicationName: SITE.name,
+    authors: [{ name: SITE.name, url: SITE.url }],
+    creator: SITE.name,
+    metadataBase: new URL(SITE.url),
+    alternates: {
+      canonical: "/",
+      types: { "application/rss+xml": [{ url: "/feed.xml", title: `${SITE.name}: Blog` }] },
+    },
+    robots: INDEXABLE
+      ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } }
+      : { index: false, follow: false },
+    verification: settings.seo.googleVerification ? { google: settings.seo.googleVerification } : undefined,
+    manifest: "/manifest.json",
+    icons: {
+      icon: [{ url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" }],
+      apple: "/icons/apple-touch-icon.png",
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: SITE.url,
+      siteName: SITE.name,
+      title,
+      description,
+      images: [{ url: "/icons/og.jpg", width: 1200, height: 630, alt: `${SITE.name}, ${SITE.headline}` }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: ["/icons/og.jpg"] },
+  };
+}
 
 export default function RootLayout({
   children,
@@ -61,6 +69,19 @@ export default function RootLayout({
           "min-h-screen bg-slate-950 font-sans antialiased selection:bg-cyan-500/30 text-slate-200"
         )}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: jsonLd({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: SITE.name,
+              url: SITE.url,
+              inLanguage: "en",
+              publisher: { "@type": "Person", name: SITE.name, url: SITE.url },
+            }),
+          }}
+        />
         <a 
           href="#main-content" 
           className="absolute left-0 top-0 z-50 -translate-y-full bg-cyan-600 px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
