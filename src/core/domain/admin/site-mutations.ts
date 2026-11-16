@@ -87,7 +87,8 @@ async function getSiteHealthBase(): Promise<ActionResult<SiteHealth>> {
         { label: "Profile row", ok: Boolean(profile.data?.length), help: "Homepage intro and CV link. Save the Profile tab once to create it." },
         { label: "AI (Gemini) key", ok: has("GEMINI_API_KEY") || has("GOOGLE_GENERATIVE_AI_API_KEY"), help: "Needed for CV import and the site assistant. Add GEMINI_API_KEY in Vercel." },
         { label: "Automatic refresh secret", ok: has("CRON_SECRET"), help: "Lets the CV automation refresh pages. Add CRON_SECRET in Vercel and GitHub." },
-        { label: "Email notifications", ok: has("RESEND_API_KEY"), help: "Optional: email when someone sends a message. Add RESEND_API_KEY in Vercel." },
+        { label: "Contact messages emailed to you", ok: has("RESEND_API_KEY"), help: "Messages are saved here but not emailed until you add RESEND_API_KEY in Vercel (free at resend.com)." },
+        { label: "Visitors get a confirmation email", ok: has("RESEND_FROM_EMAIL") && !/resend\.dev/i.test(process.env.RESEND_FROM_EMAIL ?? ""), help: "Optional: verify your own domain in Resend, then set RESEND_FROM_EMAIL." },
       ],
     },
   };

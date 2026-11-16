@@ -72,6 +72,16 @@ It checks, in plain words:
 
 With `--write-test` it also adds, edits and deletes a temporary entry, to prove the admin can write. Fix anything marked ✗; it tells you how.
 
+## 4b. Receive contact messages by email
+
+Every message sent through the contact form is saved in **Admin → Messages** and also emailed to you. Press Reply in your email to answer the visitor directly. If one of the two fails, the other still keeps the message.
+
+1. Create a free account at <https://resend.com> using the email you want messages delivered to, then go to **API Keys → Create**.
+2. Add `RESEND_API_KEY` to `.env.local` and to Vercel. Set `INQUIRY_NOTIFY_EMAIL` to that same email (otherwise `ADMIN_EMAIL` is used).
+3. Test it: `npm run check:setup -- --email-test`, then check your inbox (and spam).
+
+**Optional, so visitors get a "thanks, I got your message" email:** Resend's free test sender only delivers to your own address. To email visitors, add your own domain in Resend → Domains, add the DNS records it shows, then set `RESEND_FROM_EMAIL`, e.g. `Aime Serge <hello@yourdomain.com>`.
+
 ## 5. Add the values to Vercel
 
 Vercel → your project → **Settings → Environment Variables**. Add each value from step 1, except the database connection string, for **Production**. Then use **Deployments → ⋯ → Redeploy**.

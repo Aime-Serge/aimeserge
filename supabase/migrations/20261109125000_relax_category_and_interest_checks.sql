@@ -4,6 +4,7 @@
 -- 1. projects.category only allowed AI / Security / Cloud / Full-Stack /
 --    Software Engineering. Projects now use labels like "Health · AI" and
 --    "Safety · AI · IoT", so those inserts failed. Category becomes free text.
+-- 3. contacts.contact_type didn't allow the form's "Company" option.
 -- 2. contacts.interest didn't allow the contact form's current topics
 --    ("Freelance project", "Partnership or investment", "Research collaboration"),
 --    so those messages were rejected. Old values stay valid for existing rows.
@@ -19,7 +20,8 @@ BEGIN
      WHERE nsp.nspname = 'public'
        AND con.contype = 'c'
        AND ((rel.relname = 'projects' AND pg_get_constraintdef(con.oid) ILIKE '%category%')
-         OR (rel.relname = 'contacts' AND pg_get_constraintdef(con.oid) ILIKE '%interest%'))
+         OR (rel.relname = 'contacts' AND pg_get_constraintdef(con.oid) ILIKE '%interest%')
+         OR (rel.relname = 'contacts' AND pg_get_constraintdef(con.oid) ILIKE '%contact_type%'))
   LOOP
     EXECUTE format('ALTER TABLE public.%I DROP CONSTRAINT %I', c.relname, c.conname);
   END LOOP;
@@ -33,3 +35,6 @@ ALTER TABLE public.contacts
     'Hiring', 'Freelance project', 'Partnership or investment', 'Research collaboration', 'Other',
     'Collaboration', 'Consultation', 'Research'
   ));
+
+ALTER TABLE public.contacts
+  ADD CONSTRAINT contacts_contact_type_check CHECK (contact_type IN ('Individual', 'Business', 'Company'));

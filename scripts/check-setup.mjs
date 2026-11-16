@@ -5,6 +5,7 @@
  *   npm run check:setup                      # read-only checks
  *   npm run check:setup -- --write-test      # also add, read and remove a test entry
  *   npm run check:setup -- --site https://aimeserge.vercel.app   # also check the live site
+ *   npm run check:setup -- --email-test     # also send yourself a test "new message" email
  *
  * Reads keys from .env.local (never uploaded). Prints no secret values.
  */
@@ -17,6 +18,7 @@ const args = process.argv.slice(2);
 const WRITE_TEST = args.includes("--write-test");
 const siteIdx = args.indexOf("--site");
 const SITE = siteIdx >= 0 ? args[siteIdx + 1] : null;
+const EMAIL_TEST = args.includes("--email-test");
 
 let failures = 0;
 let warnings = 0;
@@ -45,6 +47,11 @@ env("JWT_SECRET").length >= 32 ? ok("Sign-in secret (32+ characters)") : bad("JW
 env("NEXT_PUBLIC_SITE_URL") ? ok("Site address") : warn("NEXT_PUBLIC_SITE_URL is not set", "Set it to https://aimeserge.vercel.app");
 env("GEMINI_API_KEY") || env("GOOGLE_GENERATIVE_AI_API_KEY") ? ok("AI key (CV import, assistant)") : warn("GEMINI_API_KEY is not set", "Needed for CV import and the site assistant");
 env("CRON_SECRET") ? ok("Refresh secret (CV automation)") : warn("CRON_SECRET is not set", "Needed for the CV automation to refresh pages");
+const NOTIFY = env("INQUIRY_NOTIFY_EMAIL") || ADMIN_EMAIL;
+env("RESEND_API_KEY")
+  ? ok(`Contact-form emails go to ${NOTIFY || "(no address set)"}`)
+  : warn("RESEND_API_KEY is not set: contact messages are saved but not emailed to you", "Create a free key at resend.com → API Keys");
+if (env("RESEND_API_KEY") && !env("RESEND_FROM_EMAIL")) warn("Using Resend's test sender: emails reach only the address you signed up to Resend with, and visitors get no confirmation", "Verify your domain in Resend, then set RESEND_FROM_EMAIL");
 
 if (!URL_ || !ANON || !SERVICE) {
   console.log("\nStopping: the database can't be checked without the three Supabase values above.");
@@ -150,6 +157,27 @@ if (WRITE_TEST) {
     if (e2) bad(`Couldn't upload a file: ${e2.message}`);
     else { ok("Admin can upload files"); await admin.storage.from("artifacts").remove([p2]); }
   } else { ok("Admin can upload files"); await admin.storage.from("artifacts").remove([path]); }
+}
+
+// ─── Optional: email test ────────────────────────────────────────────────
+if (EMAIL_TEST) {
+  section("Email test (sends one email to you)");
+  if (!env("RESEND_API_KEY")) bad("RESEND_API_KEY is not set");
+  else {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: env("RESEND_FROM_EMAIL") || "Aime Serge website <onboarding@resend.dev>",
+        to: NOTIFY,
+        subject: "Test: contact-form emails work",
+        text: "This is a test from scripts/check-setup.mjs. New contact-form messages will arrive like this.",
+      }),
+    });
+    const j = await r.json().catch(() => ({}));
+    r.ok ? ok(`Test email sent to ${NOTIFY}. Check your inbox (and spam).`)
+      : bad(`Resend refused the email: ${j.message || r.status}`, /testing emails|own email/i.test(j.message || "") ? "With the test sender, INQUIRY_NOTIFY_EMAIL must be your Resend sign-up email" : "Check RESEND_API_KEY");
+  }
 }
 
 // ─── 6. Optional: live site ──────────────────────────────────────────────

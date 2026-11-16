@@ -45,6 +45,12 @@ export class HandleDbWebhookUseCase {
     }
 
     // 2. Notification Mapping Logic
+    // New contact messages are already emailed by the contact form action;
+    // notifying again here would send duplicates. Content edits are not worth an email.
+    if (table === 'contacts' || ['projects', 'research', 'broadcasts', 'certificates'].includes(table)) {
+      return { success: true };
+    }
+
     let title = `DB ${type}: ${table}`;
     let message = `A ${type} operation was performed on the ${table} table.`;
     let notificationType: 'SYSTEM' | 'INQUIRY' | 'SECURITY' = 'SYSTEM';
