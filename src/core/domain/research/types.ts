@@ -39,6 +39,17 @@ export interface ResearchPaper {
   category?: string;
   language: string;
   citations: number;
+  /** Where the work stands. Missing means published (older rows). */
+  status?: ResearchStatus;
 }
 
-export const fallbackResearch: ResearchPaper[] = [];
+export type ResearchStatus = "in_progress" | "under_review" | "preprint" | "published";
+
+export const RESEARCH_STATUS_LABEL: Record<ResearchStatus, string> = {
+  in_progress: "In progress, not yet peer reviewed",
+  under_review: "Under peer review",
+  preprint: "Preprint, not yet peer reviewed",
+  published: "Published",
+};
+
+export { fallbackResearch } from "./fallbackResearch";
