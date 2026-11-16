@@ -131,7 +131,9 @@ export async function getProjectBySlug(slug: string): Promise<Project | undefine
     .catch(contentFallback(undefined));
   if (row) return row;
   // Only fall back when the whole list is the built-in one, so a project hidden in /admin stays hidden.
-  return (await getProjects()) === fallbackProjects ? fallbackProjects.find((p) => p.slug === slug) : undefined;
+  // Look in the list the projects page shows: it holds the built-in projects only while the
+  // database has none. (Comparing with fallbackProjects by identity fails: cached results are copies.)
+  return (await getProjects()).find((p) => p.slug === slug);
 }
 
 async function fetchProjectBySlug(slug: string) {
