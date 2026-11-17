@@ -214,7 +214,17 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             )}
 
             <nav className="mt-8 space-y-3" aria-label="Project Links">
-              {project.url && (
+              {project.url && project.url.startsWith("/") && (
+                // A page on this site (e.g. the research behind the project): same tab, plain label.
+                <Link
+                  href={project.url}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+                >
+                  {project.url.startsWith("/research/") ? "Read the research behind it" : "Learn more"}
+                  <FileText className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
+              {project.url && !project.url.startsWith("/") && (
                 <a
                   href={project.url}
                   target="_blank"
