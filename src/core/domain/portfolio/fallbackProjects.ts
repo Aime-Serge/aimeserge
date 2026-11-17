@@ -104,7 +104,40 @@ Status: the full system works end to end in the lab, with simulated cameras and 
     contributors: [ME], association: "Independent Venture · Public safety",
   },
   {
-    id: "second-look", slug: "second-look", featured: true, sortOrder: 5,
+    id: "evuzi-carepath", slug: "evuzi-carepath", featured: true, sortOrder: 5,
+    title: "E-Vuzi CarePath",
+    tagline: "Making sure that when a patient is referred, the result and next steps come back to the health worker who sent them.",
+    role: "Founder · Product & Engineering Lead",
+    summary: "A health venture to close referral loops in Rwanda's primary health care: it works inside the national digital systems instead of replacing them, and is built only once field evidence proves the gap.",
+    description: `The problem: in Rwanda, community health workers send patients to health centres and hospitals. The national referral guidelines (2020) say the facility must then send the result and the next steps back, a message called a counter-referral. The evidence shows this return trip is rarely recorded: in one audit of 11 Kigali facilities, the counter-referral part of the form was filled in only 3.9% of the time. Without it, the health worker can't follow the patient up at home.
+
+Our approach: Rwanda already has strong digital health systems, including electronic records for community health workers (cEMR), a digital screening tool, facility records, national reporting and the National Health Intelligence Center. So E-Vuzi CarePath will not be another app, patient record, screening tool or dashboard. First, with the teams that run these systems, we check whether referrals still fail to close today. Only if that gap is real will we build a small add-on that works inside the existing systems.
+
+What it would do: when a referral is missing a step (the patient isn't recorded as arriving, the facility hasn't sent feedback, or a follow-up is overdue), it shows the case to the person already responsible for it. The case closes only when the existing system records the missing step. It uses simple rules that anyone can check, not AI. It never makes clinical decisions or delays emergency care, and health workers never re-type what they have already entered.
+
+Built responsibly: health data is sensitive under Rwanda's data protection law (N°058/2021). We use only made-up test data until the data owner, legal basis, hosting and approvals are in place. Even then, it keeps the minimum: the referral number and which steps have happened, never clinical notes.
+
+How we'll know it works: compared with a baseline measured first, how many referrals get feedback, how quickly it comes back, how many follow-ups are completed, and how many extra minutes it adds to health workers' days.
+
+Status: discovery. There is no code yet and no partnership is confirmed. The first 30 days: walk through today's referral workflow with the people who run it, interview health workers and facility staff, and review a sample of anonymised referral records. Then we decide to build, partner, offer an implementation service, or stop. The evidence behind it is my scoping review, "Closing the Referral Loop", on the Research page.`,
+    tools: ["Product discovery","Service design","Rule-based workflows (no AI)","Health data standards (FHIR, DHIS2)","Privacy by design"],
+    features: [
+      "Finds referrals missing a step: arrival, feedback or follow-up",
+      "Sends each case to the person already responsible for it",
+      "Works inside Rwanda's existing systems: no new app or patient record",
+      "Simple, checkable rules; no AI and no clinical decisions",
+      "Never delays emergency care; falls back to phone or paper",
+      "Made-up test data only until every approval is in place",
+    ],
+    category: "Health · Product",
+    url: "/research/referral-loop-rwanda",
+    images: ["/uploads/evuzi-carepath-thumbnail.svg"],
+    createdAt: "2026-11-16", isVisible: true, isCurrent: true,
+    startDate: { month: "November", year: "2026" },
+    contributors: [ME, "Joseph Nsabimana"], association: "Co-founded venture · Rwanda primary health care",
+  },
+  {
+    id: "second-look", slug: "second-look", featured: true, sortOrder: 6,
     title: "Second Look",
     tagline: "Paste a suspicious email and get a plain-language verdict on whether it's phishing, and why.",
     role: "Designer & Developer",
@@ -131,7 +164,7 @@ Status: a working, tested prototype (14 automated tests). It runs on a rule-base
     contributors: [ME], association: "Independent Project · Online safety",
   },
   {
-    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 6,
+    id: "professional-portfolio-ai-platform", slug: "professional-portfolio-ai-platform", featured: true, sortOrder: 7,
     title: "Professional Portfolio & AI-Powered Content Platform",
     tagline: "This website: portfolio, blog and research, with AI search and chat.",
     role: "Full-Stack Engineer & Architect",

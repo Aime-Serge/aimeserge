@@ -359,8 +359,13 @@ export default function ProjectEditor({ initialData, onClose }: ProjectEditorPro
           <h3 className="text-sm font-semibold text-white">Links <span className={hint}>(optional)</span></h3>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label htmlFor="p-url" className={label}>Code or live site</label>
-              <input id="p-url" type="url" value={f.url} onChange={(e) => set("url", e.target.value)} className={input} placeholder="https://…" />
+              <label htmlFor="p-url" className={label}>Code, live site or page on this site</label>
+              <input
+                id="p-url" type="text" inputMode="url" value={f.url}
+                onChange={(e) => set("url", e.target.value)} className={input}
+                placeholder="https://… or /research/…"
+                pattern="(https?://.+|/.*)" title="A full link (https://…) or a page on this site starting with /"
+              />
             </div>
             <div>
               <label htmlFor="p-video" className={label}>Video <span className={hint}>(YouTube, Vimeo, Loom)</span></label>
